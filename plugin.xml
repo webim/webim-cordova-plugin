@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin id="ru.webim.sdk" version="0.7.0" xmlns="http://www.phonegap.com/ns/plugins/1.0">
+
+    <name>WebimSDK</name>
+
+    <engines>
+        <engine name="cordova" version=">=3.4.0" />
+    </engines>
+
+    <asset src="www/webimsdk.js" target="js/webimsdk.js" />
+
+    <js-module name="webimsdk" src="www/webimsdk.js">
+        <clobbers target="webimsdk" />
+    </js-module>
+
+    <platform name="android">
+
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="WebimSDK">
+                <param name="android-package" value="ru.webim.plugin.WebimSDK" />
+            </feature>
+        </config-file>
+
+        <framework custom="true" src="webim.gradle" type="gradleReference" />
+        <source-file src="src/android/WebimSDK.java" target-dir="src/ru/webim/plugin/" />
+        <source-file src="src/android/models/Message.java"
+            target-dir="src/ru/webim/plugin/models" />
+        <source-file src="src/android/models/DialogState.java"
+            target-dir="src/ru/webim/plugin/models" />
+        <source-file src="src/android/models/Employee.java"
+            target-dir="src/ru/webim/plugin/models" />
+    </platform>
+
+    <platform name="ios">
+
+        <config-file parent="/*" target="config.xml">
+            <feature name="WebimSDK">
+                <param name="ios-package" value="WebimSDK" />
+            </feature>
+        </config-file>
+        <dependency id="cordova-plugin-cocoapod-support" />
+        <pods-config ios-min-version="8.0" use-frameworks="true" />
+        <pod name="WebimClientLibrary" git="https://github.com/webim/webim-client-sdk-ios.git" tag="3.21.2" />
+        <source-file src="src/ios/MimeType.swift"/>
+        <source-file src="src/ios/WebimSDK.swift" />
+    </platform>
+
+</plugin>
