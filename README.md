@@ -8,10 +8,6 @@ Attention!!! This product is not ready for use yet. If you wish to use it, pleas
 
 `git clone https://github.com/webim/webim-client-sdk-cordova-plugin.git`
 
-`cordova plugin add cordova-plugin-add-swift-support --save`
-
-`cordova plugin add cordova-plugin-cocoapod-support --save`
-
 `cordova plugin add ../webim-sdk-cordova-plugin/`
 
 `cordova platform add ios`
