@@ -130,6 +130,7 @@ public class WebimSDK extends CordovaPlugin {
                 .setErrorHandler(new FatalErrorHandler() {
                     @Override
                     public void onError(@NonNull WebimError<FatalErrorType> error) {
+                        sendCallbackError(callbackContext, "Fail");
                         switch (error.getErrorType()) {
                             case ACCOUNT_BLOCKED:
                             case VISITOR_BANNED:
@@ -169,6 +170,7 @@ public class WebimSDK extends CordovaPlugin {
             }
         });
         session.resume();
+        sendNotificationCallbackResult(callbackContext, "Success");
     }
 
     private void getMessagesHistory(int limit, int offset, final CallbackContext callbackContext) {

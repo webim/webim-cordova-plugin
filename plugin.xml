@@ -41,7 +41,7 @@
         <dependency id="cordova-plugin-cocoapod-support" />
         <dependency id="cordova-plugin-add-swift-support"/>
         <pods-config ios-min-version="8.0" use-frameworks="true" />
-        <pod name="WebimClientLibrary" git="https://github.com/webim/webim-client-sdk-ios.git" tag="3.21.2" />
+        <pod name="WebimClientLibrary" git="https://github.com/webim/webim-client-sdk-ios.git" tag="3.22.3" />
         <source-file src="src/ios/MimeType.swift"/>
         <source-file src="src/ios/WebimSDK.swift" />
     </platform>
