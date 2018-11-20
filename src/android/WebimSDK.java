@@ -192,7 +192,11 @@ public class WebimSDK extends CordovaPlugin {
             return;
         }
 
-        session.getStream().sendMessage(message);
+        String id = session.getStream().sendMessage(message).toString();
+        ru.webim.plugin.models.Message msg
+                = ru.webim.plugin.models.Message.fromParams(id, message, null,
+                Long.toString(System.currentTimeMillis() * 1000), null);
+        sendNotificationCallbackResult(callbackContext, msg);
     }
 
     private void sendFile(final String fileUri, final CallbackContext callbackContext) {
@@ -222,6 +226,7 @@ public class WebimSDK extends CordovaPlugin {
             Log.e("WEBIM", "failed to copy selected file", e);
             file.delete();
             file = null;
+            sendCallbackError(callbackContext, e.toString());
         }
 
         if (file != null && name != null) {
@@ -392,7 +397,7 @@ public class WebimSDK extends CordovaPlugin {
         public void messageAdded(@Nullable Message before, @NonNull Message message) {
             if (message.getType() != Message.Type.FILE_FROM_OPERATOR
                     && message.getType() != Message.Type.FILE_FROM_VISITOR) {
-                if (receiveMessageCallback != null) {
+                if (receiveMessageCallback != null && message.getType() != Message.Type.VISITOR) {
                     sendNotificationCallbackResult(receiveMessageCallback,
                             ru.webim.plugin.models.Message.fromWebimMessage(message));
                 }
@@ -413,10 +418,10 @@ public class WebimSDK extends CordovaPlugin {
         public void messageChanged(@NonNull Message from, @NonNull Message to) {
             if (to.getType() != Message.Type.FILE_FROM_OPERATOR
                     && to.getType() != Message.Type.FILE_FROM_VISITOR) {
-                /*if (receiveMessageCallback != null) {
-                    sendNotificationCallbackResult(receiveMessageCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(to));
-                }*/
+                if (confirmMessageCallback != null) {
+                    sendNotificationCallbackResult(confirmMessageCallback,
+                            ru.webim.plugin.models.Message.fromWebimMessage(to).id);
+                }
             } else {
                 if (receiveFileCallback != null) {
                     sendNotificationCallbackResult(receiveFileCallback,
