@@ -6,6 +6,7 @@ public class Message {
     public String url;
     public String timestamp;
     public String sender;
+    public Employee employee;
 
     public static Message fromParams(String id,
                                      String text,
@@ -26,11 +27,18 @@ public class Message {
         Message resultMessage = new Message();
         resultMessage.id = message.getId().toString();
         resultMessage.text = message.getText();
-        resultMessage.sender = message.getSenderName();
-        resultMessage.timestamp = Long.toString(message.getTime());
+        if (message.getType() != com.webimapp.android.sdk.Message.Type.FILE_FROM_OPERATOR
+                && message.getType() != com.webimapp.android.sdk.Message.Type.OPERATOR) {
+            resultMessage.sender = message.getSenderName();
+        } else {
+            System.err.println("123456789");
+            resultMessage.employee = Employee.getEmployeeFromParams(message.getSenderName(),
+                    message.getSenderAvatarUrl());
+        }
         if (message.getAttachment() != null) {
             resultMessage.url = message.getAttachment().getUrl();
         }
+        resultMessage.timestamp = Long.toString(message.getTime());
 
         return resultMessage;
     }

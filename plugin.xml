@@ -21,6 +21,12 @@
             </feature>
         </config-file>
 
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.MANAGE_DOCUMENTS" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+        </config-file>
+
         <framework custom="true" src="webim.gradle" type="gradleReference" />
         <source-file src="src/android/WebimSDK.java" target-dir="src/ru/webim/plugin/" />
         <source-file src="src/android/models/Message.java"

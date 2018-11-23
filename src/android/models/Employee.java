@@ -16,4 +16,12 @@ public class Employee {
         return resultEmployee;
     }
 
+    public static Employee getEmployeeFromParams(String firstname, String avatar) {
+        Employee resultEmployee = new Employee();
+        resultEmployee.firstname = firstname;
+        resultEmployee.avatar = avatar;
+
+        return resultEmployee;
+    }
+
 }

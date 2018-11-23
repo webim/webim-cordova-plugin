@@ -5,12 +5,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.util.Log;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.webkit.MimeTypeMap;
 
 
@@ -40,6 +45,7 @@ public class WebimSDK extends CordovaPlugin {
     public static final String DEFAULT_LOCATION = "mobile";
 
     private Context context;
+    private Activity activity;
     private WebimSession session;
     private Handler handler;
     private ListController listController;
@@ -55,6 +61,7 @@ public class WebimSDK extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         this.context = cordova.getActivity().getApplicationContext();
+        this.activity = cordova.getActivity();
         this.handler = new Handler();
     }
 
@@ -195,7 +202,7 @@ public class WebimSDK extends CordovaPlugin {
         String id = session.getStream().sendMessage(message).toString();
         ru.webim.plugin.models.Message msg
                 = ru.webim.plugin.models.Message.fromParams(id, message, null,
-                Long.toString(System.currentTimeMillis() * 1000), null);
+                Long.toString(System.currentTimeMillis()), null);
         sendNotificationCallbackResult(callbackContext, msg);
     }
 
@@ -203,7 +210,6 @@ public class WebimSDK extends CordovaPlugin {
         if (session == null) {
             return;
         }
-
         Uri uri = Uri.parse(fileUri);
         String mime = context.getContentResolver().getType(uri);
         String extension = mime == null
@@ -214,6 +220,26 @@ public class WebimSDK extends CordovaPlugin {
                 : uri.getLastPathSegment() + "." + extension;
         File file = null;
         try {
+            /*if (Build.VERSION.SDK_INT >= 23
+                    && ActivityCompat.checkSelfPermission(
+                    context, android.Manifest.permission.MANAGE_DOCUMENTS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        activity,
+                        new String[] { android.Manifest.permission.MANAGE_DOCUMENTS },
+                        1);
+            }
+            if (Build.VERSION.SDK_INT >= 23
+                    && ActivityCompat.checkSelfPermission(
+                    context, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        activity,
+                        new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE },
+                        1);
+            }*/
+            /*activity.grantUriPermission(activity.getPackageName(),
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);*/
             InputStream inp = context.getContentResolver().openInputStream(uri);
             if (inp == null) {
                 file = null;
