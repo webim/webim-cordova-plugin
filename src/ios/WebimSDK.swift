@@ -9,6 +9,7 @@ import WebimClientLibrary
     var onBanCallbackId: String?
     var onDialogCallbackId: String?
     var onFileMessageErrorCallbackId: String?
+    var onConfirmCallbackId: String?
 
 
     func `init`(_ command: CDVInvokedUrlCommand) {
@@ -42,7 +43,7 @@ import WebimClientLibrary
     }
 
     func onConfirm(_ command: CDVInvokedUrlCommand) {
-        //onConfirmCallbackId = command.callbackId
+        onConfirmCallbackId = command.callbackId
     }
 
     func onFile(_ command: CDVInvokedUrlCommand) {
@@ -124,10 +125,14 @@ import WebimClientLibrary
     func sendMessage(_ command: CDVInvokedUrlCommand) {
         let callbackId = command.callbackId
         let userMessage = command.arguments[0]
+        var messageID: String?
         do {
-            try _ = session?.getStream().send(message: userMessage as! String)
+            try messageID = session?.getStream().send(message: userMessage as! String)
         } catch { }
-        sendCallbackResult(callbackId: callbackId!)
+        let message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil)
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
 
     func sendFile(_ command: CDVInvokedUrlCommand) {
@@ -173,7 +178,7 @@ import WebimClientLibrary
     }
 
     func messageToJSON(message: Message) -> String {
-        var dict = [String: String]()
+        var dict = [String: Any]()
         dict["id"] = message.getID()
         dict["text"] = message.getText()
         if message.getAttachment() != nil {
@@ -181,8 +186,34 @@ import WebimClientLibrary
                 dict["url"] = try String(contentsOf: (message.getAttachment()?.getURL())!)
             } catch { }
         }
-        dict["sender"] = message.getSenderName()
-        dict["timestamp"] = String(message.getTime().timeIntervalSince1970)
+        if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
+            dict["sender"] = message.getSenderName()
+        } else {
+            var employee = [String: String]()
+            employee["firstname"] = message.getSenderName()
+            employee["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
+            dict["employee"] = employee
+        }
+        dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
+        if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
+                                                      options: .prettyPrinted),
+            let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
+            return JSONText
+        }
+        return "";
+    }
+
+    func messageToJSON(id: String,
+                       text: String,
+                       url: String?,
+                       timestamp: String,
+                       sender: String?) -> String {
+        var dict = [String: String]()
+        dict["id"] = id
+        dict["text"] = text
+        dict["url"] = url
+        dict["sender"] = sender
+        dict["timestamp"] = timestamp
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
@@ -222,7 +253,7 @@ extension WebimSDK: MessageListener {
     func added(message newMessage: Message, after previousMessage: Message?) {
         if newMessage.getType() != MessageType.FILE_FROM_OPERATOR
             && newMessage.getType() != MessageType.FILE_FROM_VISITOR {
-            if onMessageCallbackId != nil {
+            if onMessageCallbackId != nil && newMessage.getType() != .VISITOR {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newMessage))
                 pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onMessageCallbackId)
@@ -247,11 +278,11 @@ extension WebimSDK: MessageListener {
     func changed(message oldVersion: Message, to newVersion: Message) {
         if newVersion.getType() != MessageType.FILE_FROM_OPERATOR
             && newVersion.getType() != MessageType.FILE_FROM_VISITOR {
-            /*if onMessageCallbackId != nil {
+            if onConfirmCallbackId != nil {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))
                 pluginResult?.setKeepCallbackAs(true)
-                self.commandDelegate!.send(pluginResult, callbackId: onMessageCallbackId)
-            }*/
+                self.commandDelegate!.send(pluginResult, callbackId: onConfirmCallbackId)
+            }
         } else {
             if onFileCallbackId != nil {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))

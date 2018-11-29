@@ -31,7 +31,6 @@ public class Message {
                 && message.getType() != com.webimapp.android.sdk.Message.Type.OPERATOR) {
             resultMessage.sender = message.getSenderName();
         } else {
-            System.err.println("123456789");
             resultMessage.employee = Employee.getEmployeeFromParams(message.getSenderName(),
                     message.getSenderAvatarUrl());
         }

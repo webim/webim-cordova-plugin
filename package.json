@@ -1,6 +1,6 @@
 {
   "name": "webim-client-sdk-cordova-plugin",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Webim SDK",
   "cordova": {
     "id": "webim-client-sdk-cordova-plugin",

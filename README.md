@@ -6,7 +6,7 @@ Attention!!! This product is not ready for use yet. If you wish to use it, pleas
 
 ## Installation
 
-`git clone https://github.com/webim/webim-client-sdk-cordova-plugin.git`
+`git clone https://github.com/webim/webim-client-sdk-cordova-plugin.git`git
 
 `cordova plugin add ../webim-sdk-cordova-plugin/`
 

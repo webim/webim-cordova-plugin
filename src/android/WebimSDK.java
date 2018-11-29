@@ -5,17 +5,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.util.Log;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.webkit.MimeTypeMap;
 
 
@@ -45,7 +40,6 @@ public class WebimSDK extends CordovaPlugin {
     public static final String DEFAULT_LOCATION = "mobile";
 
     private Context context;
-    private Activity activity;
     private WebimSession session;
     private Handler handler;
     private ListController listController;
@@ -61,7 +55,6 @@ public class WebimSDK extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         this.context = cordova.getActivity().getApplicationContext();
-        this.activity = cordova.getActivity();
         this.handler = new Handler();
     }
 
@@ -70,57 +63,45 @@ public class WebimSDK extends CordovaPlugin {
 
         if (action.equals("init")) {
             init(data.getString(0), callbackContext);
-            sendNoResult(callbackContext);
             return true;
 
         } else if (action.equals("sendMessage")) {
             String message = data.getString(0);
             sendMessage(message, callbackContext);
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("requestDialog")) {
             requestDialog(callbackContext);
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("getMessagesHistory")) {
             int limit = Integer.parseInt(data.getString(0));
             int offset = Integer.parseInt(data.getString(1));
             getMessagesHistory(limit, offset, callbackContext);
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("typingMessage")) {
             String message = data.getString(0);
             typingMessage(message, callbackContext);
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("sendFile")) {
             String filePath = data.getString(0);
             sendFile(filePath, callbackContext);
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("onMessage")) {
             receiveMessageCallback = callbackContext;
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("onFile")) {
             receiveFileCallback = callbackContext;
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("onTyping")) {
             typingMessageCallback = callbackContext;
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("onConfirm")) {
             confirmMessageCallback = callbackContext;
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("onDialog")) {
             dialogCallback = callbackContext;
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("onBan")) {
             banCallback = callbackContext;
-            sendNoResult(callbackContext);
             return true;
         } else if (action.equals("close")) {
             close(callbackContext);
@@ -182,6 +163,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private void getMessagesHistory(int limit, int offset, final CallbackContext callbackContext) {
         if (session == null) {
+            sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
         listController.requestMore(limit, offset, callbackContext);
@@ -189,13 +171,16 @@ public class WebimSDK extends CordovaPlugin {
 
     private void requestDialog(final CallbackContext callbackContext) {
         if (session == null) {
+            sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
         session.getStream().startChat();
+        sendNotificationCallbackResult(callbackContext, "Chat is started.");
     }
 
     private void sendMessage(String message, final CallbackContext callbackContext) {
         if (session == null) {
+            sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
 
@@ -208,6 +193,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private void sendFile(final String fileUri, final CallbackContext callbackContext) {
         if (session == null) {
+            sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
         Uri uri = Uri.parse(fileUri);
@@ -220,26 +206,6 @@ public class WebimSDK extends CordovaPlugin {
                 : uri.getLastPathSegment() + "." + extension;
         File file = null;
         try {
-            /*if (Build.VERSION.SDK_INT >= 23
-                    && ActivityCompat.checkSelfPermission(
-                    context, android.Manifest.permission.MANAGE_DOCUMENTS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                        activity,
-                        new String[] { android.Manifest.permission.MANAGE_DOCUMENTS },
-                        1);
-            }
-            if (Build.VERSION.SDK_INT >= 23
-                    && ActivityCompat.checkSelfPermission(
-                    context, android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                        activity,
-                        new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE },
-                        1);
-            }*/
-            /*activity.grantUriPermission(activity.getPackageName(),
-                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);*/
             InputStream inp = context.getContentResolver().openInputStream(uri);
             if (inp == null) {
                 file = null;
@@ -267,7 +233,7 @@ public class WebimSDK extends CordovaPlugin {
                         @Override
                         public void onSuccess(@NonNull Message.Id id) {
                             fileToUpload.delete();
-                            sendCallbackResult(callbackContext, true);
+                            sendCallbackResult(callbackContext, id.toString());
                         }
 
                         @Override
@@ -310,6 +276,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private void typingMessage(String text, final CallbackContext callbackContext) {
         if (session == null) {
+            sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
         if (text.length() == 0) {
@@ -321,6 +288,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private void close(final CallbackContext callbackContext) {
         if (session == null) {
+            sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
         receiveMessageCallback = null;
@@ -403,7 +371,7 @@ public class WebimSDK extends CordovaPlugin {
                 @Override
                 public void receive(@NonNull List<? extends Message> messagesList) {
                     if (messagesList != null) {
-                        ArrayList<ru.webim.plugin.models.Message> messagesResult
+                        List<ru.webim.plugin.models.Message> messagesResult
                                 = new ArrayList<ru.webim.plugin.models.Message>();
                         for (Message msg : messagesList) {
                             messagesResult.add(ru.webim.plugin.models.Message.fromWebimMessage(msg));
