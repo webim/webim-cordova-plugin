@@ -6,9 +6,13 @@ Attention!!! This product is not ready for use yet. If you wish to use it, pleas
 
 ## Installation
 
-`git clone https://github.com/webim/webim-client-sdk-cordova-plugin.git`git
+`cordova create yourApp com.example.app YourApp` if project doesn't exist yet.
 
-`cordova plugin add ../webim-sdk-cordova-plugin/`
+`git clone https://github.com/webim/webim-client-sdk-cordova-plugin.git`
+
+`cd yourApp`
+
+`cordova plugin add ../webim-client-sdk-cordova-plugin/`
 
 `cordova platform add ios`
 

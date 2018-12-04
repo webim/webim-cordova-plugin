@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import android.util.Log;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -191,12 +192,33 @@ public class WebimSDK extends CordovaPlugin {
         sendNotificationCallbackResult(callbackContext, msg);
     }
 
+    private static String getFilePath(Context context, String fileUri) {
+        Uri uri = Uri.parse(fileUri);
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
+            String[] projection = {"_data"};
+            Cursor cursor = null;
+            try {
+                cursor = context.getContentResolver().query(uri, projection, null, null, null);
+                int column_index = cursor.getColumnIndexOrThrow("_data");
+                if (cursor.moveToFirst()) {
+                    String path = cursor.getString(column_index);
+                    return path == null ? fileUri : path;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+        return fileUri;
+    }
+
     private void sendFile(final String fileUri, final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
-        Uri uri = Uri.parse(fileUri);
+        Uri uri = Uri.parse(getFilePath(context, fileUri));
         String mime = context.getContentResolver().getType(uri);
         String extension = mime == null
                 ? null

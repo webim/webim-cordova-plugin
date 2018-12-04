@@ -6,7 +6,7 @@ public class Message {
     public String url;
     public String timestamp;
     public String sender;
-    public Employee employee;
+    public Employee operator;
 
     public static Message fromParams(String id,
                                      String text,
@@ -31,7 +31,7 @@ public class Message {
                 && message.getType() != com.webimapp.android.sdk.Message.Type.OPERATOR) {
             resultMessage.sender = message.getSenderName();
         } else {
-            resultMessage.employee = Employee.getEmployeeFromParams(message.getSenderName(),
+            resultMessage.operator = Employee.getEmployeeFromParams(message.getSenderName(),
                     message.getSenderAvatarUrl());
         }
         if (message.getAttachment() != null) {

@@ -189,10 +189,10 @@ import WebimClientLibrary
         if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
             dict["sender"] = message.getSenderName()
         } else {
-            var employee = [String: String]()
-            employee["firstname"] = message.getSenderName()
-            employee["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
-            dict["employee"] = employee
+            var operator = [String: String]()
+            operator["firstname"] = message.getSenderName()
+            operator["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
+            dict["operator"] = operator
         }
         dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
