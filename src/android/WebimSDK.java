@@ -6,6 +6,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.util.Log;
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -40,6 +41,7 @@ public class WebimSDK extends CordovaPlugin {
     public static final String DEFAULT_ACCOUNT_NAME = "demo";
     public static final String DEFAULT_LOCATION = "mobile";
 
+    private Activity activity;
     private Context context;
     private WebimSession session;
     private Handler handler;
@@ -55,6 +57,7 @@ public class WebimSDK extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
+        this.activity = cordova.getActivity();
         this.context = cordova.getActivity().getApplicationContext();
         this.handler = new Handler();
     }
@@ -218,7 +221,56 @@ public class WebimSDK extends CordovaPlugin {
             sendCallbackError(callbackContext, "Session initialisation expected");
             return;
         }
-        Uri uri = Uri.parse(getFilePath(context, fileUri));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final File file = new File(getFilePath(context, fileUri));
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            final File fileToUpload = file;
+                            String mime = activity.getContentResolver().getType(Uri.fromFile(fileToUpload));
+                            session.getStream().sendFile(fileToUpload,
+                                    fileToUpload.getName(), "image/png", new MessageStream.SendFileCallback() {
+                                        @Override
+                                        public void onProgress(@NonNull Message.Id id, long sentBytes) {
+
+                                        }
+
+                                        @Override
+                                        public void onSuccess(@NonNull Message.Id id) {
+                                            fileToUpload.delete();
+                                            sendCallbackResult(callbackContext, id.toString());
+                                        }
+
+                                        @Override
+                                        public void onFailure(@NonNull Message.Id id,
+                                                              @NonNull WebimError<SendFileError> error) {
+                                            fileToUpload.delete();
+                                            String msg;
+                                            switch (error.getErrorType()) {
+                                                case FILE_TYPE_NOT_ALLOWED:
+                                                    msg = "file_type_not_allowed";
+                                                    break;
+                                                case FILE_SIZE_EXCEEDED:
+                                                    msg = "file_size_exceeded";
+                                                    break;
+                                                case UPLOADED_FILE_NOT_FOUND:
+                                                default:
+                                                    msg = "unkown_error";
+                                            }
+                                            sendCallbackError(callbackContext, msg);
+                                        }
+                                    });
+                        }
+                    });
+                } catch (Exception e) {
+                    sendCallbackError(callbackContext, e.getMessage());
+                }
+            }
+        }).start();
+        /*Uri uri = Uri.parse(getFilePath(context, fileUri));
         String mime = context.getContentResolver().getType(uri);
         String extension = mime == null
                 ? null
@@ -277,7 +329,7 @@ public class WebimSDK extends CordovaPlugin {
                             sendCallbackError(callbackContext, msg);
                         }
                     });
-        }
+        }*/
     }
 
     private static void writeFully(@NonNull File to, @NonNull InputStream from) throws IOException {
