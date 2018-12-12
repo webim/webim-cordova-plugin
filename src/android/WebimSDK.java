@@ -26,6 +26,7 @@ import com.webimapp.android.sdk.MessageTracker;
 import com.webimapp.android.sdk.Operator;
 import com.webimapp.android.sdk.Webim;
 import com.webimapp.android.sdk.WebimSession;
+import com.webimapp.android.sdk.Webim.SessionBuilder;
 import com.webimapp.android.sdk.WebimError;
 import com.webimapp.android.sdk.WebimLog;
 
@@ -38,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebimSDK extends CordovaPlugin {
-    public static final String DEFAULT_ACCOUNT_NAME = "demo";
     public static final String DEFAULT_LOCATION = "mobile";
 
     private Activity activity;
@@ -66,7 +66,7 @@ public class WebimSDK extends CordovaPlugin {
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
 
         if (action.equals("init")) {
-            init(data.getString(0), callbackContext);
+            init(data.getJSONObject(0), callbackContext);
             return true;
 
         } else if (action.equals("sendMessage")) {
@@ -115,9 +115,13 @@ public class WebimSDK extends CordovaPlugin {
         }
     }
 
-    private void init(final String args, final CallbackContext callbackContext)
+    private void init(final JSONObject args, final CallbackContext callbackContext)
             throws JSONException {
-        session = Webim.newSessionBuilder()
+        if (!args.has("accountName")) {
+            sendCallbackError(callbackContext, "Missing required parameters");
+            return;
+        }
+        SessionBuilder sessionBuilder = Webim.newSessionBuilder()
                 .setContext(this.context)
                 .setErrorHandler(new FatalErrorHandler() {
                     @Override
@@ -136,16 +140,12 @@ public class WebimSDK extends CordovaPlugin {
                         }
                     }
                 })
-                .setAccountName(DEFAULT_ACCOUNT_NAME)
-                .setLocation(DEFAULT_LOCATION)
-                .setLogger(new WebimLog() {
-                               @Override
-                               public void log(String log) {
-                                   Log.i("WEBIM LOG", log);
-                               }
-                           },
-                        Webim.SessionBuilder.WebimLogVerbosityLevel.VERBOSE)
-                .build();
+                .setAccountName(args.getString("accountName"))
+                .setLocation(args.has("location") ? args.getString("location") : DEFAULT_LOCATION);
+        if (args.has("visitorFields")) {
+            sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
+        }
+        session = sessionBuilder.build();
         listController = new ListController(session.getStream());
         session.getStream().setOperatorTypingListener(new MessageStream.OperatorTypingListener() {
             @Override

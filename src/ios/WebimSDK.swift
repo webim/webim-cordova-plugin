@@ -13,21 +13,31 @@ import WebimClientLibrary
 
 
     func `init`(_ command: CDVInvokedUrlCommand) {
-        // TO DO
         var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
         let callbackId = command.callbackId
-        let authUrl = "demo"
-        let sessionBuilder = Webim.newSessionBuilder()
-            .set(accountName: authUrl)
-            .set(location: "mobile")
-        do {
-            session = try sessionBuilder.build()
-            session?.getStream().set(operatorTypingListener:self)
-            session?.getStream().set(currentOperatorChangeListener: self)
-            try messageTracker = session?.getStream().newMessageTracker(messageListener: self)
-            try session?.resume()
-            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Init")
-        } catch { }
+        let args = command.arguments[0] as! NSDictionary
+        let accountName = args["accountName"] as? String
+        let location = args["location"] as? String
+        if let accountName = accountName {
+            var sessionBuilder = Webim.newSessionBuilder()
+                .set(accountName: accountName)
+                .set(location: location ?? "mobile")
+            if let visitorFields = args["visitorFields"] as? NSDictionary {
+                let jsonData = try? JSONSerialization.data(withJSONObject: visitorFields, options: [])
+                let jsonString = String(data: jsonData!, encoding: .utf8)
+                if let jsonString = jsonString {
+                    sessionBuilder = sessionBuilder.set(visitorFieldsJSONString: jsonString)
+                }
+            }
+            do {
+                session = try sessionBuilder.build()
+                session?.getStream().set(operatorTypingListener:self)
+                session?.getStream().set(currentOperatorChangeListener: self)
+                try messageTracker = session?.getStream().newMessageTracker(messageListener: self)
+                try session?.resume()
+                pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Init")
+            } catch { }
+        }
         self.commandDelegate!.send(
             pluginResult,
             callbackId: callbackId
@@ -189,10 +199,10 @@ import WebimClientLibrary
         if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
             dict["sender"] = message.getSenderName()
         } else {
-            var operator = [String: String]()
-            operator["firstname"] = message.getSenderName()
-            operator["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
-            dict["operator"] = operator
+            var `operator` = [String: String]()
+            `operator`["firstname"] = message.getSenderName()
+            `operator`["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
+            dict["operator"] = `operator`
         }
         dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
