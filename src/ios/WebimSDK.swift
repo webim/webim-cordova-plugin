@@ -35,7 +35,7 @@ import WebimClientLibrary
                 session?.getStream().set(currentOperatorChangeListener: self)
                 try messageTracker = session?.getStream().newMessageTracker(messageListener: self)
                 try session?.resume()
-                pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Init")
+                pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
             } catch { }
         }
         self.commandDelegate!.send(

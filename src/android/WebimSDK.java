@@ -118,7 +118,7 @@ public class WebimSDK extends CordovaPlugin {
     private void init(final JSONObject args, final CallbackContext callbackContext)
             throws JSONException {
         if (!args.has("accountName")) {
-            sendCallbackError(callbackContext, "Missing required parameters");
+            sendCallbackError(callbackContext, "{\"reult\":\"Missing required parameters\"}");
             return;
         }
         SessionBuilder sessionBuilder = Webim.newSessionBuilder()
@@ -126,13 +126,13 @@ public class WebimSDK extends CordovaPlugin {
                 .setErrorHandler(new FatalErrorHandler() {
                     @Override
                     public void onError(@NonNull WebimError<FatalErrorType> error) {
-                        sendCallbackError(callbackContext, "Fail");
+                        sendCallbackError(callbackContext, "{\"reult\":\"Fail\"}");
                         switch (error.getErrorType()) {
                             case ACCOUNT_BLOCKED:
                             case VISITOR_BANNED:
                                 if (banCallback != null) {
                                     sendNotificationCallbackResult(banCallback,
-                                            "Visitor is banned");
+                                            "{\"result\":\"Visitor is banned\"}");
                                 }
                                 break;
                             default:
@@ -162,12 +162,12 @@ public class WebimSDK extends CordovaPlugin {
             }
         });
         session.resume();
-        sendNotificationCallbackResult(callbackContext, "Success");
+        sendNotificationCallbackResult(callbackContext, "{\"result\":\"Success\"}");
     }
 
     private void getMessagesHistory(int limit, int offset, final CallbackContext callbackContext) {
         if (session == null) {
-            sendCallbackError(callbackContext, "Session initialisation expected");
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
         listController.requestMore(limit, offset, callbackContext);
@@ -175,16 +175,16 @@ public class WebimSDK extends CordovaPlugin {
 
     private void requestDialog(final CallbackContext callbackContext) {
         if (session == null) {
-            sendCallbackError(callbackContext, "Session initialisation expected");
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
         session.getStream().startChat();
-        sendNotificationCallbackResult(callbackContext, "Chat is started.");
+        sendNotificationCallbackResult(callbackContext, "{\"result\":\"Chat is started.\"}");
     }
 
     private void sendMessage(String message, final CallbackContext callbackContext) {
         if (session == null) {
-            sendCallbackError(callbackContext, "Session initialisation expected");
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
 
@@ -218,7 +218,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private void sendFile(final String fileUri, final CallbackContext callbackContext) {
         if (session == null) {
-            sendCallbackError(callbackContext, "Session initialisation expected");
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
         new Thread(new Runnable() {
@@ -260,7 +260,7 @@ public class WebimSDK extends CordovaPlugin {
                                                 default:
                                                     msg = "unkown_error";
                                             }
-                                            sendCallbackError(callbackContext, msg);
+                                            sendCallbackError(callbackContext, "{\"result\":\"" + msg + "\"}");
                                         }
                                     });
                         }
@@ -270,66 +270,6 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
         }).start();
-        /*Uri uri = Uri.parse(getFilePath(context, fileUri));
-        String mime = context.getContentResolver().getType(uri);
-        String extension = mime == null
-                ? null
-                : MimeTypeMap.getSingleton().getExtensionFromMimeType(mime);
-        String name = extension == null
-                ? null
-                : uri.getLastPathSegment() + "." + extension;
-        File file = null;
-        try {
-            InputStream inp = context.getContentResolver().openInputStream(uri);
-            if (inp == null) {
-                file = null;
-            } else {
-                file = File.createTempFile("webim",
-                        extension, context.getCacheDir());
-                writeFully(file, inp);
-            }
-        } catch (IOException e) {
-            Log.e("WEBIM", "failed to copy selected file", e);
-            file.delete();
-            file = null;
-            sendCallbackError(callbackContext, e.toString());
-        }
-
-        if (file != null && name != null) {
-            final File fileToUpload = file;
-            session.getStream().sendFile(fileToUpload,
-                    name, mime, new MessageStream.SendFileCallback() {
-                        @Override
-                        public void onProgress(@NonNull Message.Id id, long sentBytes) {
-
-                        }
-
-                        @Override
-                        public void onSuccess(@NonNull Message.Id id) {
-                            fileToUpload.delete();
-                            sendCallbackResult(callbackContext, id.toString());
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull Message.Id id,
-                                              @NonNull WebimError<SendFileError> error) {
-                            fileToUpload.delete();
-                            String msg;
-                            switch (error.getErrorType()) {
-                                case FILE_TYPE_NOT_ALLOWED:
-                                    msg = "file_type_not_allowed";
-                                    break;
-                                case FILE_SIZE_EXCEEDED:
-                                    msg = "file_size_exceeded";
-                                    break;
-                                case UPLOADED_FILE_NOT_FOUND:
-                                default:
-                                    msg = "unkown_error";
-                            }
-                            sendCallbackError(callbackContext, msg);
-                        }
-                    });
-        }*/
     }
 
     private static void writeFully(@NonNull File to, @NonNull InputStream from) throws IOException {
@@ -350,7 +290,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private void typingMessage(String text, final CallbackContext callbackContext) {
         if (session == null) {
-            sendCallbackError(callbackContext, "Session initialisation expected");
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
         if (text.length() == 0) {
@@ -362,7 +302,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private void close(final CallbackContext callbackContext) {
         if (session == null) {
-            sendCallbackError(callbackContext, "Session initialisation expected");
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
         receiveMessageCallback = null;
@@ -371,7 +311,7 @@ public class WebimSDK extends CordovaPlugin {
 
         session.destroy();
         session = null;
-        sendCallbackResult(callbackContext, "WebimSession Close");
+        sendCallbackResult(callbackContext, "{\"result\":\"WebimSession Close\"}");
 
     }
 
