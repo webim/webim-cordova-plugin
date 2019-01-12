@@ -1,5 +1,3 @@
-import WebimClientLibrary
-
 @objc(WebimSDK) class WebimSDK : CDVPlugin {
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
