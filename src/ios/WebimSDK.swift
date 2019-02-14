@@ -88,11 +88,11 @@
     func getMessagesHistory(_ command: CDVInvokedUrlCommand) {
         // TO DO
         let callbackId = command.callbackId
-        let limit = Int((command.arguments[0] as? String)!)
-        let offset = Int((command.arguments[1] as? String)!)
+        let limit = command.arguments[0] as? Int
+        let offset = command.arguments[1] as? Int
         if offset == 0 {
             do {
-                try messageTracker?.getLastMessages(byLimit: limit!) { [weak self] messages in
+                try messageTracker?.getLastMessages(byLimit: limit ?? 25) { [weak self] messages in
                     var messagesSDK = [String]()
                     for message in messages {
                         messagesSDK.append((self?.messageToJSON(message: message))!)
@@ -102,7 +102,7 @@
             } catch { }
         } else {
             do {
-                try messageTracker?.getNextMessages(byLimit: limit!) { [weak self] messages in
+                try messageTracker?.getNextMessages(byLimit: limit ?? 25) { [weak self] messages in
                     var messagesSDK = [String]()
                     for message in messages {
                         messagesSDK.append((self?.messageToJSON(message: message))!)
