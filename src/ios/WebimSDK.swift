@@ -86,7 +86,6 @@
     }
 
     func getMessagesHistory(_ command: CDVInvokedUrlCommand) {
-        // TO DO
         let callbackId = command.callbackId
         let limit = command.arguments[0] as? Int
         let offset = command.arguments[1] as? Int
@@ -145,19 +144,19 @@
 
     func sendFile(_ command: CDVInvokedUrlCommand) {
         onFileMessageErrorCallbackId = command.callbackId
-        let url = NSURL(string: (command.arguments[0] as? String)!)
+        let url = URL(string: (command.arguments[0] as? String)!)
         let fileName = url?.lastPathComponent
         let mimeType = MimeType(url: url! as URL)
-        var file = Data()
-        do {
-            file = try Data(contentsOf: url! as URL)
-        } catch { }
-        do {
-            try _ = session?.getStream().send(file: file,
-                                              filename: fileName!,
-                                              mimeType: mimeType.value,
-                                              completionHandler: self)
-        } catch { }
+        URLSession.shared.dataTask(with: url!) { (data: Data?, urlResponse: URLResponse?, error: Error?) -> Void in
+            if let data = data {
+                do {
+                    try _ = self.session?.getStream().send(file: data,
+                                                      filename: fileName!,
+                                                      mimeType: mimeType.value,
+                                                      completionHandler: self)
+                } catch { }
+            }
+        }
     }
 
     private func sendCallbackResult(callbackId: String) {
