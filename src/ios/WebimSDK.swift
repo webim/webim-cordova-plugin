@@ -89,12 +89,12 @@
         let callbackId = command.callbackId
         let limit = command.arguments[0] as? Int
         let offset = command.arguments[1] as? Int
+        var messagesSDK = [[String: Any]]()
         if offset == 0 {
             do {
                 try messageTracker?.getLastMessages(byLimit: limit ?? 25) { [weak self] messages in
-                    var messagesSDK = [String]()
                     for message in messages {
-                        messagesSDK.append((self?.messageToJSON(message: message))!)
+                        messagesSDK.append((self?.messageToDictionary(message: message))!)
                     }
                     self?.sendCallbackResult(callbackId: callbackId!, resultArray: messagesSDK)
                 }
@@ -102,9 +102,8 @@
         } else {
             do {
                 try messageTracker?.getNextMessages(byLimit: limit ?? 25) { [weak self] messages in
-                    var messagesSDK = [String]()
                     for message in messages {
-                        messagesSDK.append((self?.messageToJSON(message: message))!)
+                        messagesSDK.append((self?.messageToDictionary(message: message))!)
                     }
                     self?.sendCallbackResult(callbackId: callbackId!, resultArray: messagesSDK)
                 }
@@ -208,6 +207,27 @@
             return JSONText
         }
         return "";
+    }
+
+    func messageToDictionary(message: Message) -> [String: Any] {
+        var dict = [String: Any]()
+        dict["id"] = message.getID()
+        dict["text"] = message.getText()
+        if message.getAttachment() != nil {
+            do {
+                dict["url"] = try String(contentsOf: (message.getAttachment()?.getURL())!)
+            } catch { }
+        }
+        if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
+            dict["sender"] = message.getSenderName()
+        } else {
+            var `operator` = [String: String]()
+            `operator`["firstname"] = message.getSenderName()
+            `operator`["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
+            dict["operator"] = `operator`
+        }
+        dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
+        return dict;
     }
 
     func messageToJSON(id: String,
