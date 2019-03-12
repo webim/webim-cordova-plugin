@@ -1,3 +1,5 @@
+import Photos
+
 @objc(WebimSDK) class WebimSDK : CDVPlugin {
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
@@ -144,16 +146,22 @@
     func sendFile(_ command: CDVInvokedUrlCommand) {
         onFileMessageErrorCallbackId = command.callbackId
         let url = URL(string: (command.arguments[0] as? String)!)
-        let fileName = url?.lastPathComponent
-        let mimeType = MimeType(url: url! as URL)
-        URLSession.shared.dataTask(with: url!) { (data: Data?, urlResponse: URLResponse?, error: Error?) -> Void in
-            if let data = data {
-                do {
-                    try _ = self.session?.getStream().send(file: data,
-                                                      filename: fileName!,
-                                                      mimeType: mimeType.value,
-                                                      completionHandler: self)
-                } catch { }
+        let fileName = url!.lastPathComponent
+        let mimeType = MimeType(url: url!)
+
+        let fetchResult = PHAsset.fetchAssets(withALAssetURLs: [url!], options: nil)
+        if let phAsset = fetchResult.firstObject {
+            PHImageManager.default().requestImageData(for: phAsset, options: nil) {
+                (imageData, dataURI, orientation, info) -> Void in
+                if let imageDataExists = imageData {
+                    print(imageDataExists)
+                    do {
+                        try _ = self.session?.getStream().send(file: imageDataExists,
+                                                               filename: fileName,
+                                                               mimeType: mimeType.value,
+                                                               completionHandler: self)
+                    } catch { }
+                }
             }
         }
     }
@@ -188,9 +196,7 @@
         dict["id"] = message.getID()
         dict["text"] = message.getText()
         if message.getAttachment() != nil {
-            do {
-                dict["url"] = try String(contentsOf: (message.getAttachment()?.getURL())!)
-            } catch { }
+            dict["url"] = (message.getAttachment()?.getURL())!.absoluteString
         }
         if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
             dict["sender"] = message.getSenderName()
@@ -214,9 +220,7 @@
         dict["id"] = message.getID()
         dict["text"] = message.getText()
         if message.getAttachment() != nil {
-            do {
-                dict["url"] = try String(contentsOf: (message.getAttachment()?.getURL())!)
-            } catch { }
+            dict["url"] = (message.getAttachment()?.getURL())!.absoluteString
         }
         if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
             dict["sender"] = message.getSenderName()
