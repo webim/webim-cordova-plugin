@@ -5,7 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
@@ -13,7 +13,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.webkit.MimeTypeMap;
 
 
 import com.google.gson.Gson;
@@ -28,18 +27,13 @@ import com.webimapp.android.sdk.Webim;
 import com.webimapp.android.sdk.WebimSession;
 import com.webimapp.android.sdk.Webim.SessionBuilder;
 import com.webimapp.android.sdk.WebimError;
-import com.webimapp.android.sdk.WebimLog;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WebimSDK extends CordovaPlugin {
-    public static final String DEFAULT_LOCATION = "mobile";
+    private static final String DEFAULT_LOCATION = "mobile";
 
     private Activity activity;
     private Context context;
@@ -63,62 +57,75 @@ public class WebimSDK extends CordovaPlugin {
     }
 
     @Override
-    public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, JSONArray data, CallbackContext callbackContext)
+            throws JSONException {
 
-        if (action.equals("init")) {
-            init(data.getJSONObject(0), callbackContext);
-            return true;
+        switch (action) {
+            case "init":
+                init(data.getJSONObject(0), callbackContext);
+                return true;
 
-        } else if (action.equals("sendMessage")) {
-            String message = data.getString(0);
-            sendMessage(message, callbackContext);
-            return true;
-        } else if (action.equals("requestDialog")) {
-            requestDialog(callbackContext);
-            return true;
-        } else if (action.equals("getMessagesHistory")) {
-            int limit = Integer.parseInt(data.getString(0));
-            int offset = Integer.parseInt(data.getString(1));
-            getMessagesHistory(limit, offset, callbackContext);
-            return true;
-        } else if (action.equals("typingMessage")) {
-            String message = data.getString(0);
-            typingMessage(message, callbackContext);
-            return true;
-        } else if (action.equals("sendFile")) {
-            String filePath = data.getString(0);
-            sendFile(filePath, callbackContext);
-            return true;
-        } else if (action.equals("onMessage")) {
-            receiveMessageCallback = callbackContext;
-            return true;
-        } else if (action.equals("onFile")) {
-            receiveFileCallback = callbackContext;
-            return true;
-        } else if (action.equals("onTyping")) {
-            typingMessageCallback = callbackContext;
-            return true;
-        } else if (action.equals("onConfirm")) {
-            confirmMessageCallback = callbackContext;
-            return true;
-        } else if (action.equals("onDialog")) {
-            dialogCallback = callbackContext;
-            return true;
-        } else if (action.equals("onBan")) {
-            banCallback = callbackContext;
-            return true;
-        } else if (action.equals("close")) {
-            close(callbackContext);
-            return true;
-        } else {
-            return false;
+            case "sendMessage":
+                String message = data.getString(0);
+                sendMessage(message, callbackContext);
+                return true;
+
+            case "requestDialog":
+                requestDialog(callbackContext);
+                return true;
+
+            case "getMessagesHistory":
+                int limit = Integer.parseInt(data.getString(0));
+                int offset = Integer.parseInt(data.getString(1));
+                getMessagesHistory(limit, offset, callbackContext);
+                return true;
+
+            case "typingMessage":
+                typingMessage(data.getString(0), callbackContext);
+                return true;
+
+            case "sendFile":
+                String filePath = data.getString(0);
+                sendFile(filePath, callbackContext);
+                return true;
+
+            case "onMessage":
+                receiveMessageCallback = callbackContext;
+                return true;
+
+            case "onFile":
+                receiveFileCallback = callbackContext;
+                return true;
+
+            case "onTyping":
+                typingMessageCallback = callbackContext;
+                return true;
+
+            case "onConfirm":
+                confirmMessageCallback = callbackContext;
+                return true;
+
+            case "onDialog":
+                dialogCallback = callbackContext;
+                return true;
+
+            case "onBan":
+                banCallback = callbackContext;
+                return true;
+
+            case "close":
+                close(callbackContext);
+                return true;
+
+            default:
+                return false;
         }
     }
 
     private void init(final JSONObject args, final CallbackContext callbackContext)
             throws JSONException {
         if (!args.has("accountName")) {
-            sendCallbackError(callbackContext, "{\"reult\":\"Missing required parameters\"}");
+            sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
             return;
         }
         SessionBuilder sessionBuilder = Webim.newSessionBuilder()
@@ -126,7 +133,7 @@ public class WebimSDK extends CordovaPlugin {
                 .setErrorHandler(new FatalErrorHandler() {
                     @Override
                     public void onError(@NonNull WebimError<FatalErrorType> error) {
-                        sendCallbackError(callbackContext, "{\"reult\":\"Fail\"}");
+                        sendCallbackError(callbackContext, "{\"result\":\"Fail\"}");
                         switch (error.getErrorType()) {
                             case ACCOUNT_BLOCKED:
                             case VISITOR_BANNED:
@@ -141,7 +148,10 @@ public class WebimSDK extends CordovaPlugin {
                     }
                 })
                 .setAccountName(args.getString("accountName"))
-                .setLocation(args.has("location") ? args.getString("location") : DEFAULT_LOCATION);
+                .setLocation(args.has("location")
+                        ? args.getString("location")
+                        : DEFAULT_LOCATION);
+
         if (args.has("visitorFields")) {
             sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
         }
@@ -153,10 +163,11 @@ public class WebimSDK extends CordovaPlugin {
                 sendNotificationCallbackResult(typingMessageCallback, "");
             }
         });
-        session.getStream().setCurrentOperatorChangeListener(new MessageStream.CurrentOperatorChangeListener() {
+        session.getStream().setCurrentOperatorChangeListener(
+                new MessageStream.CurrentOperatorChangeListener() {
             @Override
             public void onOperatorChanged(@Nullable Operator oldOperator,
-                                   @Nullable Operator newOperator) {
+                                          @Nullable Operator newOperator) {
                 sendCallbackResult(dialogCallback,
                         ru.webim.plugin.models.DialogState.dialogStateFromEmployee(newOperator));
             }
@@ -195,11 +206,12 @@ public class WebimSDK extends CordovaPlugin {
         sendNotificationCallbackResult(callbackContext, msg);
     }
 
+    @SuppressLint("Recycle")
     private static String getFilePath(Context context, String fileUri) {
         Uri uri = Uri.parse(fileUri);
         if ("content".equalsIgnoreCase(uri.getScheme())) {
             String[] projection = {"_data"};
-            Cursor cursor = null;
+            Cursor cursor;
             try {
                 cursor = context.getContentResolver().query(uri, projection, null, null, null);
                 int column_index = cursor.getColumnIndexOrThrow("_data");
@@ -229,10 +241,9 @@ public class WebimSDK extends CordovaPlugin {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            final File fileToUpload = file;
-                            String mime = activity.getContentResolver().getType(Uri.fromFile(fileToUpload));
-                            session.getStream().sendFile(fileToUpload,
-                                    fileToUpload.getName(), "image/png", new MessageStream.SendFileCallback() {
+                            String mime = activity.getContentResolver().getType(Uri.fromFile(file));
+                            session.getStream().sendFile(file,
+                                    file.getName(), "image/png", new MessageStream.SendFileCallback() {
                                         @Override
                                         public void onProgress(@NonNull Message.Id id, long sentBytes) {
 
@@ -240,14 +251,14 @@ public class WebimSDK extends CordovaPlugin {
 
                                         @Override
                                         public void onSuccess(@NonNull Message.Id id) {
-                                            fileToUpload.delete();
+                                            file.delete();
                                             sendCallbackResult(callbackContext, id.toString());
                                         }
 
                                         @Override
                                         public void onFailure(@NonNull Message.Id id,
                                                               @NonNull WebimError<SendFileError> error) {
-                                            fileToUpload.delete();
+                                            file.delete();
                                             String msg;
                                             switch (error.getErrorType()) {
                                                 case FILE_TYPE_NOT_ALLOWED:
@@ -258,7 +269,7 @@ public class WebimSDK extends CordovaPlugin {
                                                     break;
                                                 case UPLOADED_FILE_NOT_FOUND:
                                                 default:
-                                                    msg = "unkown_error";
+                                                    msg = "unknown_error";
                                             }
                                             sendCallbackError(callbackContext, "{\"result\":\"" + msg + "\"}");
                                         }
@@ -270,22 +281,6 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
         }).start();
-    }
-
-    private static void writeFully(@NonNull File to, @NonNull InputStream from) throws IOException {
-        byte[] buffer = new byte[4096];
-        OutputStream out = null;
-        try {
-            out = new FileOutputStream(to);
-            for (int read; (read = from.read(buffer)) != -1; ) {
-                out.write(buffer, 0, read);
-            }
-        } finally {
-            from.close();
-            if (out != null) {
-                out.close();
-            }
-        }
     }
 
     private void typingMessage(String text, final CallbackContext callbackContext) {
@@ -373,9 +368,7 @@ public class WebimSDK extends CordovaPlugin {
     private class ListController implements MessageListener {
         private final MessageTracker tracker;
 
-        private boolean requestingMessages;
-
-        public ListController(MessageStream stream) {
+        ListController(MessageStream stream) {
             this.tracker = stream.newMessageTracker(this);
         }
 
@@ -384,14 +377,12 @@ public class WebimSDK extends CordovaPlugin {
                     = new MessageTracker.GetMessagesCallback() {
                 @Override
                 public void receive(@NonNull List<? extends Message> messagesList) {
-                    if (messagesList != null) {
-                        List<ru.webim.plugin.models.Message> messagesResult
-                                = new ArrayList<ru.webim.plugin.models.Message>();
-                        for (Message msg : messagesList) {
-                            messagesResult.add(ru.webim.plugin.models.Message.fromWebimMessage(msg));
-                        }
-                        sendCallbackResult(callbackContext, messagesResult);
+                    List<ru.webim.plugin.models.Message> messagesResult
+                            = new ArrayList<ru.webim.plugin.models.Message>();
+                    for (Message msg : messagesList) {
+                        messagesResult.add(ru.webim.plugin.models.Message.fromWebimMessage(msg));
                     }
+                    sendCallbackResult(callbackContext, messagesResult);
                 }
             };
             if (offset == 0) {

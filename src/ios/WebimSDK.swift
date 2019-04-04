@@ -92,23 +92,19 @@ import Photos
         let limit = command.arguments[0] as? Int
         let offset = command.arguments[1] as? Int
         var messagesSDK = [[String: Any]]()
+        let completionHandler: ([Message]) -> () = { [weak self] messages in
+            for message in messages {
+                messagesSDK.append((self?.messageToDictionary(message: message))!)
+            }
+            self?.sendCallbackResult(callbackId: callbackId!, resultArray: messagesSDK)
+        }
         if offset == 0 {
             do {
-                try messageTracker?.getLastMessages(byLimit: limit ?? 25) { [weak self] messages in
-                    for message in messages {
-                        messagesSDK.append((self?.messageToDictionary(message: message))!)
-                    }
-                    self?.sendCallbackResult(callbackId: callbackId!, resultArray: messagesSDK)
-                }
+                try messageTracker?.getLastMessages(byLimit: limit ?? 25, completion: completionHandler)
             } catch { }
         } else {
             do {
-                try messageTracker?.getNextMessages(byLimit: limit ?? 25) { [weak self] messages in
-                    for message in messages {
-                        messagesSDK.append((self?.messageToDictionary(message: message))!)
-                    }
-                    self?.sendCallbackResult(callbackId: callbackId!, resultArray: messagesSDK)
-                }
+                try messageTracker?.getNextMessages(byLimit: limit ?? 25, completion: completionHandler)
             } catch { }
         }
     }
@@ -192,21 +188,7 @@ import Photos
     }
 
     func messageToJSON(message: Message) -> String {
-        var dict = [String: Any]()
-        dict["id"] = message.getID()
-        dict["text"] = message.getText()
-        if message.getAttachment() != nil {
-            dict["url"] = (message.getAttachment()?.getURL())!.absoluteString
-        }
-        if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
-            dict["sender"] = message.getSenderName()
-        } else {
-            var `operator` = [String: String]()
-            `operator`["firstname"] = message.getSenderName()
-            `operator`["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
-            dict["operator"] = `operator`
-        }
-        dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
+        let dict = messageToDictionary(message: message)
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
@@ -219,8 +201,8 @@ import Photos
         var dict = [String: Any]()
         dict["id"] = message.getID()
         dict["text"] = message.getText()
-        if message.getAttachment() != nil {
-            dict["url"] = (message.getAttachment()?.getURL())!.absoluteString
+        if let attachment = message.getAttachment() {
+            dict["url"] = (attachment.getURL()).absoluteString
         }
         if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
             dict["sender"] = message.getSenderName()
@@ -272,7 +254,7 @@ import Photos
 
 extension WebimSDK : OperatorTypingListener {
     func onOperatorTypingStateChanged(isTyping: Bool) {
-        if onTypingCallbackId != nil {
+        if let onTypingCallbackId = onTypingCallbackId {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "")
             pluginResult?.setKeepCallbackAs(true)
             self.commandDelegate!.send(pluginResult, callbackId: onTypingCallbackId)
@@ -290,7 +272,7 @@ extension WebimSDK: MessageListener {
                 self.commandDelegate!.send(pluginResult, callbackId: onMessageCallbackId)
             }
         } else {
-            if onFileCallbackId != nil {
+            if let onFileCallbackId = onFileCallbackId {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newMessage))
                 pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onFileCallbackId)
@@ -309,13 +291,13 @@ extension WebimSDK: MessageListener {
     func changed(message oldVersion: Message, to newVersion: Message) {
         if newVersion.getType() != MessageType.FILE_FROM_OPERATOR
             && newVersion.getType() != MessageType.FILE_FROM_VISITOR {
-            if onConfirmCallbackId != nil {
+            if let onConfirmCallbackId = onConfirmCallbackId {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))
                 pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onConfirmCallbackId)
             }
         } else {
-            if onFileCallbackId != nil {
+            if let onFileCallbackId = onFileCallbackId {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))
                 pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onFileCallbackId)
@@ -367,6 +349,5 @@ extension WebimSDK : CurrentOperatorChangeListener {
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onDialogCallbackId)
     }
-
 
 }
