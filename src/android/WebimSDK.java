@@ -148,6 +148,10 @@ public class WebimSDK extends CordovaPlugin {
                     }
                 })
                 .setAccountName(args.getString("accountName"))
+				.setPushSystem(Webim.PushSystem.FCM)
+                .setPushToken(args.has("pushToken")
+				        ? args.getString("pushToken")
+						: "none")
                 .setLocation(args.has("location")
                         ? args.getString("location")
                         : DEFAULT_LOCATION);

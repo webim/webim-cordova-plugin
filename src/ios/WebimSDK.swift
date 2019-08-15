@@ -18,10 +18,14 @@ import Photos
         let args = command.arguments[0] as! NSDictionary
         let accountName = args["accountName"] as? String
         let location = args["location"] as? String
+		let deviceToken = args["pushToken"] as? String
         if let accountName = accountName {
             var sessionBuilder = Webim.newSessionBuilder()
                 .set(accountName: accountName)
                 .set(location: location ?? "mobile")
+				.set(fatalErrorHandler: self)
+				.set(remoteNotificationSystem: ((deviceToken != nil) ? .APNS : .NONE))
+                .set(deviceToken: deviceToken)
             if let visitorFields = args["visitorFields"] as? NSDictionary {
                 let jsonData = try? JSONSerialization.data(withJSONObject: visitorFields, options: [])
                 let jsonString = String(data: jsonData!, encoding: .utf8)
