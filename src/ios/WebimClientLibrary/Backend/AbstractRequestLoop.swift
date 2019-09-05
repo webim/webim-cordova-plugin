@@ -190,6 +190,9 @@ class AbstractRequestLoop {
                     + "\(parametersString ?? "") "
                     + "failed with HTTP code: \(httpCode).",
                     verbosityLevel: .WARNING)
+                if let receivedData = receivedData {
+                    return receivedData
+                }
             }
             
             errorCounter += 1

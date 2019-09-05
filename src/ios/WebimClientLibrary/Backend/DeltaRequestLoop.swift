@@ -181,6 +181,7 @@ class DeltaRequestLoop: AbstractRequestLoop {
             } else {
                 WebimInternalLogger.shared.log(entry: "Error de-serializing server response: \(String(data: data, encoding: .utf8) ?? "unreadable data").",
                     verbosityLevel: .WARNING)
+                handleInitialization(error: "500 error")
             }
         } catch let unknownError as UnknownError {
             handleRequestLoop(error: unknownError)
@@ -189,12 +190,12 @@ class DeltaRequestLoop: AbstractRequestLoop {
                 verbosityLevel: .WARNING)
         }
     }
-    
+
     func requestDelta() {
         let url = URL(string: getDeltaServerURLString() + "?" + getDeltaParameterString())
         var request = URLRequest(url: url!)
         request.httpMethod = AbstractRequestLoop.HTTPMethods.get.rawValue
-        
+
         do {
             let data = try perform(request: request)
             if let dataJSON = try? JSONSerialization.jsonObject(with: data) as! [String: Any] {
@@ -202,13 +203,13 @@ class DeltaRequestLoop: AbstractRequestLoop {
                     handleDeltaRequest(error: error)
                 } else {
                     let deltaResponse = DeltaResponse(jsonDictionary: dataJSON)
-                    
+
                     guard let revision = deltaResponse.getRevision() else {
                         // Delta timeout.
                         return
                     }
                     since = revision
-                    
+
                     if let fullUpdate = deltaResponse.getFullUpdate() {
                         completionHandlerExecutor.execute(task: DispatchWorkItem {
                             self.process(fullUpdate: fullUpdate)
@@ -224,6 +225,8 @@ class DeltaRequestLoop: AbstractRequestLoop {
             } else {
                 WebimInternalLogger.shared.log(entry: "Error de-serializing server response: \(String(data: data, encoding: .utf8) ?? "unreadable data").",
                     verbosityLevel: .WARNING)
+                handleDeltaRequest(error: "500 error")
+
             }
         } catch let unknownError as UnknownError {
             handleRequestLoop(error: unknownError)

@@ -10,11 +10,13 @@ import Photos
     var onDialogCallbackId: String?
     var onFileMessageErrorCallbackId: String?
     var onConfirmCallbackId: String?
+    var onFatalErrorCallbackId: String?
 
 
     func `init`(_ command: CDVInvokedUrlCommand) {
         var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
         let callbackId = command.callbackId
+        onFatalErrorCallbackId = callbackId
         let args = command.arguments[0] as! NSDictionary
         let accountName = args["accountName"] as? String
         let location = args["location"] as? String
@@ -42,6 +44,7 @@ import Photos
                 pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
             } catch { }
         }
+        pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(
             pluginResult,
             callbackId: callbackId
@@ -146,17 +149,32 @@ import Photos
     func sendFile(_ command: CDVInvokedUrlCommand) {
         onFileMessageErrorCallbackId = command.callbackId
         let url = URL(string: (command.arguments[0] as? String)!)
-        let fileName = url!.lastPathComponent
-        let mimeType = MimeType(url: url!)
+        var fileName = url!.lastPathComponent
+        var mimeType = MimeType(url: url!)
 
         let fetchResult = PHAsset.fetchAssets(withALAssetURLs: [url!], options: nil)
         if let phAsset = fetchResult.firstObject {
             PHImageManager.default().requestImageData(for: phAsset, options: nil) {
                 (imageData, dataURI, orientation, info) -> Void in
-                if let imageDataExists = imageData {
-                    print(imageDataExists)
+                if var imageData = imageData {
+                    let imageExtension = url!.pathExtension.lowercased()
+                    let image = UIImage(data: imageData)!
+                    if imageExtension == "jpg" || imageExtension == "jpeg" {
+                        imageData = UIImageJPEGRepresentation(image, 1.0)!
+                    } else if imageExtension == "heic" || imageExtension == "heif" {
+                        imageData = UIImageJPEGRepresentation(image, 0.5)!
+                        mimeType = MimeType()
+                        var components = fileName.components(separatedBy: ".")
+                        if components.count > 1 {
+                            components.removeLast()
+                            fileName = components.joined(separator: ".")
+                        }
+                        fileName += ".jpeg"
+                    } else {
+                        imageData = UIImagePNGRepresentation(image)!
+                    }
                     do {
-                        try _ = self.session?.getStream().send(file: imageDataExists,
+                        try _ = self.session?.getStream().send(file: imageData,
                                                                filename: fileName,
                                                                mimeType: mimeType.value,
                                                                completionHandler: self)
@@ -315,6 +333,7 @@ extension WebimSDK : FatalErrorHandler {
         let errorType = error.getErrorType()
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: true)
         pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onFatalErrorCallbackId)
         switch errorType {
         case .ACCOUNT_BLOCKED:
             self.commandDelegate!.send(pluginResult, callbackId: onBanCallbackId)
