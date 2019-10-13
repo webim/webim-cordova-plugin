@@ -491,6 +491,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
             WebimInternalLogger.shared.log(entry: "\($0)",
                 verbosityLevel: .DEBUG)
         }
+        createIndex()
     }
     
     private func createIndex() {
@@ -502,7 +503,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
             _ = try db?.run(SQLiteHistoryStorage
                 .history
                 .createIndex(SQLiteHistoryStorage.timestamp,
-                             unique: true))
+                             unique: true,
+                             ifNotExists: true))
         } catch {
             WebimInternalLogger.shared.log(entry: error.localizedDescription,
                                            verbosityLevel: .VERBOSE)
@@ -512,8 +514,6 @@ final class SQLiteHistoryStorage: HistoryStorage {
             WebimInternalLogger.shared.log(entry: "\($0)",
                 verbosityLevel: .DEBUG)
         }
-        
-        createIndex()
     }
     
     private func prepare() {

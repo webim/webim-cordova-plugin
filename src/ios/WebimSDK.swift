@@ -13,6 +13,7 @@ import Photos
     var onFatalErrorCallbackId: String?
 
 
+    @objc(init:)
     func `init`(_ command: CDVInvokedUrlCommand) {
         var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
         let callbackId = command.callbackId
@@ -333,7 +334,9 @@ extension WebimSDK : FatalErrorHandler {
         let errorType = error.getErrorType()
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: true)
         pluginResult?.setKeepCallbackAs(true)
-        self.commandDelegate!.send(pluginResult, callbackId: onFatalErrorCallbackId)
+        let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        errorPluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(errorPluginResult, callbackId: onFatalErrorCallbackId)
         switch errorType {
         case .ACCOUNT_BLOCKED:
             self.commandDelegate!.send(pluginResult, callbackId: onBanCallbackId)
