@@ -21,13 +21,13 @@ import Photos
         let args = command.arguments[0] as! NSDictionary
         let accountName = args["accountName"] as? String
         let location = args["location"] as? String
-		let deviceToken = args["pushToken"] as? String
+        let deviceToken = args["pushToken"] as? String
         if let accountName = accountName {
             var sessionBuilder = Webim.newSessionBuilder()
                 .set(accountName: accountName)
                 .set(location: location ?? "mobile")
-				.set(fatalErrorHandler: self)
-				.set(remoteNotificationSystem: ((deviceToken != nil) ? .APNS : .NONE))
+                .set(fatalErrorHandler: self)
+                .set(remoteNotificationSystem: ((deviceToken != nil) ? .APNS : .NONE))
                 .set(deviceToken: deviceToken)
             if let visitorFields = args["visitorFields"] as? NSDictionary {
                 let jsonData = try? JSONSerialization.data(withJSONObject: visitorFields, options: [])
@@ -52,30 +52,37 @@ import Photos
         )
     }
 
+    @objc(onMessage:)
     func onMessage(_ command: CDVInvokedUrlCommand) {
         onMessageCallbackId = command.callbackId
     }
 
+    @objc(onTyping:)
     func onTyping(_ command: CDVInvokedUrlCommand) {
         onTypingCallbackId = command.callbackId
     }
 
+    @objc(onConfirm:)
     func onConfirm(_ command: CDVInvokedUrlCommand) {
         onConfirmCallbackId = command.callbackId
     }
 
+    @objc(onFile:)
     func onFile(_ command: CDVInvokedUrlCommand) {
         onFileCallbackId = command.callbackId
     }
 
+    @objc(onBan:)
     func onBan(_ command: CDVInvokedUrlCommand) {
         onBanCallbackId = command.callbackId
     }
 
+    @objc(onDialog:)
     func onDialog(_ command: CDVInvokedUrlCommand) {
         onDialogCallbackId = command.callbackId
     }
 
+    @objc(close:)
     func close(_ command: CDVInvokedUrlCommand) {
         let callbackId = command.callbackId
         if session != nil {
@@ -95,6 +102,7 @@ import Photos
         }
     }
 
+    @objc(getMessagesHistory:)
     func getMessagesHistory(_ command: CDVInvokedUrlCommand) {
         let callbackId = command.callbackId
         let limit = command.arguments[0] as? Int
@@ -117,6 +125,7 @@ import Photos
         }
     }
 
+    @objc(typingMessage:)
     func typingMessage(_ command: CDVInvokedUrlCommand) {
         let callbackId = command.callbackId
         let userMessage = command.arguments[0] as? String
@@ -127,6 +136,7 @@ import Photos
         sendCallbackResult(callbackId: callbackId!)
     }
 
+    @objc(requestDialog:)
     func requestDialog(_ command: CDVInvokedUrlCommand) {
         do {
             try session?.getStream().startChat()
@@ -134,6 +144,7 @@ import Photos
         } catch { }
     }
 
+    @objc(sendMessage:)
     func sendMessage(_ command: CDVInvokedUrlCommand) {
         let callbackId = command.callbackId
         let userMessage = command.arguments[0]
@@ -147,6 +158,7 @@ import Photos
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
 
+    @objc(sendFile:)
     func sendFile(_ command: CDVInvokedUrlCommand) {
         onFileMessageErrorCallbackId = command.callbackId
         let url = URL(string: (command.arguments[0] as? String)!)
