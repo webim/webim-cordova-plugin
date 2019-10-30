@@ -29,7 +29,6 @@ import Photos
                 .set(fatalErrorHandler: self)
                 .set(remoteNotificationSystem: ((deviceToken != nil) ? .APNS : .NONE))
                 .set(deviceToken: deviceToken)
-                .set(isLocalHistoryStoragingEnabled: false)
             if let visitorFields = args["visitorFields"] as? NSDictionary {
                 let jsonData = try? JSONSerialization.data(withJSONObject: visitorFields, options: [])
                 let jsonString = String(data: jsonData!, encoding: .utf8)
