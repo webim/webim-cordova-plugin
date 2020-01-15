@@ -245,39 +245,46 @@ public class WebimSDK extends CordovaPlugin {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            String mime = activity.getContentResolver().getType(Uri.fromFile(file));
-                            session.getStream().sendFile(file,
-                                    file.getName(), "image/png", new MessageStream.SendFileCallback() {
-                                        @Override
-                                        public void onProgress(@NonNull Message.Id id, long sentBytes) {
+                            try {
+                                String mime = activity.getContentResolver().getType(Uri.fromFile(file));
+                                if (mime == null) {
+                                    mime = "image/png";
+                                }
+                                session.getStream().sendFile(file,
+                                        file.getName(), mime, new MessageStream.SendFileCallback() {
+                                            @Override
+                                            public void onProgress(@NonNull Message.Id id, long sentBytes) {
 
-                                        }
-
-                                        @Override
-                                        public void onSuccess(@NonNull Message.Id id) {
-                                            file.delete();
-                                            sendCallbackResult(callbackContext, id.toString());
-                                        }
-
-                                        @Override
-                                        public void onFailure(@NonNull Message.Id id,
-                                                              @NonNull WebimError<SendFileError> error) {
-                                            file.delete();
-                                            String msg;
-                                            switch (error.getErrorType()) {
-                                                case FILE_TYPE_NOT_ALLOWED:
-                                                    msg = "file_type_not_allowed";
-                                                    break;
-                                                case FILE_SIZE_EXCEEDED:
-                                                    msg = "file_size_exceeded";
-                                                    break;
-                                                case UPLOADED_FILE_NOT_FOUND:
-                                                default:
-                                                    msg = "unknown_error";
                                             }
-                                            sendCallbackError(callbackContext, "{\"result\":\"" + msg + "\"}");
-                                        }
-                                    });
+
+                                            @Override
+                                            public void onSuccess(@NonNull Message.Id id) {
+                                                file.delete();
+                                                sendCallbackResult(callbackContext, id.toString());
+                                            }
+
+                                            @Override
+                                            public void onFailure(@NonNull Message.Id id,
+                                                                  @NonNull WebimError<SendFileError> error) {
+                                                file.delete();
+                                                String msg;
+                                                switch (error.getErrorType()) {
+                                                    case FILE_TYPE_NOT_ALLOWED:
+                                                        msg = "file_type_not_allowed";
+                                                        break;
+                                                    case FILE_SIZE_EXCEEDED:
+                                                        msg = "file_size_exceeded";
+                                                        break;
+                                                    case UPLOADED_FILE_NOT_FOUND:
+                                                    default:
+                                                        msg = "unknown_error";
+                                                }
+                                                sendCallbackError(callbackContext, "{\"result\":\"" + msg + "\"}");
+                                            }
+                                        });
+                            } catch (Exception e) {
+                                sendCallbackError(callbackContext, e.getMessage());
+                            }
                         }
                     });
                 } catch (Exception e) {
