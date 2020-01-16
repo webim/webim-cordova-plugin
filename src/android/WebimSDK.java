@@ -232,6 +232,17 @@ public class WebimSDK extends CordovaPlugin {
         return fileUri;
     }
 
+    public static String getMimeType(Context context, Uri uri) {
+        String extension = null;
+        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            final MimeTypeMap mime = MimeTypeMap.getSingleton();
+            extension = mime.getExtensionFromMimeType(context.getContentResolver().getType(uri));
+        } else {
+            extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
+        }
+        return extension != null ? MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase()) : null;
+    }
+
     private void sendFile(final String fileUri, final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
@@ -246,7 +257,8 @@ public class WebimSDK extends CordovaPlugin {
                         @Override
                         public void run() {
                             try {
-                                String mime = activity.getContentResolver().getType(Uri.fromFile(file));
+                                Uri uri = Uri.fromFile(file);
+                                String mime = getMimeType(context, uri);
                                 if (mime == null) {
                                     mime = "image/png";
                                 }
