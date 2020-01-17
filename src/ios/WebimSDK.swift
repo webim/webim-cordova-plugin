@@ -239,6 +239,11 @@ import Photos
         dict["text"] = message.getText()
         if let attachment = message.getAttachment() {
             dict["url"] = (attachment.getURL()).absoluteString
+            if let imageInfo = attachment.getImageInfo() {
+                dict["thumbUrl"] = (imageInfo.getThumbURL()).absoluteString
+                dict["imageWidth"] = imageInfo.getWidth()
+                dict["imageHeight"] = imageInfo.getHeight()
+            }
         }
         if message.getType() != .FILE_FROM_OPERATOR && message.getType() != .OPERATOR {
             dict["sender"] = message.getSenderName()
