@@ -296,7 +296,7 @@ import Photos
 extension WebimSDK : OperatorTypingListener {
     func onOperatorTypingStateChanged(isTyping: Bool) {
         if let onTypingCallbackId = onTypingCallbackId {
-            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "")
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: isTyping)
             pluginResult?.setKeepCallbackAs(true)
             self.commandDelegate!.send(pluginResult, callbackId: onTypingCallbackId)
         }
