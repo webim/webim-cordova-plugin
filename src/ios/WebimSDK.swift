@@ -1,6 +1,7 @@
 import Photos
 
 @objc(WebimSDK) class WebimSDK : CDVPlugin {
+    
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
     var onMessageCallbackId: String?
@@ -408,8 +409,12 @@ class WebimFile {
             var resultMimeType = self.mimeType
         var resultFileName = self.fileName
         
-        if (isImage(contentType: self.mimeType.value)) {
-            let imageExtension = self.url.pathExtension.lowercased()
+        let imageExtension = self.url.pathExtension.lowercased()
+        if (imageExtension != "jpg"
+            && imageExtension != "jpeg"
+            && imageExtension != "png"
+            && isImage(contentType: self.mimeType.value)) {
+            
             let image = UIImage(data: self.data)!
             if imageExtension == "heic" || imageExtension == "heif" {
                 resultData = UIImageJPEGRepresentation(image, 0.5)!
@@ -420,9 +425,7 @@ class WebimFile {
                     resultFileName = components.joined(separator: ".")
                 }
                 resultFileName += ".jpeg"
-            } else if imageExtension != "jpg"
-                && imageExtension != "jpeg"
-                && imageExtension != "png" {
+            } else {
                 resultData = UIImagePNGRepresentation(image)!
             }
         }
