@@ -162,37 +162,28 @@ import Photos
     @objc(sendFile:)
     func sendFile(_ command: CDVInvokedUrlCommand) {
         onFileMessageErrorCallbackId = command.callbackId
-        let url = URL(string: (command.arguments[0] as? String)!)
-        var fileName = url!.lastPathComponent
-        var mimeType = MimeType(url: url!)
+        guard let url = URL(string: (command.arguments[0] as? String)!), let session = session else {
+            return
+        }
 
-        let fetchResult = PHAsset.fetchAssets(withALAssetURLs: [url!], options: nil)
+        let fetchResult = PHAsset.fetchAssets(withALAssetURLs: [url], options: nil)
         if let phAsset = fetchResult.firstObject {
             PHImageManager.default().requestImageData(for: phAsset, options: nil) {
                 (imageData, dataURI, orientation, info) -> Void in
-                if var imageData = imageData {
-                    let imageExtension = url!.pathExtension.lowercased()
-                    let image = UIImage(data: imageData)!
-                    if imageExtension == "jpg" || imageExtension == "jpeg" {
-                        imageData = UIImageJPEGRepresentation(image, 1.0)!
-                    } else if imageExtension == "heic" || imageExtension == "heif" {
-                        imageData = UIImageJPEGRepresentation(image, 0.5)!
-                        mimeType = MimeType()
-                        var components = fileName.components(separatedBy: ".")
-                        if components.count > 1 {
-                            components.removeLast()
-                            fileName = components.joined(separator: ".")
+                if let imageData = imageData {
+                    let file = WebimFile(url: url, data: imageData)
+                    file.send(session: session, completionHandler: self) { error in
+                        if let error = error {
+                            print("Error while sending a file: \(error).")
                         }
-                        fileName += ".jpeg"
-                    } else {
-                        imageData = UIImagePNGRepresentation(image)!
                     }
-                    do {
-                        try _ = self.session?.getStream().send(file: imageData,
-                                                               filename: fileName,
-                                                               mimeType: mimeType.value,
-                                                               completionHandler: self)
-                    } catch { }
+                }
+            }
+        } else if let data = try? Data(contentsOf: url) {
+            let file = WebimFile(url: url, data: data)
+            file.send(session: session, completionHandler: self) { error in
+                if let error = error {
+                    print("Error while sending a file: \(error).")
                 }
             }
         }
@@ -393,5 +384,71 @@ extension WebimSDK : CurrentOperatorChangeListener {
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onDialogCallbackId)
     }
+}
 
+class WebimFile {
+    
+    let data: Data
+    let fileName: String
+    let mimeType: MimeType
+    let url: URL
+    
+    init(url fileUrl: URL, data fileData: Data) {
+        self.data = fileData
+        self.fileName = fileUrl.lastPathComponent
+        self.mimeType = MimeType(url: fileUrl)
+        self.url = fileUrl
+    }
+    
+    private func sendInternal(session: WebimSession,
+              completionHandler: SendFileCompletionHandler?,
+              completion: @escaping (Error?) -> Void) {
+        
+        var resultData = self.data
+            var resultMimeType = self.mimeType
+        var resultFileName = self.fileName
+        
+        if (isImage(contentType: self.mimeType.value)) {
+            let imageExtension = self.url.pathExtension.lowercased()
+            let image = UIImage(data: self.data)!
+            if imageExtension == "jpg" || imageExtension == "jpeg" {
+                resultData = UIImageJPEGRepresentation(image, 1.0)!
+            } else if imageExtension == "heic" || imageExtension == "heif" {
+                resultData = UIImageJPEGRepresentation(image, 0.5)!
+                resultMimeType = MimeType()
+                var components = self.fileName.components(separatedBy: ".")
+                if components.count > 1 {
+                    components.removeLast()
+                    resultFileName = components.joined(separator: ".")
+                }
+                resultFileName += ".jpeg"
+            } else {
+                resultData = UIImagePNGRepresentation(image)!
+            }
+        }
+        
+        // Run in main thread to prevent INVALID_THREAD error
+        DispatchQueue.main.async {
+            do {
+                try _ = session.getStream().send(file: resultData,
+                                                 filename: resultFileName,
+                                                 mimeType: resultMimeType.value,
+                                                 completionHandler: completionHandler)
+                completion(nil)
+            } catch {
+                completion(error)
+            }
+        }
+    }
+    
+    func send(session: WebimSession,
+              completionHandler: SendFileCompletionHandler?,
+              completion: @escaping (Error?) -> Void) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.sendInternal(session: session,
+                              completionHandler: completionHandler,
+                              completion: completion)
+        }
+    }
 }
