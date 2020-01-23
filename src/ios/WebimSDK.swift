@@ -411,9 +411,7 @@ class WebimFile {
         if (isImage(contentType: self.mimeType.value)) {
             let imageExtension = self.url.pathExtension.lowercased()
             let image = UIImage(data: self.data)!
-            if imageExtension == "jpg" || imageExtension == "jpeg" {
-                resultData = UIImageJPEGRepresentation(image, 1.0)!
-            } else if imageExtension == "heic" || imageExtension == "heif" {
+            if imageExtension == "heic" || imageExtension == "heif" {
                 resultData = UIImageJPEGRepresentation(image, 0.5)!
                 resultMimeType = MimeType()
                 var components = self.fileName.components(separatedBy: ".")
@@ -422,7 +420,9 @@ class WebimFile {
                     resultFileName = components.joined(separator: ".")
                 }
                 resultFileName += ".jpeg"
-            } else {
+            } else if imageExtension != "jpg"
+                && imageExtension != "jpeg"
+                && imageExtension != "png" {
                 resultData = UIImagePNGRepresentation(image)!
             }
         }
