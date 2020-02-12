@@ -7,12 +7,14 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.webkit.MimeTypeMap;
 
 
 import com.google.gson.Gson;
@@ -164,7 +166,9 @@ public class WebimSDK extends CordovaPlugin {
         session.getStream().setOperatorTypingListener(new MessageStream.OperatorTypingListener() {
             @Override
             public void onOperatorTypingStateChanged(boolean isTyping) {
-                sendNotificationCallbackResult(typingMessageCallback, "");
+                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, isTyping);
+                pluginResult.setKeepCallback(true);
+                typingMessageCallback.sendPluginResult(pluginResult);
             }
         });
         session.getStream().setCurrentOperatorChangeListener(
@@ -232,6 +236,17 @@ public class WebimSDK extends CordovaPlugin {
         return fileUri;
     }
 
+    public static String getMimeType(Context context, Uri uri) {
+        String extension = null;
+        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            final MimeTypeMap mime = MimeTypeMap.getSingleton();
+            extension = mime.getExtensionFromMimeType(context.getContentResolver().getType(uri));
+        } else {
+            extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
+        }
+        return extension != null ? MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase()) : null;
+    }
+
     private void sendFile(final String fileUri, final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
@@ -246,7 +261,8 @@ public class WebimSDK extends CordovaPlugin {
                         @Override
                         public void run() {
                             try {
-                                String mime = activity.getContentResolver().getType(Uri.fromFile(file));
+                                Uri uri = Uri.fromFile(file);
+                                String mime = getMimeType(context, uri);
                                 if (mime == null) {
                                     mime = "image/png";
                                 }
