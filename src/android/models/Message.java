@@ -4,6 +4,9 @@ public class Message {
     public String id;
     public String text;
     public String url;
+    public int imageWidth;
+    public int imageHeight;
+    public String thumbUrl;
     public String timestamp;
     public String sender;
     public Employee operator;
@@ -34,9 +37,20 @@ public class Message {
             resultMessage.operator = Employee.getEmployeeFromParams(message.getSenderName(),
                     message.getSenderAvatarUrl());
         }
-        if (message.getAttachment() != null) {
-            resultMessage.url = message.getAttachment().getUrl();
+        com.webimapp.android.sdk.Message.Attachment attachment = message.getAttachment();
+        if (attachment != null) {
+            if(resultMessage.text.trim().isEmpty()) {
+                resultMessage.text = attachment.getFileName();
+            }
+            resultMessage.url = attachment.getUrl();
+            com.webimapp.android.sdk.Message.ImageInfo imageInfo = attachment.getImageInfo();
+            if (imageInfo != null) {
+                resultMessage.thumbUrl = imageInfo.getThumbUrl();
+                resultMessage.imageWidth = imageInfo.getWidth();
+                resultMessage.imageHeight = imageInfo.getHeight();
+            }
         }
+
         resultMessage.timestamp = Long.toString(message.getTime());
 
         return resultMessage;
