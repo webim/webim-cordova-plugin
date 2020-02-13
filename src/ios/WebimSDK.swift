@@ -167,20 +167,7 @@ import Photos
             return
         }
 
-        let fetchResult = PHAsset.fetchAssets(withALAssetURLs: [url], options: nil)
-        if let phAsset = fetchResult.firstObject {
-            PHImageManager.default().requestImageData(for: phAsset, options: nil) {
-                (imageData, dataURI, orientation, info) -> Void in
-                if let imageData = imageData {
-                    let file = WebimFile(url: url, data: imageData)
-                    file.send(session: session, completionHandler: self) { error in
-                        if let error = error {
-                            print("Error while sending a file: \(error).")
-                        }
-                    }
-                }
-            }
-        } else if let data = try? Data(contentsOf: url) {
+        if let data = try? Data(contentsOf: url) {
             let file = WebimFile(url: url, data: data)
             file.send(session: session, completionHandler: self) { error in
                 if let error = error {
