@@ -81,4 +81,7 @@ enum WebimInternalError: String, Error {
     // Rate operator errors
     case noChat = "no-chat"
     case operatorNotInChat = "operator-not-in-chat"
+
+    // Send Dialog errors
+    case sentTooManyTimes = "chat-history-sent-too-many-times"
 }

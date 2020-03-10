@@ -509,6 +509,23 @@ public protocol MessageStream: class {
      2018 Webim
      */
     func setChatRead() throws
+
+    /**
+     Send current dialog to email address.
+     - parameter emailAddress:
+     Email addres for sending.
+     - parameter completionHandler:
+     Completion handler that executes when operation is done.
+     - throws:
+     `AccessError.INVALID_THREAD` if the method was called not from the thread the WebimSession was created in.
+     `AccessError.INVALID_SESSION` if WebimSession was destroyed.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2020 Webim
+     */
+    func sendDialogTo(emailAddress: String,
+                      completionHandler: SendDialogToEmailAddressCompletionHandler?) throws
     
     /**
      `MessageTracker` (via `MessageTracker.getNextMessages(byLimit:completion:)`) allows to request the messages which are above in the history. Each next call `MessageTracker.getNextMessages(byLimit:completion:)` returns earlier messages in relation to the already requested ones.
@@ -858,6 +875,40 @@ public protocol RateOperatorCompletionHandler: class {
      */
     func onFailure(error: RateOperatorError)
     
+}
+
+/**
+ - seealso:
+ `MessageStream.sendDialogTo(emailAddress:completionHandler:)`.
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2020 Webim
+ */
+public protocol SendDialogToEmailAddressCompletionHandler: class {
+
+    /**
+     Executed when operation is done successfully.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2020 Webim
+     */
+    func onSuccess()
+
+    /**
+     Executed when operation is failed.
+     - parameter error:
+     Error.
+     - seealso:
+     `SendDialogToEmailAddressError`.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2020 Webim
+     */
+    func onFailure(error: SendDialogToEmailAddressError)
+
 }
 
 /**
@@ -1616,4 +1667,41 @@ public enum RateOperatorError: Error {
      */
     case WRONG_OPERATOR_ID
     
+}
+
+/**
+- seealso:
+`SendDialogToEmailAddressCompletionHandler.onFailure(error:)`
+- author:
+Nikita Kaberov
+- copyright:
+2020 Webim
+*/
+public enum SendDialogToEmailAddressError: Error {
+    /**
+     There is no chat to send it to the email address.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2020 Webim
+     */
+    case NO_CHAT
+
+    /**
+     Exceeded sending attempts.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2020 Webim
+     */
+    case SENT_TOO_MANY_TIMES
+
+    /**
+     An unexpected error occurred while sending.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2020 Webim
+     */
+    case UNKNOWN
 }

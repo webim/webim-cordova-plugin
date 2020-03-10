@@ -40,10 +40,10 @@ public class Message {
         com.webimapp.android.sdk.Message.Attachment attachment = message.getAttachment();
         if (attachment != null) {
             if(resultMessage.text.trim().isEmpty()) {
-                resultMessage.text = attachment.getFileName();
+                resultMessage.text = attachment.getFileInfo().getFileName();
             }
-            resultMessage.url = attachment.getUrl();
-            com.webimapp.android.sdk.Message.ImageInfo imageInfo = attachment.getImageInfo();
+            resultMessage.url = attachment.getFileInfo().getUrl();
+            com.webimapp.android.sdk.Message.ImageInfo imageInfo = attachment.getFileInfo().getImageInfo();
             if (imageInfo != null) {
                 resultMessage.thumbUrl = imageInfo.getThumbUrl();
                 resultMessage.imageWidth = imageInfo.getWidth();

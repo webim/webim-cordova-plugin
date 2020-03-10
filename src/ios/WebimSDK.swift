@@ -12,6 +12,8 @@ import Photos
     var onFileMessageErrorCallbackId: String?
     var onConfirmCallbackId: String?
     var onFatalErrorCallbackId: String?
+    var onRateOperatorCallbackId: String?
+    var sendDialogToEmailAddressId: String?
 
 
     @objc(init:)
@@ -175,6 +177,27 @@ import Photos
                 }
             }
         }
+    }
+
+    @objc(rateOperator:)
+    func rateOperator(_ command: CDVInvokedUrlCommand) {
+        onRateOperatorCallbackId = command.callbackId
+        let operatorId = command.arguments[0] as? String
+        let rating = command.arguments[1] as? Int
+        do {
+            try session?.getStream().rateOperatorWith(id: operatorId,
+                                                      byRating: rating ?? -1,
+                                                      comletionHandler: self)
+        } catch { }
+    }
+
+    @objc(sendDialogToEmailAddress:)
+    func sendDialogToEmailAddress(_ command: CDVInvokedUrlCommand) {
+        let emailAddress = command.arguments[0] as? String
+        sendDialogToEmailAddressId = command.callbackId
+        do {
+            try session?.getStream().sendDialogTo(emailAddress: emailAddress ?? "", completionHandler: SendDialogToEmailAddressCompletionImpl(webimSDK: self))
+        } catch { }
     }
 
     private func sendCallbackResult(callbackId: String) {
@@ -351,9 +374,25 @@ extension WebimSDK : FatalErrorHandler {
     }
 }
 
+extension WebimSDK: RateOperatorCompletionHandler {
+    func onSuccess() {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onRateOperatorCallbackId)
+    }
+
+    func onFailure(error: RateOperatorError) {
+        let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        errorPluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(errorPluginResult, callbackId: onRateOperatorCallbackId)
+    }
+
+
+}
+
 extension WebimSDK : SendFileCompletionHandler {
     func onSuccess(messageID: String) {
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onFileMessageErrorCallbackId)
     }
@@ -372,6 +411,29 @@ extension WebimSDK : CurrentOperatorChangeListener {
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onDialogCallbackId)
     }
+}
+
+class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletionHandler {
+
+    let webimSDK: WebimSDK
+
+    init(webimSDK: WebimSDK) {
+        self.webimSDK = webimSDK;
+    }
+
+    func onSuccess() {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(pluginResult, callbackId: webimSDK.sendDialogToEmailAddressId)
+    }
+
+    func onFailure(error: SendDialogToEmailAddressError) {
+        let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        errorPluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(errorPluginResult, callbackId: webimSDK.onRateOperatorCallbackId)
+    }
+
+
 }
 
 class WebimFile {

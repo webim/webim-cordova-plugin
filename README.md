@@ -19,6 +19,8 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-confirm">method onConfirm</a></p>
 <p style="padding-left: 30px;"><a href="#on-dialog">method onDialog</a></p>
 <p style="padding-left: 30px;"><a href="#on-ban">method onBan</a></p>
+<p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
+<p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
 <p style="padding-left: 30px;"><a href="#close">method close</a></p>
 
 <a href="#objects">Objects</a>
@@ -105,6 +107,19 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Success callback called when the visitor is baned.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="rateOperator" style="padding-left: 30px;"><b>method webimsdk.rateOperator(id, rating, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Rates an operator.</p>
+<p style="padding-left: 60px;"><em>id</em> parameter — operator id. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>rating</em> parameter — a number in range (1...5) that represents an operator rating. If the number is out of range, rating will not be sent to a server. Type — <em>Int</em>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="sendDialogToEmailAddress" style="padding-left: 30px;"><b>method webimsdk.sendDialogToEmailAddress(emailAddress, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Rates an operator.</p>
+<p style="padding-left: 60px;"><em>emailAddress</em> parameter — send dialog to this email address. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
 <h4 id="close" style="padding-left: 30px;"><b>method webimsdk.close(succesCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Close session and stop session network activity.</p>

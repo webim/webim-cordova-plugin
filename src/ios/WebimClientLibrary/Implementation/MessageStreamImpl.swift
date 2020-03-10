@@ -505,6 +505,16 @@ extension MessageStreamImpl: MessageStream {
         
         webimActions.setChatRead()
     }
+
+    func sendDialogTo(emailAddress: String,
+                      completionHandler: SendDialogToEmailAddressCompletionHandler?) throws {
+        try accessChecker.checkAccess()
+        if !lastChatState.isClosed() {
+            webimActions.sendDialogTo(emailAddress: emailAddress, completionHandler: completionHandler)
+        } else {
+            completionHandler?.onFailure(error: .NO_CHAT)
+        }
+    }
     
     func set(prechatFields: String) throws {
         try accessChecker.checkAccess()

@@ -49,6 +49,8 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext confirmMessageCallback;
     private CallbackContext dialogCallback;
     private CallbackContext banCallback;
+    private CallbackContext rateOperatorCallback;
+    private CallbackContext sendDialogToEmailAddressCallback;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -117,6 +119,17 @@ public class WebimSDK extends CordovaPlugin {
 
             case "close":
                 close(callbackContext);
+                return true;
+
+            case "rateOperator":
+                String id = data.getString(0);
+                int rating = Integer.parseInt(data.getString(1));
+                rateOperator(id, rating, callbackContext);
+                return true;
+
+            case "sendDialogToEmailAddress":
+                String emailAddress = data.getString(0);
+                sendDialogToEmailAddress(emailAddress, callbackContext);
                 return true;
 
             default:
@@ -335,6 +348,65 @@ public class WebimSDK extends CordovaPlugin {
         session = null;
         sendCallbackResult(callbackContext, "{\"result\":\"WebimSession Close\"}");
 
+    }
+
+    private void rateOperator(String id, int rating, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        rateOperatorCallback = callbackContext;
+        session.getStream().rateOperator(id, rating, new MessageStream.RateOperatorCallback() {
+            @Override
+            public void onSuccess() {
+                sendCallbackResult(rateOperatorCallback, "{\"result\":\"Rate operator successfully.\"}");
+            }
+
+            @Override
+            public void onFailure(@NonNull WebimError<RateOperatorError> error) {
+                switch (error.getErrorType()) {
+                    case NO_CHAT:
+                        sendCallbackError(rateOperatorCallback, "{\"result\":\"No chat.\"}");
+                        break;
+                    case OPERATOR_NOT_IN_CHAT:
+                        sendCallbackError(rateOperatorCallback, "{\"result\":\"this operator does not belong to existing chat.\"}");
+                        break;
+                    default:
+                        sendCallbackError(rateOperatorCallback, "{\"result\":\"Unknown send dialog to email address error.\"}");
+                        break;
+                }
+            }
+        });
+    }
+
+    private void sendDialogToEmailAddress(String emailAddress, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        sendDialogToEmailAddressCallback = callbackContext;
+        session.getStream().sendDialogToEmailAddress(emailAddress,
+                new MessageStream.SendDialogToEmailAddressCallback() {
+                    @Override
+                    public void onSuccess() {
+                        sendCallbackResult(sendDialogToEmailAddressCallback , "{\"result\":\"Dialog sent to email address.\"}");
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull WebimError<SendDialogToEmailAddressError> error) {
+                        switch (error.getErrorType()) {
+                            case NO_CHAT:
+                                sendCallbackError(sendDialogToEmailAddressCallback, "{\"result\":\"No chat.\"}");
+                                break;
+                            case SENT_TOO_MANY_TIMES:
+                                sendCallbackError(sendDialogToEmailAddressCallback, "{\"result\":\"Sent too many times.\"}");
+                                break;
+                            case UNKNOWN:
+                                sendCallbackError(sendDialogToEmailAddressCallback, "{\"result\":\"Unknown send dialog to email address error.\"}");
+                                break;
+                        }
+                    }
+                });
     }
 
     private void sendNoResult(CallbackContext callbackContext) {
