@@ -40,10 +40,10 @@ module.exports = {
     close: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "close", []);
     },
-    rateOperator: function (successCallback, errorCallback) {
+    rateOperator: function (id, rating, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "rateOperator", [id, rating]);
     },
-    sendDialogToEmailAddress: function (successCallback, errorCallback) {
+    sendDialogToEmailAddress: function (emailAddress, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendDialogToEmailAddress", [emailAddress]);
     }
 };

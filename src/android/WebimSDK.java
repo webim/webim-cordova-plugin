@@ -193,8 +193,9 @@ public class WebimSDK extends CordovaPlugin {
                         ru.webim.plugin.models.DialogState.dialogStateFromEmployee(newOperator));
             }
         });
+        session.getStream().setChatStateListener((oldState, newState)
+                -> sendNotificationCallbackResult(callbackContext, "{\"result\":\"Success\"}"));
         session.resume();
-        sendNotificationCallbackResult(callbackContext, "{\"result\":\"Success\"}");
     }
 
     private void getMessagesHistory(int limit, int offset, final CallbackContext callbackContext) {
