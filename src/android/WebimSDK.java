@@ -51,6 +51,7 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext banCallback;
     private CallbackContext rateOperatorCallback;
     private CallbackContext sendDialogToEmailAddressCallback;
+    private CallbackContext onUnreadByVisitorMessageCountCallback;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -132,6 +133,10 @@ public class WebimSDK extends CordovaPlugin {
                 sendDialogToEmailAddress(emailAddress, callbackContext);
                 return true;
 
+            case "onUnreadByVisitorMessageCount":
+                onUnreadByVisitorMessageCountCallback = callbackContext;
+                return true;
+
             default:
                 return false;
         }
@@ -155,6 +160,12 @@ public class WebimSDK extends CordovaPlugin {
                                 if (banCallback != null) {
                                     sendNotificationCallbackResult(banCallback,
                                             "{\"result\":\"Visitor is banned\"}");
+                                }
+                                break;
+                            case WRONG_PROVIDED_VISITOR_HASH:
+                                if (banCallback != null) {
+                                    sendNotificationCallbackResult(banCallback,
+                                            "{\"result\":\"Wrong provided visitor hash\"}");
                                 }
                                 break;
                             default:
@@ -191,6 +202,12 @@ public class WebimSDK extends CordovaPlugin {
                                           @Nullable Operator newOperator) {
                 sendCallbackResult(dialogCallback,
                         ru.webim.plugin.models.DialogState.dialogStateFromEmployee(newOperator));
+            }
+        });
+        session.getStream().setUnreadByVisitorMessageCountChangeListener(new MessageStream.UnreadByVisitorMessageCountChangeListener() {
+            @Override
+            public void onUnreadByVisitorMessageCountChanged(int newMessageCount) {
+                sendNotificationCallbackResult(onUnreadByVisitorMessageCountCallback, "{\"unreadByVisitorMessageCount\":" + newMessageCount + "}");
             }
         });
         session.getStream().setChatStateListener((oldState, newState)

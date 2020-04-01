@@ -14,6 +14,7 @@ import Photos
     var onFatalErrorCallbackId: String?
     var onRateOperatorCallbackId: String?
     var sendDialogToEmailAddressId: String?
+    var onUnreadByVisitorMessageCountId: String?
 
 
     @objc(init:)
@@ -44,6 +45,7 @@ import Photos
                 session = try sessionBuilder.build()
                 session?.getStream().set(operatorTypingListener:self)
                 session?.getStream().set(currentOperatorChangeListener: self)
+                session?.getStream().set(unreadByVisitorMessageCountChangeListener: self)
                 try messageTracker = session?.getStream().newMessageTracker(messageListener: self)
                 try session?.resume()
                 pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
@@ -84,6 +86,11 @@ import Photos
     @objc(onDialog:)
     func onDialog(_ command: CDVInvokedUrlCommand) {
         onDialogCallbackId = command.callbackId
+    }
+
+    @objc(onUnreadByVisitorMessageCount:)
+    func onUnreadByVisitorMessageCount(_ command: CDVInvokedUrlCommand) {
+        onUnreadByVisitorMessageCountId = command.callbackId
     }
 
     @objc(close:)
@@ -362,6 +369,7 @@ extension WebimSDK : FatalErrorHandler {
             self.commandDelegate!.send(pluginResult, callbackId: onBanCallbackId)
             break
         case .PROVIDED_VISITOR_FIELDS_EXPIRED:
+            self.commandDelegate!.send(pluginResult, callbackId: onBanCallbackId)
             break
         case .UNKNOWN:
             break
@@ -369,6 +377,7 @@ extension WebimSDK : FatalErrorHandler {
             self.commandDelegate!.send(pluginResult, callbackId: onBanCallbackId)
             break
         case .WRONG_PROVIDED_VISITOR_HASH:
+            self.commandDelegate!.send(pluginResult, callbackId: onBanCallbackId)
             break
         }
     }
@@ -411,6 +420,16 @@ extension WebimSDK : CurrentOperatorChangeListener {
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onDialogCallbackId)
     }
+}
+
+extension WebimSDK: UnreadByVisitorMessageCountChangeListener {
+    func changedUnreadByVisitorMessageCountTo(newValue: Int) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"unreadByVisitorMessageCount\":" + String(newValue) + "}")
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onUnreadByVisitorMessageCountId)
+    }
+
+
 }
 
 class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletionHandler {

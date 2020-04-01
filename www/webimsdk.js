@@ -45,5 +45,8 @@ module.exports = {
     },
     sendDialogToEmailAddress: function (emailAddress, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendDialogToEmailAddress", [emailAddress]);
+    },
+    onUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onUnreadByVisitorMessageCount", [])
     }
 };

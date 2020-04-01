@@ -21,6 +21,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-ban">method onBan</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
 <p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
+<p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#close">method close</a></p>
 
 <a href="#objects">Objects</a>
@@ -120,6 +121,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;"><em>emailAddress</em> parameter — send dialog to this email address. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="on-unread-by-visitor-message-count" style="padding-left: 30px;"><b>method webimsdk.onUnreadByVisitorMessage(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when operator send new message.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> is executed when value of unread by visitor message count changed. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="close" style="padding-left: 30px;"><b>method webimsdk.close(succesCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Close session and stop session network activity.</p>
