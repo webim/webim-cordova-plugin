@@ -19,6 +19,9 @@ import Photos
 
     @objc(init:)
     func `init`(_ command: CDVInvokedUrlCommand) {
+        if session != nil {
+            closeInternal()
+        }
         var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
         let callbackId = command.callbackId
         onFatalErrorCallbackId = callbackId
@@ -95,21 +98,36 @@ import Photos
 
     @objc(close:)
     func close(_ command: CDVInvokedUrlCommand) {
-        let callbackId = command.callbackId
+        closeInternal(command)
+    }
+
+    private func closeInternal(_ command: CDVInvokedUrlCommand? = nil) {
+        let callbackId = command?.callbackId
         if session != nil {
             do {
+                try messageTracker?.destroy()
                 try session?.destroy()
             } catch { }
             session = nil
+            messageTracker = nil
             onMessageCallbackId = nil
             onTypingCallbackId = nil
             onFileCallbackId = nil
             onBanCallbackId = nil
             onDialogCallbackId = nil
             onFileMessageErrorCallbackId = nil
-            sendCallbackResult(callbackId: callbackId!)
+            onConfirmCallbackId = nil
+            onFatalErrorCallbackId = nil
+            onRateOperatorCallbackId = nil
+            sendDialogToEmailAddressId = nil
+            onUnreadByVisitorMessageCountId = nil
+            if let callbackId = callbackId {
+                sendCallbackResult(callbackId: callbackId)
+            }
         } else {
-            sendCallbackError(callbackId: callbackId!)
+            if let callbackId = callbackId {
+                sendCallbackError(callbackId: callbackId)
+            }
         }
     }
 

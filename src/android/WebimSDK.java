@@ -144,6 +144,9 @@ public class WebimSDK extends CordovaPlugin {
 
     private void init(final JSONObject args, final CallbackContext callbackContext)
             throws JSONException {
+        if (session != null) {
+            close(null);
+        }
         if (!args.has("accountName")) {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
             return;
@@ -361,9 +364,16 @@ public class WebimSDK extends CordovaPlugin {
         receiveMessageCallback = null;
         receiveFileCallback = null;
         typingMessageCallback = null;
+        confirmMessageCallback = null;
+        dialogCallback = null;
+        banCallback = null;
+        rateOperatorCallback = null;
+        sendDialogToEmailAddressCallback = null;
+        onUnreadByVisitorMessageCountCallback = null;
 
         session.destroy();
         session = null;
+        listController = null;
         sendCallbackResult(callbackContext, "{\"result\":\"WebimSession Close\"}");
 
     }
