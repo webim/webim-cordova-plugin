@@ -52,6 +52,7 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext rateOperatorCallback;
     private CallbackContext sendDialogToEmailAddressCallback;
     private CallbackContext onUnreadByVisitorMessageCountCallback;
+    private CallbackContext onDeletedMessageCallback;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -96,6 +97,10 @@ public class WebimSDK extends CordovaPlugin {
 
             case "onMessage":
                 receiveMessageCallback = callbackContext;
+                return true;
+
+            case "onDeletedMessage":
+                onDeletedMessageCallback = callbackContext;
                 return true;
 
             case "onFile":
@@ -370,6 +375,7 @@ public class WebimSDK extends CordovaPlugin {
         rateOperatorCallback = null;
         sendDialogToEmailAddressCallback = null;
         onUnreadByVisitorMessageCountCallback = null;
+        onDeletedMessageCallback = null;
 
         session.destroy();
         session = null;
@@ -537,7 +543,8 @@ public class WebimSDK extends CordovaPlugin {
 
         @Override
         public void messageRemoved(@NonNull Message message) {
-
+            sendNotificationCallbackResult(onDeletedMessageCallback,
+                    ru.webim.plugin.models.Message.fromWebimMessage(message));
         }
 
         @Override

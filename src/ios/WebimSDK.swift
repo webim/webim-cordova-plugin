@@ -13,8 +13,9 @@ import Photos
     var onConfirmCallbackId: String?
     var onFatalErrorCallbackId: String?
     var onRateOperatorCallbackId: String?
-    var sendDialogToEmailAddressId: String?
-    var onUnreadByVisitorMessageCountId: String?
+    var sendDialogToEmailAddressCallbackId: String?
+    var onUnreadByVisitorMessageCountCallbackId: String?
+    var onDeletedMessageCallbackId: String?
 
 
     @objc(init:)
@@ -66,6 +67,11 @@ import Photos
         onMessageCallbackId = command.callbackId
     }
 
+    @objc(onDeletedMessage:)
+    func onDeletedMessage(_ command: CDVInvokedUrlCommand) {
+        onDeletedMessageCallbackId = command.callbackId
+    }
+
     @objc(onTyping:)
     func onTyping(_ command: CDVInvokedUrlCommand) {
         onTypingCallbackId = command.callbackId
@@ -93,7 +99,7 @@ import Photos
 
     @objc(onUnreadByVisitorMessageCount:)
     func onUnreadByVisitorMessageCount(_ command: CDVInvokedUrlCommand) {
-        onUnreadByVisitorMessageCountId = command.callbackId
+        onUnreadByVisitorMessageCountCallbackId = command.callbackId
     }
 
     @objc(close:)
@@ -119,8 +125,9 @@ import Photos
             onConfirmCallbackId = nil
             onFatalErrorCallbackId = nil
             onRateOperatorCallbackId = nil
-            sendDialogToEmailAddressId = nil
-            onUnreadByVisitorMessageCountId = nil
+            sendDialogToEmailAddressCallbackId = nil
+            onUnreadByVisitorMessageCountCallbackId = nil
+            onDeletedMessageCallbackId = nil
             if let callbackId = callbackId {
                 sendCallbackResult(callbackId: callbackId)
             }
@@ -219,7 +226,7 @@ import Photos
     @objc(sendDialogToEmailAddress:)
     func sendDialogToEmailAddress(_ command: CDVInvokedUrlCommand) {
         let emailAddress = command.arguments[0] as? String
-        sendDialogToEmailAddressId = command.callbackId
+        sendDialogToEmailAddressCallbackId = command.callbackId
         do {
             try session?.getStream().sendDialogTo(emailAddress: emailAddress ?? "", completionHandler: SendDialogToEmailAddressCompletionImpl(webimSDK: self))
         } catch { }
@@ -349,7 +356,9 @@ extension WebimSDK: MessageListener {
     }
 
     func removed(message: Message) {
-
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: message))
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onDeletedMessageCallbackId)
     }
 
     func removedAllMessages() {
@@ -444,7 +453,7 @@ extension WebimSDK: UnreadByVisitorMessageCountChangeListener {
     func changedUnreadByVisitorMessageCountTo(newValue: Int) {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"unreadByVisitorMessageCount\":" + String(newValue) + "}")
         pluginResult?.setKeepCallbackAs(true)
-        self.commandDelegate!.send(pluginResult, callbackId: onUnreadByVisitorMessageCountId)
+        self.commandDelegate!.send(pluginResult, callbackId: onUnreadByVisitorMessageCountCallbackId)
     }
 
 
@@ -461,7 +470,7 @@ class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletion
     func onSuccess() {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
         pluginResult?.setKeepCallbackAs(true)
-        webimSDK.commandDelegate!.send(pluginResult, callbackId: webimSDK.sendDialogToEmailAddressId)
+        webimSDK.commandDelegate!.send(pluginResult, callbackId: webimSDK.sendDialogToEmailAddressCallbackId)
     }
 
     func onFailure(error: SendDialogToEmailAddressError) {

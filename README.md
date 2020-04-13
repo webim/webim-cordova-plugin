@@ -14,6 +14,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#send-message">method sendMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-file">method sendFile</a></p>
 <p style="padding-left: 30px;"><a href="#on-message">method onMessage</a></p>
+<p style="padding-left: 30px;"><a href="#on-deleted-message">method onDeletedMessage</a></p>
 <p style="padding-left: 30px;"><a href="#on-file">method onFile</a></p>
 <p style="padding-left: 30px;"><a href="#on-typing">method onTyping</a></p>
 <p style="padding-left: 30px;"><a href="#on-confirm">method onConfirm</a></p>
@@ -81,6 +82,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 
 <h4 id="on-message" style="padding-left: 30px;"><b>method webimsdk.onMessage(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback called when added a new operator message, a new system message or sending visitor message.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(message)</em> is executed when the method is successfully completed. <em>message</em> parameter contains message, type — <a href="#message"><em>Message</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="on-deleted-message" style="padding-left: 30px;"><b>method webimsdk.onDeletedMessage(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when deleted a message.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(message)</em> is executed when the method is successfully completed. <em>message</em> parameter contains message, type — <a href="#message"><em>Message</em></a>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 

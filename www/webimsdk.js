@@ -22,6 +22,9 @@ module.exports = {
     onMessage: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onMessage", []);
     },
+    onDeletedMessage: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onDeletedMessage", []);
+    },
     onFile: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onFile", []);
     },
