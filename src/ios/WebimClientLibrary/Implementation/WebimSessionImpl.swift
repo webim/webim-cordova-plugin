@@ -25,7 +25,6 @@
 //
 
 import Foundation
-import UIKit
 
 // MARK: - Constants
 fileprivate enum UserDefaultsName: String {
@@ -99,8 +98,7 @@ final class WebimSessionImpl {
                                 isLocalHistoryStoragingEnabled: Bool,
                                 isVisitorDataClearingEnabled: Bool,
                                 webimLogger: WebimLogger?,
-                                verbosityLevel: SessionBuilder.WebimLoggerVerbosityLevel?,
-                                prechat: String?) -> WebimSessionImpl {
+                                verbosityLevel: SessionBuilder.WebimLoggerVerbosityLevel?) -> WebimSessionImpl {
         WebimInternalLogger.setup(webimLogger: webimLogger,
                                   verbosityLevel: verbosityLevel)
         
@@ -156,7 +154,6 @@ final class WebimSessionImpl {
             .set(title: (pageTitle ?? DefaultSettings.pageTitle.rawValue))
             .set(deviceToken: deviceToken)
             .set(deviceID: getDeviceID())
-            .set(prechat: prechat)
             .build() as WebimClient
         
         var historyStorage: HistoryStorage
@@ -219,6 +216,7 @@ final class WebimSessionImpl {
                                               currentChatMessageFactoriesMapper: currentChatMessageMapper,
                                               sendingMessageFactory: SendingFactory(withServerURLString: serverURLString),
                                               operatorFactory: OperatorFactory(withServerURLString: serverURLString),
+                                              surveyFactory: SurveyFactory(),
                                               accessChecker: accessChecker,
                                               webimActions: webimActions,
                                               messageHolder: messageHolder,
@@ -367,7 +365,7 @@ extension WebimSessionImpl: WebimSession {
         }
         
         try checkAccess()
-        
+
         sessionDestroyer.destroy()
         WebimSessionImpl.clearVisitorDataFor(userDefaultsKey: sessionDestroyer.getUserDefaulstKey())
     }
@@ -645,7 +643,7 @@ final private class DestroyOnFatalErrorListener: InternalErrorListener {
             internalErrorListener?.on(error: error)
         }
     }
-    
+
 }
 
 // MARK: -
@@ -743,5 +741,5 @@ final private class HistoryMetaInformationStoragePreferences: HistoryMetaInforma
             }
         }
     }
-    
+
 }

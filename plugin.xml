@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<plugin id="ru.webim.sdk" version="1.3.0" xmlns="http://www.phonegap.com/ns/plugins/1.0">
+<plugin id="ru.webim.sdk" version="1.4.0" xmlns="http://www.phonegap.com/ns/plugins/1.0">
 
     <name>WebimSDK</name>
 
@@ -29,6 +29,16 @@
             target-dir="src/ru/webim/plugin/models" />
         <source-file src="src/android/models/Employee.java"
             target-dir="src/ru/webim/plugin/models" />
+        <source-file src="src/android/models/Survey.java"
+            target-dir="src/ru/webim/plugin/models" />
+        <source-file src="src/android/models/SurveyConfig.java"
+            target-dir="src/ru/webim/plugin/models" />
+        <source-file src="src/android/models/SurveyCurrentQuestionInfo.java"
+            target-dir="src/ru/webim/plugin/models" />
+        <source-file src="src/android/models/SurveyForm.java"
+            target-dir="src/ru/webim/plugin/models" />
+        <source-file src="src/android/models/SurveyQuestion.java"
+            target-dir="src/ru/webim/plugin/models" />
     </platform>
 
     <platform name="ios">
@@ -49,6 +59,7 @@
         <source-file src="src/ios/WebimClientLibrary/MessageTracker.swift" />
         <source-file src="src/ios/WebimClientLibrary/Operator.swift" />
         <source-file src="src/ios/WebimClientLibrary/ProvidedAuthorizationTokenStateListener.swift" />
+        <source-file src="src/ios/WebimClientLibrary/Survey.swift" />
         <source-file src="src/ios/WebimClientLibrary/Webim.swift" />
         <source-file src="src/ios/WebimClientLibrary/WebimClientLibrary.h" />
         <source-file src="src/ios/WebimClientLibrary/WebimError.swift" />
@@ -61,6 +72,7 @@
         <source-file src="src/ios/WebimClientLibrary/Implementation/MessageStreamImpl.swift" />
         <source-file src="src/ios/WebimClientLibrary/Implementation/MessageTrackerImpl.swift" />
         <source-file src="src/ios/WebimClientLibrary/Implementation/OperatorImpl.swift" />
+        <source-file src="src/ios/WebimClientLibrary/Implementation/SurveyImpl.swift" />
         <source-file src="src/ios/WebimClientLibrary/Implementation/WebimErrorImpl.swift" />
         <source-file src="src/ios/WebimClientLibrary/Implementation/WebimRemoteNotificationImpl.swift" />
         <source-file src="src/ios/WebimClientLibrary/Implementation/WebimSessionImpl.swift" />
@@ -87,6 +99,7 @@
         <source-file src="src/ios/WebimClientLibrary/Backend/SessionDestroyer.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/SessionParametersListener.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/SQLiteHistoryStorage.swift" />
+        <source-file src="src/ios/WebimClientLibrary/Backend/SurveyController.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/WebimActions.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/WebimClient.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/WebimInternalError.swift" />
@@ -97,6 +110,8 @@
         <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/InternalUtils.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/MessageFactories.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/OperatorFactory.swift" />
+        <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/SendSurveyAnswerCompletionHandlerWrapper.swift" />
+        <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/SurveyFactory.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/Extensions/Array.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/Extensions/Collection.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Utilities/Extensions/Dictionary.swift" />
@@ -111,6 +126,7 @@
         <source-file src="src/ios/WebimClientLibrary/Backend/Items/OnlineStatusItem.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Items/OperatorItem.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Items/RatingItem.swift" />
+        <source-file src="src/ios/WebimClientLibrary/Backend/Items/SurveyItem.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Items/VisitorItem.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Items/VisitSessionStateItem.swift" />
         <source-file src="src/ios/WebimClientLibrary/Backend/Items/Deltas/DeltaItem.swift" />

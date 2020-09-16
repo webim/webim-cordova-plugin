@@ -19,6 +19,12 @@ module.exports = {
     sendFile: function (filePath, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendFile", [filePath]);
     },
+    sendSurveyAnswer: function (surveyAnswer, successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "sendSurveyAnswer", [surveyAnswer]);
+    },
+    cancelSurvey: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "cancelSurvey", []);
+    },
     onMessage: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onMessage", []);
     },
@@ -51,5 +57,14 @@ module.exports = {
     },
     onUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onUnreadByVisitorMessageCount", [])
+    },
+    onSurvey: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onSurvey", [])
+    },
+    onNextQuestion: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onNextQuestion", [])
+    },
+    onSurveyCancel: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onSurveyCancel", [])
     }
 };

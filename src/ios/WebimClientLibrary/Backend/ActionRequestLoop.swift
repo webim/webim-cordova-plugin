@@ -168,11 +168,23 @@ class ActionRequestLoop: AbstractRequestLoop {
                             self.handleDeleteMessage(error: error,
                                                     ofRequest: request)
                             break
-                         case WebimInternalError.sentTooManyTimes.rawValue:
-                             self.handleSendDialogResponse(error: error,
-                                                           ofRequest: request)
+                        case WebimInternalError.sentTooManyTimes.rawValue:
+                            self.handleSendDialogResponse(error: error,
+                                                          ofRequest: request)
 
-                             break
+                            break
+                        case WebimInternalError.surveyDisabled.rawValue,
+                             WebimInternalError.noCurrentSurvey.rawValue,
+                             WebimInternalError.incorrectSurveyID.rawValue,
+                             WebimInternalError.incorrectStarsValue.rawValue,
+                             WebimInternalError.maxCommentLenghtExceeded.rawValue,
+                             WebimInternalError.questionNotFound.rawValue:
+                            self.handleSendSurveyAnswer(error: error,
+                                                        ofRequest: request)
+                            self.handleSurveyClose(error: error,
+                                                   ofRequest: request)
+
+                            break
                         default:
                             self.running = false
                             
@@ -393,6 +405,62 @@ class ActionRequestLoop: AbstractRequestLoop {
          }
      }
 
+    private func handleSendSurveyAnswer(error errorString: String,
+                                        ofRequest webimRequest: WebimRequest) {
+        if let sendSurveyAnswerCompletionHandler = webimRequest.getSendSurveyAnswerCompletionHandler() {
+            completionHandlerExecutor.execute(task: DispatchWorkItem {
+                let sendSurveyAnswerError: SendSurveyAnswerError
+                switch errorString {
+                case WebimInternalError.surveyDisabled.rawValue:
+                    sendSurveyAnswerError = .surveyDisabled
+                    break
+                case WebimInternalError.noCurrentSurvey.rawValue:
+                    sendSurveyAnswerError = .noCurrentSurvey
+                    break
+                case WebimInternalError.incorrectSurveyID.rawValue:
+                    sendSurveyAnswerError = .incorrectSurveyID
+                    break
+                case WebimInternalError.incorrectStarsValue.rawValue:
+                    sendSurveyAnswerError = .incorrectStarsValue
+                    break
+                case WebimInternalError.maxCommentLenghtExceeded.rawValue:
+                    sendSurveyAnswerError = .maxCommentLength_exceeded
+                    break
+                case WebimInternalError.questionNotFound.rawValue:
+                    sendSurveyAnswerError = .questionNotFound
+                    break
+                default:
+                    sendSurveyAnswerError = .unknown
+                }
+
+                sendSurveyAnswerCompletionHandler.onFailure(error: sendSurveyAnswerError)
+            })
+        }
+    }
+
+    private func handleSurveyClose(error errorString: String,
+                                    ofRequest webimRequest: WebimRequest) {
+        if let surveyCloseCompletionHandler = webimRequest.getSurveyCloseCompletionHandler() {
+            completionHandlerExecutor.execute(task: DispatchWorkItem {
+                let surveyCloseError: SurveyCloseError
+                switch errorString {
+                case WebimInternalError.surveyDisabled.rawValue:
+                    surveyCloseError = .surveyDisabled
+                    break
+                case WebimInternalError.noCurrentSurvey.rawValue:
+                    surveyCloseError = .noCurrentSurvey
+                    break
+                case WebimInternalError.incorrectSurveyID.rawValue:
+                    surveyCloseError = .incorrectSurveyID
+                    break
+                default:
+                    surveyCloseError = .unknown
+                }
+
+                surveyCloseCompletionHandler.onFailure(error: surveyCloseError)
+            })
+        }
+    }
     
     private func handleWrongArgumentValueError(ofRequest webimRequest: WebimRequest) {
         WebimInternalLogger.shared.log(entry: "Request \(webimRequest.getBaseURLString()) with parameters \(webimRequest.getPrimaryData().stringFromHTTPParameters()) failed with error \(WebimInternalError.wrongArgumentValue.rawValue)",

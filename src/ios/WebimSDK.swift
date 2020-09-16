@@ -16,6 +16,9 @@ import Photos
     var sendDialogToEmailAddressCallbackId: String?
     var onUnreadByVisitorMessageCountCallbackId: String?
     var onDeletedMessageCallbackId: String?
+    var onSurveyCallbackId: String?
+    var onNextQuestionCallbackId: String?
+    var onSurveyCancelCallbackId: String?
 
 
     @objc(init:)
@@ -50,6 +53,7 @@ import Photos
                 session?.getStream().set(operatorTypingListener:self)
                 session?.getStream().set(currentOperatorChangeListener: self)
                 session?.getStream().set(unreadByVisitorMessageCountChangeListener: self)
+                self.session?.getStream().set(surveyListener: self)
                 try messageTracker = session?.getStream().newMessageTracker(messageListener: self)
                 try session?.resume()
                 pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
@@ -102,6 +106,21 @@ import Photos
         onUnreadByVisitorMessageCountCallbackId = command.callbackId
     }
 
+    @objc(onSurvey:)
+    func onSurvey(_ command: CDVInvokedUrlCommand) {
+        onSurveyCallbackId = command.callbackId
+    }
+
+    @objc(onNextQuestion:)
+    func onNextQuestion(_ command: CDVInvokedUrlCommand) {
+        onNextQuestionCallbackId = command.callbackId
+    }
+
+    @objc(onSurveyCancel:)
+    func onSurveyCancel(_ command: CDVInvokedUrlCommand) {
+        onSurveyCancelCallbackId = command.callbackId
+    }
+
     @objc(close:)
     func close(_ command: CDVInvokedUrlCommand) {
         closeInternal(command)
@@ -128,6 +147,9 @@ import Photos
             sendDialogToEmailAddressCallbackId = nil
             onUnreadByVisitorMessageCountCallbackId = nil
             onDeletedMessageCallbackId = nil
+            onSurveyCallbackId = nil
+            onNextQuestionCallbackId = nil
+            onSurveyCancelCallbackId = nil
             if let callbackId = callbackId {
                 sendCallbackResult(callbackId: callbackId)
             }
@@ -209,6 +231,21 @@ import Photos
                 }
             }
         }
+    }
+
+    @objc(sendSurveyAnswer:)
+    func sendSurveyAnswer(_ command: CDVInvokedUrlCommand) {
+        let surveyAnswer = command.arguments[0] as? String ?? ""
+        do {
+            try session?.getStream().send(surveyAnswer: surveyAnswer, completionHandler: nil)
+        } catch { }
+    }
+
+    @objc(cancelSurvey:)
+    func cancelSurvey(_ command: CDVInvokedUrlCommand) {
+        do {
+            try session?.getStream().closeSurvey(completionHandler: nil)
+        } catch { }
     }
 
     @objc(rateOperator:)
@@ -317,6 +354,49 @@ import Photos
         employee["firstname"] = op?.getName()
         employee["avatar"] = op?.getAvatarURL()?.absoluteString
         dict["employee"] = employee
+
+        if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
+                                                      options: .prettyPrinted),
+            let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
+            return JSONText
+        }
+        return "";
+    }
+
+    func surveyToJSON(survey: Survey) -> String {
+        var dict = [String: Any]()
+        dict["id"] = survey.getID()
+        var config = [String: String]()
+        config["id"] = String(survey.getConfig().getID())
+        config["version"] = survey.getConfig().getVersion()
+        dict["config"] = config
+        var currentQuestionInfo = [String: String]()
+        currentQuestionInfo["formId"] = String(survey.getCurrentQuestionInfo().getFormID())
+        currentQuestionInfo["questionId"] = String(survey.getCurrentQuestionInfo().getQuestionID())
+        dict["currentQuestionInfo"] = currentQuestionInfo
+
+        if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
+                                                      options: .prettyPrinted),
+            let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
+            return JSONText
+        }
+        return "";
+    }
+
+    func nextQuestionToJSON(nextQuestion: SurveyQuestion) -> String {
+        var dict = [String: Any]()
+        switch nextQuestion.getType() {
+        case .radio:
+            dict["type"] = "radio"
+            break
+        case .comment:
+            dict["type"] = "comment"
+            break
+        case .stars:
+            dict["type"] = "stars"
+            break
+        }
+        dict["text"] = nextQuestion.getText()
 
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
@@ -454,6 +534,28 @@ extension WebimSDK: UnreadByVisitorMessageCountChangeListener {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"unreadByVisitorMessageCount\":" + String(newValue) + "}")
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onUnreadByVisitorMessageCountCallbackId)
+    }
+
+
+}
+
+extension WebimSDK: SurveyListener {
+    func on(survey: Survey) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: surveyToJSON(survey: survey))
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onSurveyCallbackId)
+    }
+
+    func on(nextQuestion: SurveyQuestion) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: nextQuestionToJSON(nextQuestion: nextQuestion))
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onNextQuestionCallbackId)
+    }
+
+    func onSurveyCancelled() {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"")
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onSurveyCallbackId)
     }
 
 

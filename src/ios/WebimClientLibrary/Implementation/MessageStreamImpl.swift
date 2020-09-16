@@ -55,6 +55,7 @@ final class MessageStreamImpl {
     var lastOperatorTypingStatus: Bool?
     weak var locationSettingsChangeListener: LocationSettingsChangeListener?
     var operatorFactory: OperatorFactory
+    var surveyFactory: SurveyFactory
     weak var operatorTypingListener: OperatorTypingListener?
     var onlineStatus: OnlineStatusItem = .unknown
     weak var onlineStatusChangeListener: OnlineStatusChangeListener?
@@ -66,12 +67,14 @@ final class MessageStreamImpl {
     weak var unreadByVisitorTimestampChangeListener: UnreadByVisitorTimestampChangeListener?
     var visitSessionState: VisitSessionStateItem = .unknown
     weak var visitSessionStateListener: VisitSessionStateListener?
+    var surveyController: SurveyController?
     
     // MARK: - Initialization
     init(serverURLString: String,
          currentChatMessageFactoriesMapper: MessageMapper,
          sendingMessageFactory: SendingFactory,
          operatorFactory: OperatorFactory,
+         surveyFactory: SurveyFactory,
          accessChecker: AccessChecker,
          webimActions: WebimActions,
          messageHolder: MessageHolder,
@@ -81,6 +84,7 @@ final class MessageStreamImpl {
         self.currentChatMessageFactoriesMapper = currentChatMessageFactoriesMapper
         self.sendingMessageFactory = sendingMessageFactory
         self.operatorFactory = operatorFactory
+        self.surveyFactory = surveyFactory
         self.accessChecker = accessChecker
         self.webimActions = webimActions
         self.messageHolder = messageHolder
@@ -227,6 +231,20 @@ final class MessageStreamImpl {
         departmentListChangeListener?.received(departmentList: departmentList)
     }
     
+    func onReceived(surveyItem: SurveyItem) {
+        if let surveyController = surveyController,
+            let survey = surveyFactory.createSurveyFrom(surveyItem: surveyItem) {
+            surveyController.set(survey: survey)
+            surveyController.nextQuestion()
+        }
+    }
+
+    func onSurveyCancelled() {
+        if let surveyController = surveyController {
+            surveyController.cancelSurvey()
+        }
+    }
+    
     // MARK: Private methods
     
     func publicState(ofChatState chatState: ChatItem.ChatItemState) -> ChatState {
@@ -326,7 +344,7 @@ extension MessageStreamImpl: MessageStream {
         
         return ((rating == nil) ? 0 : rating!.getRating())
     }
-    
+
     
     func rateOperatorWith(id: String?,
                           byRating rating: Int,
@@ -418,7 +436,7 @@ extension MessageStreamImpl: MessageStream {
     func send(message: String) throws -> String {
         return try sendMessageInternally(messageText: message)
     }
-    
+
     func send(message: String,
               data: [String: Any]?,
               completionHandler: DataMessageCompletionHandler?) throws -> String {
@@ -449,14 +467,14 @@ extension MessageStreamImpl: MessageStream {
         
         let messageID = ClientSideID.generateClientSideID()
         messageHolder.sending(message: sendingMessageFactory.createFileMessageToSendWith(id: messageID))
-        
+
         webimActions.send(file: file,
                           filename: filename,
                           mimeType: mimeType,
                           clientSideID: messageID,
                           completionHandler: SendFileCompletionHandlerWrapper(sendFileCompletionHandler: completionHandler,
                                                                               messageHolder: messageHolder))
-        
+
         return messageID
     }
     
@@ -528,6 +546,33 @@ extension MessageStreamImpl: MessageStream {
         return try messageHolder.newMessageTracker(withMessageListener: messageListener) as MessageTracker
     }
     
+    func send(surveyAnswer: String, completionHandler: SendSurveyAnswerCompletionHandler?) throws {
+        try accessChecker.checkAccess()
+        
+        guard let surveyController = surveyController,
+            let survey = surveyController.getSurvey() else { return }
+
+        let formID = surveyController.getCurrentFormPointer()
+        let questionID = surveyController.getCurrentQuestionPointer()
+        let surveyID = survey.getID()
+        webimActions.sendQuestionAnswer(surveyID: surveyID,
+                                        formID: formID,
+                                        questionID: questionID,
+                                        surveyAnswer: surveyAnswer,
+                                        sendSurveyAnswerCompletionHandler: SendSurveyAnswerCompletionHandlerWrapper(surveyController: surveyController,
+                                                                                                                    sendSurveyAnswerCompletionHandler: completionHandler))
+    }
+    
+    func closeSurvey(completionHandler: SurveyCloseCompletionHandler?) throws {
+        try accessChecker.checkAccess()
+        
+        guard let surveyController = surveyController,
+            let survey = surveyController.getSurvey() else { return }
+        
+        webimActions.closeSurvey(surveyID: survey.getID(),
+                                 surveyCloseCompletionHandler: completionHandler)
+    }
+    
     func set(visitSessionStateListener: VisitSessionStateListener) {
         self.visitSessionStateListener = visitSessionStateListener
     }
@@ -566,6 +611,10 @@ extension MessageStreamImpl: MessageStream {
     
     func set(unreadByVisitorTimestampChangeListener: UnreadByVisitorTimestampChangeListener) {
         self.unreadByVisitorTimestampChangeListener = unreadByVisitorTimestampChangeListener
+    }
+    
+    func set(surveyListener: SurveyListener) {
+        self.surveyController = SurveyController(surveyListener: surveyListener)
     }
     
     // MARK: Private methods

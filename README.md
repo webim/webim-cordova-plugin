@@ -13,6 +13,8 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#typing-message">method typingMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-message">method sendMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-file">method sendFile</a></p>
+<p style="padding-left: 30px;"><a href="#send-survey-answer">method sendSurveyAnswer</a></p>
+<p style="padding-left: 30px;"><a href="#cancel-survey">method cancelSurvey</a></p>
 <p style="padding-left: 30px;"><a href="#on-message">method onMessage</a></p>
 <p style="padding-left: 30px;"><a href="#on-deleted-message">method onDeletedMessage</a></p>
 <p style="padding-left: 30px;"><a href="#on-file">method onFile</a></p>
@@ -20,6 +22,9 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-confirm">method onConfirm</a></p>
 <p style="padding-left: 30px;"><a href="#on-dialog">method onDialog</a></p>
 <p style="padding-left: 30px;"><a href="#on-ban">method onBan</a></p>
+<p style="padding-left: 30px;"><a href="#on-survey">method onSurvey</a></p>
+<p style="padding-left: 30px;"><a href="#on-next-question">method onNextQuestion</a></p>
+<p style="padding-left: 30px;"><a href="#on-survey-cancel">method onSurveyCancel</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
 <p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
 <p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
@@ -28,7 +33,11 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <a href="#objects">Objects</a>
 <p style="padding-left: 30px;"><a href="#message">Message</a></p>
 <p style="padding-left: 30px;"><a href="#dialog-state">DialogState</a></p>
-<p style="padding-left: 30px;"><a href="#Employee">Employee</a></p>
+<p style="padding-left: 30px;"><a href="#employee">Employee</a></p>
+<p style="padding-left: 30px;"><a href="#survey">Survey</a></p>
+<p style="padding-left: 30px;"><a href="#survey-config">SurveyConfig</a></p>
+<p style="padding-left: 30px;"><a href="#survey-current-question-info">SurveyCurrentQuestionInfo</a></p>
+<p style="padding-left: 30px;"><a href="#survey-question">SurveyQuestion</a></p>
 
 <h2 id="installation"><b>Setting up</b></h2>
 
@@ -54,7 +63,7 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
-<h4 id="get-messages-history" style="padding-left: 30px;"><b>method webimsdk.getMessagesHistory(limit, offset, succesCallback, errorCallback)</b></h4>
+<h4 id="get-messages-history" style="padding-left: 30px;"><b>method webimsdk.getMessagesHistory(limit, offset, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Requests the messages above in history. </p>
 <p style="padding-left: 60px;"><em>limit</em> parameter — method returns not more than <em>limit</em> of messages. Type — <em>Int</em>.</p>
 <p style="padding-left: 60px;"><em>offset</em> parameter — histrory offset. Type — <em>Int</em>,  0 value means last message in history, another value returns next messages after previous method running.</p>
@@ -63,14 +72,14 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 
 <h4 id="typing-message" style="padding-left: 30px;"><b>method webimsdk.typingMessage(message, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">This method must be called whenever there is a change of the input field of a message transferring current content of a message as a parameter.</p>
-<p style="padding-left: 60px;">When there's multiple calls of this method occured, draft message is sending to service one time per second.</p>
+<p style="padding-left: 60px;">When there's multiple calls of this method occurred, draft message is sending to service one time per second.</p>
 <p style="padding-left: 60px;"><em>message</em> parameter — draft message Type — <em>String</em>. When empty string value passed it means that visitor stopped to type a message or deleted it.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(text)</em> is executed when the method is successfully completed. <em>text</em> parameter contains draft message.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
 <h4 id="send-message" style="padding-left: 30px;"><b>method webimsdk.sendMessage(message, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Send message.</p>
-<p style="padding-left: 60px;"><em>message</em> parameter — sending message. Type — <em>String</em>. Max message lenght — 32000 symbols.
+<p style="padding-left: 60px;"><em>message</em> parameter — sending message. Type — <em>String</em>. Max message length — 32000 symbols.
 <p style="padding-left: 60px;">Function <em> successCallback(message)</em> is executed when the method is successfully completed. <em>message</em> parameter contains message, type — <a href="#message"><em>Message</em></a>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
@@ -78,6 +87,17 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Sends a file message.</p>
 <p style="padding-left: 60px;"><em>filePath</em> parameter — file path.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(id)</em> is executed when the method is successfully completed. <em>id</em> parameter contains file message <em>ID</em>, type — <em>String</em>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="send-survey-answer" style="padding-left: 30px;"><b>method webimsdk.sendSurveyAnswer(surveyAnswer, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Sends a answer to current question.</p>
+<p style="padding-left: 60px;"><em>surveyAnswer</em> parameter — survey answer.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="cancel-survey" style="padding-left: 30px;"><b>method webimsdk.surveyCancel(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Close the survey.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
 <h4 id="on-message" style="padding-left: 30px;"><b>method webimsdk.onMessage(successCallback, errorCallback)</b></h4>
@@ -115,6 +135,21 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
+<h4 id="on-survey" style="padding-left: 30px;"><b>method webimsdk.onSurvey(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when the visitor can answer to survey.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(survey)</em> is executed when the method is successfully completed. <em>survey</em> parameter contains <em>Survey</em> object.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="on-next-question" style="padding-left: 30px;"><b>method webimsdk.onNextQuestion(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when the visitor can answer to this question.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(surveyQuestion)</em> is executed when the method is successfully completed. <em>surveyQuestion</em> parameter contains <em>SurveyQuestion</em> object.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="on-survey-cancel" style="padding-left: 30px;"><b>method webimsdk.onSurveyCancel(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when the survey is canceled.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
 <h4 id="rateOperator" style="padding-left: 30px;"><b>method webimsdk.rateOperator(id, rating, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Rates an operator.</p>
 <p style="padding-left: 60px;"><em>id</em> parameter — operator id. Type — <em>String</em>.</p>
@@ -133,7 +168,7 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> is executed when value of unread by visitor message count changed. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
-<h4 id="close" style="padding-left: 30px;"><b>method webimsdk.close(succesCallback, errorCallback)</b></h4>
+<h4 id="close" style="padding-left: 30px;"><b>method webimsdk.close(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Close session and stop session network activity.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
@@ -155,5 +190,26 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="employee" style="padding-left: 30px;"><b>Employee</b></h4>
 <p style="padding-left: 60px;">Operator information.</p>
 <p style="padding-left: 60px;"><em>id</em> field — operator <em>ID</em>. Type — <em>String</em>.</p>
-<p style="padding-left: 60px;"><em>firstname</em> field — operator firstname. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>firstname</em> field — operator first name. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>avatar</em> field — operator avatar <em>URL</em>. Type — <em>String</em>.</p>
+
+<h4 id="survey" style="padding-left: 30px;"><b>Survey</b></h4>
+<p style="padding-left: 60px;">Survey information.</p>
+<p style="padding-left: 60px;"><em>id</em> field — survey <em>ID</em>. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>config</em> field — survey config. Type — <em>SurveyConfig</em>.</p>
+<p style="padding-left: 60px;"><em>currentQuestionInfo</em> field — information about current question in survey <em>URL</em>. Type — <em>SurveyCurrentQuestionInfo</em>.</p>
+
+<h4 id="survey-config" style="padding-left: 30px;"><b>SurveyConfig</b></h4>
+<p style="padding-left: 60px;">Survey config information.</p>
+<p style="padding-left: 60px;"><em>id</em> field — survey config <em>ID</em>. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>version</em> field — survey config version. Type — <em>String</em>.</p>
+
+<h4 id="survey-current-question-info" style="padding-left: 30px;"><b>SurveyCurrentQuestionInfo</b></h4>
+<p style="padding-left: 60px;">Survey current question information.</p>
+<p style="padding-left: 60px;"><em>formId</em> field — survey current question form <em>ID</em>. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>questionId</em> field — survey current question <em>ID</em>. Type — <em>String</em>.</p>
+
+<h4 id="survey-question" style="padding-left: 30px;"><b>SurveyQuestion</b></h4>
+<p style="padding-left: 60px;">Survey question information.</p>
+<p style="padding-left: 60px;"><em>type</em> field — survey question type. Type can be "stars", "radio", "comment". Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>text</em> field — survey question text. Type — <em>String</em>.</p>

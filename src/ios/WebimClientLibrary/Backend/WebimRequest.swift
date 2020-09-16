@@ -53,6 +53,8 @@ final class WebimRequest {
     private var deleteMessageCompletionHandler: DeleteMessageCompletionHandler?
     private var editMessageCompletionHandler: EditMessageCompletionHandler?
     private var sendDialogToEmailAddressCompletionHandler: SendDialogToEmailAddressCompletionHandler?
+    private var sendSurveyAnswerCompletionHandler: SendSurveyAnswerCompletionHandlerWrapper?
+    private var surveyCloseCompletionHandler: SurveyCloseCompletionHandler?
     
     // MARK: - Initialization
     init(httpMethod: AbstractRequestLoop.HTTPMethods,
@@ -70,7 +72,9 @@ final class WebimRequest {
          sendFileCompletionHandler: SendFileCompletionHandler? = nil,
          deleteMessageCompletionHandler: DeleteMessageCompletionHandler? = nil,
          editMessageCompletionHandler: EditMessageCompletionHandler? = nil,
-         sendDialogToEmailAddressCompletionHandler: SendDialogToEmailAddressCompletionHandler? = nil) {
+         sendDialogToEmailAddressCompletionHandler: SendDialogToEmailAddressCompletionHandler? = nil,
+         sendSurveyAnswerCompletionHandler: SendSurveyAnswerCompletionHandlerWrapper? = nil,
+         surveyCloseCompletionHandler: SurveyCloseCompletionHandler? = nil) {
         self.httpMethod = httpMethod
         self.primaryData = primaryData
         self.messageID = messageID
@@ -87,6 +91,8 @@ final class WebimRequest {
         self.deleteMessageCompletionHandler = deleteMessageCompletionHandler
         self.editMessageCompletionHandler = editMessageCompletionHandler
         self.sendDialogToEmailAddressCompletionHandler = sendDialogToEmailAddressCompletionHandler
+        self.sendSurveyAnswerCompletionHandler = sendSurveyAnswerCompletionHandler
+        self.surveyCloseCompletionHandler = surveyCloseCompletionHandler
     }
     
     
@@ -107,7 +113,7 @@ final class WebimRequest {
     func getCompletionHandler() -> ((_ data: Data?) throws -> ())? {
         return historyRequestCompletionHandler
     }
-    
+
     func getFileName() -> String? {
         return filename
     }
@@ -139,7 +145,7 @@ final class WebimRequest {
     func getRateOperatorCompletionHandler() -> RateOperatorCompletionHandler? {
         return rateOperatorCompletionHandler
     }
-    
+
     func getSendFileCompletionHandler() -> SendFileCompletionHandler? {
         return sendFileCompletionHandler
     }
@@ -154,5 +160,13 @@ final class WebimRequest {
 
     func getSendDialogToEmailAddressCompletionHandler() -> SendDialogToEmailAddressCompletionHandler? {
         return sendDialogToEmailAddressCompletionHandler
+    }
+    
+    func getSendSurveyAnswerCompletionHandler() -> SendSurveyAnswerCompletionHandlerWrapper? {
+        return sendSurveyAnswerCompletionHandler
+    }
+    
+    func getSurveyCloseCompletionHandler() -> SurveyCloseCompletionHandler? {
+        return surveyCloseCompletionHandler
     }
 }

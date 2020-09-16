@@ -518,8 +518,37 @@ public final class SessionBuilder  {
                                                 isLocalHistoryStoragingEnabled: localHistoryStoragingEnabled,
                                                 isVisitorDataClearingEnabled: visitorDataClearingEnabled,
                                                 webimLogger: webimLogger,
-                                                verbosityLevel: webimLoggerVerbosityLevel,
-                prechat: prechat) as WebimSession
+                                                verbosityLevel: webimLoggerVerbosityLevel) as WebimSession
+    }
+    
+    /**
+    Builds new `WebimSession` object with callback
+     - important:
+     All the follow-up work with the session must be implemented from the same thread this method was called in.
+     Notice that a session is created as a paused. To start using it the first thing to do is to call `WebimSession.resume()`.
+     - parameter onSuccess:
+     Clousure which will be executed when session sucessfully builded.
+     Returns `WebimSession` object.
+     - parameter onError:
+     Clousure which will be executed when session building failed.
+     Returns cause of failure as `SessionBuilder.SessionBuilderError` object.
+     - seealso:
+     `build()`
+     `SessionBuilder.SessionBuilderError`
+     - author:
+     Yury Vozleev
+     - copyright:
+     2020 Webim
+    */
+    public func build(onSuccess: @escaping (WebimSession) -> (),
+               onError: @escaping (SessionBuilder.SessionBuilderError) -> ()) {
+        do {
+            let webimSession = try self.build()
+            onSuccess(webimSession)
+        } catch let error as SessionBuilder.SessionBuilderError {
+            onError(error)
+        } catch {
+        }
     }
 
     // MARK: -

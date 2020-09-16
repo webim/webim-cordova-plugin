@@ -76,7 +76,6 @@ enum WebimInternalError: String, Error {
     case messageNotOwned = "message_not_owned";
     // edit
     case wrongMessageKind = "wrong_message_kind";
-
     
     // Rate operator errors
     case noChat = "no-chat"
@@ -84,4 +83,13 @@ enum WebimInternalError: String, Error {
 
     // Send Dialog errors
     case sentTooManyTimes = "chat-history-sent-too-many-times"
+    
+    //Survey errors
+    case surveyDisabled = "survey_disabled"
+    case noCurrentSurvey = "no-current-survey"
+    case incorrectSurveyID = "incorrect-survey-id";
+    case incorrectStarsValue = "incorrect-stars-value"
+    case incorrectRadioValue = "incorrect-radio-value"
+    case maxCommentLenghtExceeded = "max-comment-length-exceeded"
+    case questionNotFound = "question-not-found"
 }

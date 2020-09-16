@@ -25,6 +25,7 @@ import com.webimapp.android.sdk.MessageListener;
 import com.webimapp.android.sdk.MessageStream;
 import com.webimapp.android.sdk.MessageTracker;
 import com.webimapp.android.sdk.Operator;
+import com.webimapp.android.sdk.Survey;
 import com.webimapp.android.sdk.Webim;
 import com.webimapp.android.sdk.WebimSession;
 import com.webimapp.android.sdk.Webim.SessionBuilder;
@@ -53,6 +54,9 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext sendDialogToEmailAddressCallback;
     private CallbackContext onUnreadByVisitorMessageCountCallback;
     private CallbackContext onDeletedMessageCallback;
+    private CallbackContext onSurveyCallback;
+    private CallbackContext onNextQuestionCallback;
+    private CallbackContext onSurveyCancelCallback;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -93,6 +97,15 @@ public class WebimSDK extends CordovaPlugin {
             case "sendFile":
                 String filePath = data.getString(0);
                 sendFile(filePath, callbackContext);
+                return true;
+
+            case "sendSurveyAnswer":
+                String surveyAnswer = data.getString(0);
+                sendSurveyAnswer(surveyAnswer, callbackContext);
+                return true;
+
+            case "cancelSurvey":
+                cancelSurvey(callbackContext);
                 return true;
 
             case "onMessage":
@@ -140,6 +153,18 @@ public class WebimSDK extends CordovaPlugin {
 
             case "onUnreadByVisitorMessageCount":
                 onUnreadByVisitorMessageCountCallback = callbackContext;
+                return true;
+
+            case "onSurvey":
+                onSurveyCallback = callbackContext;
+                return true;
+
+            case "onNextQuestion":
+                onNextQuestionCallback = callbackContext;
+                return true;
+
+            case "onSurveyCancel":
+                onSurveyCancelCallback = callbackContext;
                 return true;
 
             default:
@@ -193,7 +218,17 @@ public class WebimSDK extends CordovaPlugin {
         if (args.has("visitorFields")) {
             sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
         }
-        session = sessionBuilder.build();
+        session = sessionBuilder.build(new WebimSession.SessionCallback() {
+            @Override
+            public void onSuccess() {
+                sendNotificationCallbackResult(callbackContext, "{\"result\":\"Success\"}");
+            }
+
+            @Override
+            public void onFailure(WebimError<SessionError> sessionError) {
+
+            }
+        });
         listController = new ListController(session.getStream());
         session.getStream().setOperatorTypingListener(new MessageStream.OperatorTypingListener() {
             @Override
@@ -218,8 +253,22 @@ public class WebimSDK extends CordovaPlugin {
                 sendNotificationCallbackResult(onUnreadByVisitorMessageCountCallback, "{\"unreadByVisitorMessageCount\":" + newMessageCount + "}");
             }
         });
-        session.getStream().setChatStateListener((oldState, newState)
-                -> sendNotificationCallbackResult(callbackContext, "{\"result\":\"Success\"}"));
+        session.getStream().setSurveyListener(new MessageStream.SurveyListener() {
+            @Override
+            public void onSurvey(Survey survey) {
+                sendNotificationCallbackResult(onSurveyCallback, ru.webim.plugin.models.Survey.fromWebimSurvey(survey));
+            }
+
+            @Override
+            public void onNextQuestion(Survey.Question question) {
+                sendNotificationCallbackResult(onNextQuestionCallback, ru.webim.plugin.models.SurveyQuestion.fromWebimSurveyQuestion(question));
+            }
+
+            @Override
+            public void onSurveyCancelled() {
+                sendNotificationCallbackResult(onSurveyCancelCallback, "{\"result\":\"Success\"}");
+            }
+        });
         session.resume();
     }
 
@@ -347,6 +396,42 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
         }).start();
+    }
+
+    private void sendSurveyAnswer(String surveyAnswer, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        session.getStream().sendSurveyAnswer(surveyAnswer, new MessageStream.SurveyAnswerCallback() {
+            @Override
+            public void onSuccess() {
+                sendCallbackError(callbackContext, "{\"result\":\"Success\"}");
+            }
+
+            @Override
+            public void onFailure(WebimError<SurveyAnswerError> webimError) {
+                sendCallbackError(callbackContext, "{\"result\":\"Failure\"}");
+            }
+        });
+    }
+
+    private void cancelSurvey(final  CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        session.getStream().closeSurvey(new MessageStream.SurveyCloseCallback() {
+            @Override
+            public void onSuccess() {
+                sendCallbackError(callbackContext, "{\"result\":\"Success\"}");
+            }
+
+            @Override
+            public void onFailure(WebimError<MessageStream.SurveyCloseCallback.SurveyCloseError> webimError) {
+                sendCallbackError(callbackContext, "{\"result\":\"Failure\"}");
+            }
+        });
     }
 
     private void typingMessage(String text, final CallbackContext callbackContext) {

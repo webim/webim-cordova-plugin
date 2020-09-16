@@ -97,10 +97,14 @@ final class DeltaCallback {
                 break
             case .departmentList:
                 handleDepartmentListUpdateBy(delta: delta)
-                
+
                 break
             case .operatorRate:
                 handleOperatorRateUpdateBy(delta: delta)
+                
+                break
+            case .survey:
+                handleSurveyBy(delta: delta)
                 
                 break
             case .unreadByVisitor:
@@ -131,7 +135,17 @@ final class DeltaCallback {
             messageStream?.onReceiving(departmentItemList: departments)
         }
         
+        if let survey = fullUpdate.getSurvey() {
+            messageStream?.onReceived(surveyItem: survey)
+        }
+        
         currentChat = fullUpdate.getChat()
+        
+        var isCurrentChatEmpty = true
+        if let currentChat = currentChat,
+           !currentChat.getMessages().isEmpty {
+            isCurrentChatEmpty = false
+        }
         
         messageStream?.changingChatStateOf(chat: currentChat)
         messageStream?.saveLocationSettingsOn(fullUpdate: fullUpdate)
@@ -298,7 +312,7 @@ final class DeltaCallback {
         }
         
         currentChat?.set(state: ChatItem.ChatItemState(withType: chatState))
-        
+
         messageStream?.changingChatStateOf(chat: currentChat)
     }
     
@@ -331,7 +345,7 @@ final class DeltaCallback {
         
         messageStream?.onReceiving(departmentItemList: departmentItems)
     }
-    
+
     private func handleOperatorRateUpdateBy(delta: DeltaItem) {
         guard let deltaData = delta.getData() as? [String: Any] else {
             return
@@ -342,6 +356,14 @@ final class DeltaCallback {
                 currentChat?.set(rating: rating,
                                  toOperatorWithId: rating.getOperatorID())
             }
+        }
+    }
+    
+    private func handleSurveyBy(delta: DeltaItem) {
+        if let deltaData = delta.getData() as? [String: Any] {
+            messageStream?.onReceived(surveyItem: SurveyItem(jsonDictionary: deltaData))
+        } else {
+            messageStream?.onSurveyCancelled()
         }
     }
     
@@ -371,5 +393,5 @@ final class DeltaCallback {
             messageStream?.set(visitSessionState: (VisitSessionStateItem(rawValue: sessionState) ?? .unknown))
         }
     }
-    
+
 }
