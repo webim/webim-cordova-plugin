@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<plugin id="ru.webim.sdk" version="1.4.0" xmlns="http://www.phonegap.com/ns/plugins/1.0">
+<plugin id="ru.webim.sdk" version="1.4.1" xmlns="http://www.phonegap.com/ns/plugins/1.0">
 
     <name>WebimSDK</name>
 
@@ -34,8 +34,6 @@
         <source-file src="src/android/models/SurveyConfig.java"
             target-dir="src/ru/webim/plugin/models" />
         <source-file src="src/android/models/SurveyCurrentQuestionInfo.java"
-            target-dir="src/ru/webim/plugin/models" />
-        <source-file src="src/android/models/SurveyForm.java"
             target-dir="src/ru/webim/plugin/models" />
         <source-file src="src/android/models/SurveyQuestion.java"
             target-dir="src/ru/webim/plugin/models" />
