@@ -90,8 +90,16 @@ public class WebimSDK extends CordovaPlugin {
                 getMessagesHistory(limit, offset, callbackContext);
                 return true;
 
+            case "getCurrentOperator":
+                getCurrentOperator(callbackContext);
+                return true;
+
             case "typingMessage":
                 typingMessage(data.getString(0), callbackContext);
+                return true;
+
+            case "setChatRead":
+                setChatRead(callbackContext);
                 return true;
 
             case "sendFile":
@@ -175,7 +183,9 @@ public class WebimSDK extends CordovaPlugin {
     private void init(final JSONObject args, final CallbackContext callbackContext)
             throws JSONException {
         if (session != null) {
+            CallbackContext savedUnreadHandler = onUnreadByVisitorMessageCountCallback;
             close(null);
+            onUnreadByVisitorMessageCountCallback = savedUnreadHandler;
         }
         if (!args.has("accountName")) {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
@@ -278,6 +288,15 @@ public class WebimSDK extends CordovaPlugin {
             return;
         }
         listController.requestMore(limit, offset, callbackContext);
+    }
+
+    private void getCurrentOperator(final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        Operator operator = session.getStream().getCurrentOperator();
+        sendCallbackResult(callbackContext, operator);
     }
 
     private void requestDialog(final CallbackContext callbackContext) {
@@ -496,6 +515,15 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
         });
+    }
+
+    private void setChatRead(final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+
+        session.getStream().setChatRead();
     }
 
     private void sendDialogToEmailAddress(String emailAddress, final CallbackContext callbackContext) {
