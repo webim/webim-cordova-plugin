@@ -257,15 +257,17 @@ import Photos
     @objc(sendSurveyAnswer:)
     func sendSurveyAnswer(_ command: CDVInvokedUrlCommand) {
         let surveyAnswer = command.arguments[0] as? String ?? ""
+        let callbackContextId = command.callbackId
         do {
-            try session?.getStream().send(surveyAnswer: surveyAnswer, completionHandler: nil)
+            try session?.getStream().send(surveyAnswer: surveyAnswer, completionHandler: SendSurveyAnswerCompletionHandlerImpl(webimSDK: self, callbackContextId: callbackContextId))
         } catch { }
     }
 
     @objc(cancelSurvey:)
     func cancelSurvey(_ command: CDVInvokedUrlCommand) {
+        let callbackContextId = command.callbackId
         do {
-            try session?.getStream().closeSurvey(completionHandler: nil)
+            try session?.getStream().closeSurvey(completionHandler: SurveyCloseCompletionHandlerImpl(webimSDK: self, callbackContextId: callbackContextId))
         } catch { }
     }
 
@@ -350,7 +352,11 @@ import Photos
             `operator`["avatar"] = message.getSenderAvatarFullURL()?.absoluteString
             dict["operator"] = `operator`
         }
-        dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
+        if message.getType() == .INFO {
+            dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000 - 1)
+        } else {
+            dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
+        }
         return dict;
     }
 
@@ -583,6 +589,52 @@ extension WebimSDK: SurveyListener {
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onSurveyCallbackId)
     }
+}
+
+class SendSurveyAnswerCompletionHandlerImpl: SendSurveyAnswerCompletionHandler {
+    let webimSDK: WebimSDK
+    let callbackContextId: String?
+
+    init(webimSDK: WebimSDK,
+         callbackContextId: String?) {
+        self.webimSDK = webimSDK
+        self.callbackContextId = callbackContextId
+    }
+
+    func onSuccess() {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(pluginResult, callbackId: callbackContextId)
+    }
+
+    func onFailure(error: SendSurveyAnswerError) {
+        let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        errorPluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(errorPluginResult, callbackId: callbackContextId)
+    }
+}
+
+class SurveyCloseCompletionHandlerImpl: SurveyCloseCompletionHandler {
+    let webimSDK: WebimSDK
+    let callbackContextId: String?
+
+    init(webimSDK: WebimSDK,
+         callbackContextId: String?) {
+        self.webimSDK = webimSDK
+        self.callbackContextId = callbackContextId
+    }
+
+    func onSuccess() {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(pluginResult, callbackId: callbackContextId)
+    }
+
+    func onFailure(error: SurveyCloseError) {
+        let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        errorPluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(errorPluginResult, callbackId: callbackContextId)
+    }
 
 
 }
@@ -592,7 +644,7 @@ class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletion
     let webimSDK: WebimSDK
 
     init(webimSDK: WebimSDK) {
-        self.webimSDK = webimSDK;
+        self.webimSDK = webimSDK
     }
 
     func onSuccess() {
@@ -604,7 +656,7 @@ class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletion
     func onFailure(error: SendDialogToEmailAddressError) {
         let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
         errorPluginResult?.setKeepCallbackAs(true)
-        webimSDK.commandDelegate!.send(errorPluginResult, callbackId: webimSDK.onRateOperatorCallbackId)
+        webimSDK.commandDelegate!.send(errorPluginResult, callbackId: webimSDK.sendDialogToEmailAddressCallbackId)
     }
 
 

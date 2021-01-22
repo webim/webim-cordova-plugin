@@ -425,7 +425,7 @@ public class WebimSDK extends CordovaPlugin {
         session.getStream().sendSurveyAnswer(surveyAnswer, new MessageStream.SurveyAnswerCallback() {
             @Override
             public void onSuccess() {
-                sendCallbackError(callbackContext, "{\"result\":\"Success\"}");
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
             }
 
             @Override
@@ -443,7 +443,7 @@ public class WebimSDK extends CordovaPlugin {
         session.getStream().closeSurvey(new MessageStream.SurveyCloseCallback() {
             @Override
             public void onSuccess() {
-                sendCallbackError(callbackContext, "{\"result\":\"Success\"}");
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
             }
 
             @Override
