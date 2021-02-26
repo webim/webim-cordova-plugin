@@ -43,6 +43,7 @@ public class WebimSDK extends CordovaPlugin {
     private WebimSession session;
     private Handler handler;
     private ListController listController;
+    private boolean closeWithClearVisitorData = false;
 
     private CallbackContext receiveMessageCallback;
     private CallbackContext receiveFileCallback;
@@ -167,6 +168,10 @@ public class WebimSDK extends CordovaPlugin {
                 onSurveyCancelCallback = callbackContext;
                 return true;
 
+            case "getUnreadByVisitorMessageCount":
+                getUnreadByVisitorMessageCount(callbackContext);
+                return true;
+
             default:
                 return false;
         }
@@ -180,6 +185,9 @@ public class WebimSDK extends CordovaPlugin {
         if (!args.has("accountName")) {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
             return;
+        }
+        if (args.has("closeWithClearVisitorData")) {
+            closeWithClearVisitorData = args.getBoolean("closeWithClearVisitorData");
         }
         SessionBuilder sessionBuilder = Webim.newSessionBuilder()
                 .setContext(this.context)
@@ -207,13 +215,15 @@ public class WebimSDK extends CordovaPlugin {
                     }
                 })
                 .setAccountName(args.getString("accountName"))
-				.setPushSystem(Webim.PushSystem.FCM)
+                .setPushSystem(Webim.PushSystem.FCM)
                 .setPushToken(args.has("pushToken")
-				        ? args.getString("pushToken")
-						: "none")
+                        ? args.getString("pushToken")
+                        : "none")
                 .setLocation(args.has("location")
                         ? args.getString("location")
-                        : DEFAULT_LOCATION);
+                        : DEFAULT_LOCATION)
+                .setStoreHistoryLocally(args.has("storeHistoryLocally")
+                        && args.getBoolean("storeHistoryLocally"));
 
         if (args.has("visitorFields")) {
             sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
@@ -240,13 +250,13 @@ public class WebimSDK extends CordovaPlugin {
         });
         session.getStream().setCurrentOperatorChangeListener(
                 new MessageStream.CurrentOperatorChangeListener() {
-            @Override
-            public void onOperatorChanged(@Nullable Operator oldOperator,
-                                          @Nullable Operator newOperator) {
-                sendCallbackResult(dialogCallback,
-                        ru.webim.plugin.models.DialogState.dialogStateFromEmployee(newOperator));
-            }
-        });
+                    @Override
+                    public void onOperatorChanged(@Nullable Operator oldOperator,
+                                                  @Nullable Operator newOperator) {
+                        sendCallbackResult(dialogCallback,
+                                ru.webim.plugin.models.DialogState.dialogStateFromEmployee(newOperator));
+                    }
+                });
         session.getStream().setUnreadByVisitorMessageCountChangeListener(new MessageStream.UnreadByVisitorMessageCountChangeListener() {
             @Override
             public void onUnreadByVisitorMessageCountChanged(int newMessageCount) {
@@ -325,7 +335,7 @@ public class WebimSDK extends CordovaPlugin {
     }
 
     public static String getMimeType(Context context, Uri uri) {
-        String extension = null;
+        String extension;
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
             final MimeTypeMap mime = MimeTypeMap.getSingleton();
             extension = mime.getExtensionFromMimeType(context.getContentResolver().getType(uri));
@@ -462,7 +472,12 @@ public class WebimSDK extends CordovaPlugin {
         onUnreadByVisitorMessageCountCallback = null;
         onDeletedMessageCallback = null;
 
-        session.destroy();
+        if (closeWithClearVisitorData) {
+            session.destroyWithClearVisitorData();
+            closeWithClearVisitorData = false;
+        } else {
+            session.destroy();
+        }
         session = null;
         listController = null;
         sendCallbackResult(callbackContext, "{\"result\":\"WebimSession Close\"}");
@@ -526,6 +541,15 @@ public class WebimSDK extends CordovaPlugin {
                         }
                     }
                 });
+    }
+
+    private void getUnreadByVisitorMessageCount(CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        int count = session.getStream().getUnreadByVisitorMessageCount();
+        sendCallbackResult(callbackContext, "{\"unreadByVisitorMessageCount\":" + count + "}");
     }
 
     private void sendNoResult(CallbackContext callbackContext) {

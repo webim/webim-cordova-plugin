@@ -4,6 +4,7 @@ import Photos
     
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
+    private var closeWithClearVisitorData = false
     var onMessageCallbackId: String?
     var onTypingCallbackId: String?
     var onFileCallbackId: String?
@@ -33,6 +34,8 @@ import Photos
         let accountName = args["accountName"] as? String
         let location = args["location"] as? String
         let deviceToken = args["pushToken"] as? String
+        let isLocalHistoryStoragingEnabled = args["storeHistoryLocally"] as? Bool
+        self.closeWithClearVisitorData = args["closeWithClearVisitorData"] as? Bool ?? false
         if let accountName = accountName {
             var sessionBuilder = Webim.newSessionBuilder()
                 .set(accountName: accountName)
@@ -40,7 +43,7 @@ import Photos
                 .set(fatalErrorHandler: self)
                 .set(remoteNotificationSystem: ((deviceToken != nil) ? .APNS : .NONE))
                 .set(deviceToken: deviceToken)
-                .set(isLocalHistoryStoragingEnabled: false)
+                .set(isLocalHistoryStoragingEnabled: isLocalHistoryStoragingEnabled ?? false)
             if let visitorFields = args["visitorFields"] as? NSDictionary {
                 let jsonData = try? JSONSerialization.data(withJSONObject: visitorFields, options: [])
                 let jsonString = String(data: jsonData!, encoding: .utf8)
@@ -131,7 +134,12 @@ import Photos
         if session != nil {
             do {
                 try messageTracker?.destroy()
-                try session?.destroy()
+                if closeWithClearVisitorData {
+                    try session?.destroyWithClearVisitorData()
+                    closeWithClearVisitorData = false
+                } else {
+                    try session?.destroy()
+                }
             } catch { }
             session = nil
             messageTracker = nil
@@ -269,6 +277,15 @@ import Photos
         do {
             try session?.getStream().sendDialogTo(emailAddress: emailAddress ?? "", completionHandler: SendDialogToEmailAddressCompletionImpl(webimSDK: self))
         } catch { }
+    }
+
+    @objc(getUnreadByVisitorMessageCount:)
+    func getUnreadByVisitorMessageCount(_ command: CDVInvokedUrlCommand) {
+        let callbackId = command.callbackId
+        let count = session?.getStream().getUnreadByVisitorMessageCount() ?? 0
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"unreadByVisitorMessageCount\":\(count)}")
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
 
     private func sendCallbackResult(callbackId: String) {
