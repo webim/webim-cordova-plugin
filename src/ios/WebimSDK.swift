@@ -5,6 +5,7 @@ import Photos
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
     private var closeWithClearVisitorData = false
+    private var firstMessageId: String?
     var onMessageCallbackId: String?
     var onTypingCallbackId: String?
     var onFileCallbackId: String?
@@ -215,13 +216,18 @@ import Photos
         let callbackId = command.callbackId
         let userMessage = command.arguments[0]
         var messageID: String?
+        let chatState = session?.getStream().getChatState()
         do {
             try messageID = session?.getStream().send(message: userMessage as! String)
         } catch { }
         let message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil)
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
-        pluginResult?.setKeepCallbackAs(true)
-        self.commandDelegate!.send(pluginResult, callbackId: callbackId)
+        if chatState != .NONE && chatState != .UNKNOWN {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
+            pluginResult?.setKeepCallbackAs(true)
+            self.commandDelegate!.send(pluginResult, callbackId: callbackId)
+        } else {
+            firstMessageId = messageID
+        }
     }
 
     @objc(sendFile:)
@@ -471,6 +477,13 @@ extension WebimSDK: MessageListener {
     func changed(message oldVersion: Message, to newVersion: Message) {
         if newVersion.getType() != MessageType.FILE_FROM_OPERATOR
             && newVersion.getType() != MessageType.FILE_FROM_VISITOR {
+            if newVersion.getID() == firstMessageId,
+               let onMessageCallbackId = onMessageCallbackId {
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))
+                pluginResult?.setKeepCallbackAs(true)
+                self.commandDelegate!.send(pluginResult, callbackId: onMessageCallbackId)
+                firstMessageId = nil
+            }
             if let onConfirmCallbackId = onConfirmCallbackId {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))
                 pluginResult?.setKeepCallbackAs(true)

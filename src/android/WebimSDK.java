@@ -44,6 +44,7 @@ public class WebimSDK extends CordovaPlugin {
     private Handler handler;
     private ListController listController;
     private boolean closeWithClearVisitorData = false;
+    private String firstMessageID;
 
     private CallbackContext receiveMessageCallback;
     private CallbackContext receiveFileCallback;
@@ -306,10 +307,15 @@ public class WebimSDK extends CordovaPlugin {
         }
 
         String id = session.getStream().sendMessage(message).toString();
-        ru.webim.plugin.models.Message msg
-                = ru.webim.plugin.models.Message.fromParams(id, message, null,
-                Long.toString(System.currentTimeMillis()), null);
-        sendNotificationCallbackResult(callbackContext, msg);
+        if (session.getStream().getChatState() == MessageStream.ChatState.NONE
+                || session.getStream().getChatState() == MessageStream.ChatState.UNKNOWN) {
+            ru.webim.plugin.models.Message msg
+                    = ru.webim.plugin.models.Message.fromParams(id, message, null,
+                    Long.toString(System.currentTimeMillis()), null);
+            sendNotificationCallbackResult(callbackContext, msg);
+        } else {
+            firstMessageID = id;
+        }
     }
 
     @SuppressLint("Recycle")
@@ -660,6 +666,13 @@ public class WebimSDK extends CordovaPlugin {
         public void messageChanged(@NonNull Message from, @NonNull Message to) {
             if (to.getType() != Message.Type.FILE_FROM_OPERATOR
                     && to.getType() != Message.Type.FILE_FROM_VISITOR) {
+                if (to.getId().toString().equals(firstMessageID)) {
+                    if (receiveMessageCallback != null) {
+                        ru.webim.plugin.models.Message msg
+                                = ru.webim.plugin.models.Message.fromWebimMessage(to);
+                        sendNotificationCallbackResult(receiveMessageCallback, msg);
+                    }
+                }
                 if (confirmMessageCallback != null) {
                     sendNotificationCallbackResult(confirmMessageCallback,
                             ru.webim.plugin.models.Message.fromWebimMessage(to).id);
