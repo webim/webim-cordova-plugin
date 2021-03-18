@@ -44,7 +44,7 @@ public class WebimSDK extends CordovaPlugin {
     private Handler handler;
     private ListController listController;
     private boolean closeWithClearVisitorData = false;
-    private String firstMessageID;
+    private boolean hasFirstMessage;
 
     private CallbackContext receiveMessageCallback;
     private CallbackContext receiveFileCallback;
@@ -307,15 +307,17 @@ public class WebimSDK extends CordovaPlugin {
         }
 
         String id = session.getStream().sendMessage(message).toString();
+        ru.webim.plugin.models.Message msg;
         if (session.getStream().getChatState() == MessageStream.ChatState.NONE
                 || session.getStream().getChatState() == MessageStream.ChatState.UNKNOWN) {
-            ru.webim.plugin.models.Message msg
-                    = ru.webim.plugin.models.Message.fromParams(id, message, null,
-                    Long.toString(System.currentTimeMillis()), null);
-            sendNotificationCallbackResult(callbackContext, msg);
+            msg = ru.webim.plugin.models.Message.fromParams(id, message, null,
+                    Long.toString(System.currentTimeMillis()), null, true);
+            hasFirstMessage = true;
         } else {
-            firstMessageID = id;
+            msg = ru.webim.plugin.models.Message.fromParams(id, message, null,
+                    Long.toString(System.currentTimeMillis()), null, false);
         }
+        sendNotificationCallbackResult(callbackContext, msg);
     }
 
     @SuppressLint("Recycle")
@@ -369,6 +371,10 @@ public class WebimSDK extends CordovaPlugin {
                                 String mime = getMimeType(context, uri);
                                 if (mime == null) {
                                     mime = "image/png";
+                                }
+                                if (session.getStream().getChatState() == MessageStream.ChatState.NONE
+                                        || session.getStream().getChatState() == MessageStream.ChatState.UNKNOWN) {
+                                    hasFirstMessage = true;
                                 }
                                 session.getStream().sendFile(file,
                                         file.getName(), mime, new MessageStream.SendFileCallback() {
@@ -664,23 +670,19 @@ public class WebimSDK extends CordovaPlugin {
 
         @Override
         public void messageChanged(@NonNull Message from, @NonNull Message to) {
+            ru.webim.plugin.models.Message message = ru.webim.plugin.models.Message.fromWebimMessage(to);
+            if (hasFirstMessage) {
+                message.isFirst = true;
+                hasFirstMessage = false;
+            }
             if (to.getType() != Message.Type.FILE_FROM_OPERATOR
                     && to.getType() != Message.Type.FILE_FROM_VISITOR) {
-                if (to.getId().toString().equals(firstMessageID)) {
-                    if (receiveMessageCallback != null) {
-                        ru.webim.plugin.models.Message msg
-                                = ru.webim.plugin.models.Message.fromWebimMessage(to);
-                        sendNotificationCallbackResult(receiveMessageCallback, msg);
-                    }
-                }
                 if (confirmMessageCallback != null) {
-                    sendNotificationCallbackResult(confirmMessageCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(to).id);
+                    sendNotificationCallbackResult(confirmMessageCallback, message);
                 }
             } else {
                 if (receiveFileCallback != null) {
-                    sendNotificationCallbackResult(receiveFileCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(to));
+                    sendNotificationCallbackResult(receiveFileCallback, message);
                 }
             }
         }
