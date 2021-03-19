@@ -648,16 +648,19 @@ public class WebimSDK extends CordovaPlugin {
 
         @Override
         public void messageAdded(@Nullable Message before, @NonNull Message message) {
+            ru.webim.plugin.models.Message msg = ru.webim.plugin.models.Message.fromWebimMessage(message);
             if (message.getType() != Message.Type.FILE_FROM_OPERATOR
                     && message.getType() != Message.Type.FILE_FROM_VISITOR) {
                 if (receiveMessageCallback != null && message.getType() != Message.Type.VISITOR) {
-                    sendNotificationCallbackResult(receiveMessageCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(message));
+                    sendNotificationCallbackResult(receiveMessageCallback, msg);
                 }
             } else {
                 if (receiveFileCallback != null) {
-                    sendNotificationCallbackResult(receiveFileCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(message));
+                    if (hasFirstMessage) {
+                        msg.isFirst = true;
+                        hasFirstMessage = false;
+                    }
+                    sendNotificationCallbackResult(receiveFileCallback, msg);
                 }
             }
         }
@@ -671,13 +674,13 @@ public class WebimSDK extends CordovaPlugin {
         @Override
         public void messageChanged(@NonNull Message from, @NonNull Message to) {
             ru.webim.plugin.models.Message message = ru.webim.plugin.models.Message.fromWebimMessage(to);
-            if (hasFirstMessage) {
-                message.isFirst = true;
-                hasFirstMessage = false;
-            }
             if (to.getType() != Message.Type.FILE_FROM_OPERATOR
                     && to.getType() != Message.Type.FILE_FROM_VISITOR) {
                 if (confirmMessageCallback != null) {
+                    if (hasFirstMessage) {
+                        message.isFirst = true;
+                        hasFirstMessage = false;
+                    }
                     sendNotificationCallbackResult(confirmMessageCallback, message);
                 }
             } else {
