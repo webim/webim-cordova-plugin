@@ -5,6 +5,7 @@ import Photos
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
     private var closeWithClearVisitorData = false
+    private var isFirstMessage = false
     var onMessageCallbackId: String?
     var onTypingCallbackId: String?
     var onFileCallbackId: String?
@@ -215,10 +216,17 @@ import Photos
         let callbackId = command.callbackId
         let userMessage = command.arguments[0]
         var messageID: String?
+        let chatState = session?.getStream().getChatState()
         do {
             try messageID = session?.getStream().send(message: userMessage as! String)
         } catch { }
-        let message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil)
+        let message: String
+        if chatState != .NONE && chatState != .UNKNOWN {
+            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: false)
+        } else {
+            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: true)
+            isFirstMessage = true
+        }
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
@@ -313,8 +321,8 @@ import Photos
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
 
-    func messageToJSON(message: Message) -> String {
-        let dict = messageToDictionary(message: message)
+    func messageToJSON(message: Message, isFirst: Bool = false) -> String {
+        let dict = messageToDictionary(message: message, isFirst: isFirst)
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
@@ -323,10 +331,11 @@ import Photos
         return "";
     }
 
-    func messageToDictionary(message: Message) -> [String: Any] {
+    func messageToDictionary(message: Message, isFirst: Bool = false) -> [String: Any] {
         var dict = [String: Any]()
         dict["id"] = message.getID()
         dict["text"] = message.getText()
+        dict["isFirst"] = isFirst
         if let attachment = message.getAttachment() {
             dict["url"] = (attachment.getURL()).absoluteString
             if let imageInfo = attachment.getImageInfo() {
@@ -355,13 +364,15 @@ import Photos
                        text: String,
                        url: String?,
                        timestamp: String,
-                       sender: String?) -> String {
-        var dict = [String: String]()
+                       sender: String?,
+                       isFirst: Bool) -> String {
+        var dict = [String: Any]()
         dict["id"] = id
         dict["text"] = text
         dict["url"] = url
         dict["sender"] = sender
         dict["timestamp"] = timestamp
+        dict["isFirst"] = isFirst
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
@@ -451,7 +462,10 @@ extension WebimSDK: MessageListener {
             }
         } else {
             if let onFileCallbackId = onFileCallbackId {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newMessage))
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newMessage, isFirst: isFirstMessage))
+                if isFirstMessage {
+                    isFirstMessage = false
+                }
                 pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onFileCallbackId)
             }
@@ -469,17 +483,18 @@ extension WebimSDK: MessageListener {
     }
 
     func changed(message oldVersion: Message, to newVersion: Message) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion, isFirst: isFirstMessage))
+        pluginResult?.setKeepCallbackAs(true)
+        if isFirstMessage {
+            isFirstMessage = false
+        }
         if newVersion.getType() != MessageType.FILE_FROM_OPERATOR
             && newVersion.getType() != MessageType.FILE_FROM_VISITOR {
             if let onConfirmCallbackId = onConfirmCallbackId {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))
-                pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onConfirmCallbackId)
             }
         } else {
             if let onFileCallbackId = onFileCallbackId {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion))
-                pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onFileCallbackId)
             }
         }
