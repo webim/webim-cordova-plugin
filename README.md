@@ -28,6 +28,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
 <p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
 <p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
+<p style="padding-left: 30px;"><a href="#get-unread-by-visitor-message-count">method getUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#close">method close</a></p>
 
 <a href="#objects">Objects</a>
@@ -55,6 +56,8 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 90px;"><em>location</em> field — <em>String</em>-typed location name. Usually default available location names are "mobile" and "default". To create any other one you can contact service support. Field is mandatory.</p>
 <p style="padding-left: 90px;"><em>pushToken</em> field — <em>String</em>-typed push token for push notification receiving.</p>
 <p style="padding-left: 90px;"><em>visitorFields</em> field — visitor authorization data. Without this method calling a visitor is anonymous, with randomly generated ID. This ID is saved inside app UserDefaults and can be lost (e.g. when app is uninstalled), thereby message history is lost too. Authorized visitor data are saved by server and available with any device. More information on <a href="https://webim.ru/kb/dev/identification/"><em>Webim</em> web site</a>. Type — <em>JSON</em>. Field is mandatory.</p>
+<p style="padding-left: 90px;"><em>storeHistoryLocally</em> field. By default session doesn't save message history inside SQLite DB file. To activate this functionality you can use this method with true value. Type — <em>Boolean</em>.</p>
+<p style="padding-left: 90px;"><em>closeWithClearVisitorData</em> field. If this parameter is true, session will close with deleting visitor data. Type — <em>Boolean</em>.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
@@ -166,6 +169,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="on-unread-by-visitor-message-count" style="padding-left: 30px;"><b>method webimsdk.onUnreadByVisitorMessage(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback called when operator send new message.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> is executed when value of unread by visitor message count changed. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="get-unread-by-visitor-message-count" style="padding-left: 30px;"><b>method webimsdk.getUnreadByVisitorMessage(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback returns unread by visitor message count.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> returns value of unread by visitor message count. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="close" style="padding-left: 30px;"><b>method webimsdk.close(successCallback, errorCallback)</b></h4>

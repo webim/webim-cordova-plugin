@@ -72,5 +72,8 @@ module.exports = {
     },
     onSurveyCancel: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onSurveyCancel", [])
+    },
+    getUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "getUnreadByVisitorMessageCount", [])
     }
 };
