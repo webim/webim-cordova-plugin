@@ -10,18 +10,21 @@ public class Message {
     public String timestamp;
     public String sender;
     public Employee operator;
+    public boolean isFirst = false;
 
     public static Message fromParams(String id,
                                      String text,
                                      String url,
                                      String timestamp,
-                                     String sender) {
+                                     String sender,
+                                     boolean isFirst) {
         Message resultMessage = new Message();
         resultMessage.id = id;
         resultMessage.text = text;
         resultMessage.sender = sender;
         resultMessage.timestamp = timestamp;
         resultMessage.url = url;
+        resultMessage.isFirst = isFirst;
 
         return resultMessage;
     }
@@ -51,7 +54,11 @@ public class Message {
             }
         }
 
-        resultMessage.timestamp = Long.toString(message.getTime());
+        if (message.getType() == com.webimapp.android.sdk.Message.Type.INFO) {
+            resultMessage.timestamp = Long.toString(message.getTime() - 1);
+        } else {
+            resultMessage.timestamp = Long.toString(message.getTime());
+        }
 
         return resultMessage;
     }

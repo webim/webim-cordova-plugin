@@ -10,8 +10,14 @@ module.exports = {
     getMessagesHistory: function (limit, offset, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "getMessagesHistory", [limit, offset]);
     },
+    getCurrentOperator: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "getCurrentOperator", []);
+    },
     typingMessage: function (message, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "typingMessage", [message]);
+    },
+    setChatRead: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "setChatRead", []);
     },
     sendMessage: function (message, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendMessage", [message]);
@@ -66,5 +72,8 @@ module.exports = {
     },
     onSurveyCancel: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onSurveyCancel", [])
+    },
+    getUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "getUnreadByVisitorMessageCount", [])
     }
 };

@@ -43,6 +43,8 @@ public class WebimSDK extends CordovaPlugin {
     private WebimSession session;
     private Handler handler;
     private ListController listController;
+    private boolean closeWithClearVisitorData = false;
+    private boolean hasFirstMessage;
 
     private CallbackContext receiveMessageCallback;
     private CallbackContext receiveFileCallback;
@@ -90,8 +92,16 @@ public class WebimSDK extends CordovaPlugin {
                 getMessagesHistory(limit, offset, callbackContext);
                 return true;
 
+            case "getCurrentOperator":
+                getCurrentOperator(callbackContext);
+                return true;
+
             case "typingMessage":
                 typingMessage(data.getString(0), callbackContext);
+                return true;
+
+            case "setChatRead":
+                setChatRead(callbackContext);
                 return true;
 
             case "sendFile":
@@ -167,6 +177,10 @@ public class WebimSDK extends CordovaPlugin {
                 onSurveyCancelCallback = callbackContext;
                 return true;
 
+            case "getUnreadByVisitorMessageCount":
+                getUnreadByVisitorMessageCount(callbackContext);
+                return true;
+
             default:
                 return false;
         }
@@ -175,11 +189,16 @@ public class WebimSDK extends CordovaPlugin {
     private void init(final JSONObject args, final CallbackContext callbackContext)
             throws JSONException {
         if (session != null) {
+            CallbackContext savedUnreadHandler = onUnreadByVisitorMessageCountCallback;
             close(null);
+            onUnreadByVisitorMessageCountCallback = savedUnreadHandler;
         }
         if (!args.has("accountName")) {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
             return;
+        }
+        if (args.has("closeWithClearVisitorData")) {
+            closeWithClearVisitorData = args.getBoolean("closeWithClearVisitorData");
         }
         SessionBuilder sessionBuilder = Webim.newSessionBuilder()
                 .setContext(this.context)
@@ -207,13 +226,15 @@ public class WebimSDK extends CordovaPlugin {
                     }
                 })
                 .setAccountName(args.getString("accountName"))
-				.setPushSystem(Webim.PushSystem.FCM)
+                .setPushSystem(Webim.PushSystem.FCM)
                 .setPushToken(args.has("pushToken")
-				        ? args.getString("pushToken")
-						: "none")
+                        ? args.getString("pushToken")
+                        : "none")
                 .setLocation(args.has("location")
                         ? args.getString("location")
-                        : DEFAULT_LOCATION);
+                        : DEFAULT_LOCATION)
+                .setStoreHistoryLocally(args.has("storeHistoryLocally")
+                        && args.getBoolean("storeHistoryLocally"));
 
         if (args.has("visitorFields")) {
             sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
@@ -240,13 +261,13 @@ public class WebimSDK extends CordovaPlugin {
         });
         session.getStream().setCurrentOperatorChangeListener(
                 new MessageStream.CurrentOperatorChangeListener() {
-            @Override
-            public void onOperatorChanged(@Nullable Operator oldOperator,
-                                          @Nullable Operator newOperator) {
-                sendCallbackResult(dialogCallback,
-                        ru.webim.plugin.models.DialogState.dialogStateFromEmployee(newOperator));
-            }
-        });
+                    @Override
+                    public void onOperatorChanged(@Nullable Operator oldOperator,
+                                                  @Nullable Operator newOperator) {
+                        sendCallbackResult(dialogCallback,
+                                ru.webim.plugin.models.DialogState.dialogStateFromEmployee(newOperator));
+                    }
+                });
         session.getStream().setUnreadByVisitorMessageCountChangeListener(new MessageStream.UnreadByVisitorMessageCountChangeListener() {
             @Override
             public void onUnreadByVisitorMessageCountChanged(int newMessageCount) {
@@ -280,6 +301,15 @@ public class WebimSDK extends CordovaPlugin {
         listController.requestMore(limit, offset, callbackContext);
     }
 
+    private void getCurrentOperator(final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        Operator operator = session.getStream().getCurrentOperator();
+        sendCallbackResult(callbackContext, operator);
+    }
+
     private void requestDialog(final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
@@ -296,9 +326,16 @@ public class WebimSDK extends CordovaPlugin {
         }
 
         String id = session.getStream().sendMessage(message).toString();
-        ru.webim.plugin.models.Message msg
-                = ru.webim.plugin.models.Message.fromParams(id, message, null,
-                Long.toString(System.currentTimeMillis()), null);
+        ru.webim.plugin.models.Message msg;
+        if (session.getStream().getChatState() == MessageStream.ChatState.NONE
+                || session.getStream().getChatState() == MessageStream.ChatState.UNKNOWN) {
+            msg = ru.webim.plugin.models.Message.fromParams(id, message, null,
+                    Long.toString(System.currentTimeMillis()), null, true);
+            hasFirstMessage = true;
+        } else {
+            msg = ru.webim.plugin.models.Message.fromParams(id, message, null,
+                    Long.toString(System.currentTimeMillis()), null, false);
+        }
         sendNotificationCallbackResult(callbackContext, msg);
     }
 
@@ -325,7 +362,7 @@ public class WebimSDK extends CordovaPlugin {
     }
 
     public static String getMimeType(Context context, Uri uri) {
-        String extension = null;
+        String extension;
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
             final MimeTypeMap mime = MimeTypeMap.getSingleton();
             extension = mime.getExtensionFromMimeType(context.getContentResolver().getType(uri));
@@ -353,6 +390,10 @@ public class WebimSDK extends CordovaPlugin {
                                 String mime = getMimeType(context, uri);
                                 if (mime == null) {
                                     mime = "image/png";
+                                }
+                                if (session.getStream().getChatState() == MessageStream.ChatState.NONE
+                                        || session.getStream().getChatState() == MessageStream.ChatState.UNKNOWN) {
+                                    hasFirstMessage = true;
                                 }
                                 session.getStream().sendFile(file,
                                         file.getName(), mime, new MessageStream.SendFileCallback() {
@@ -406,7 +447,7 @@ public class WebimSDK extends CordovaPlugin {
         session.getStream().sendSurveyAnswer(surveyAnswer, new MessageStream.SurveyAnswerCallback() {
             @Override
             public void onSuccess() {
-                sendCallbackError(callbackContext, "{\"result\":\"Success\"}");
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
             }
 
             @Override
@@ -424,7 +465,7 @@ public class WebimSDK extends CordovaPlugin {
         session.getStream().closeSurvey(new MessageStream.SurveyCloseCallback() {
             @Override
             public void onSuccess() {
-                sendCallbackError(callbackContext, "{\"result\":\"Success\"}");
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
             }
 
             @Override
@@ -462,7 +503,12 @@ public class WebimSDK extends CordovaPlugin {
         onUnreadByVisitorMessageCountCallback = null;
         onDeletedMessageCallback = null;
 
-        session.destroy();
+        if (closeWithClearVisitorData) {
+            session.destroyWithClearVisitorData();
+            closeWithClearVisitorData = false;
+        } else {
+            session.destroy();
+        }
         session = null;
         listController = null;
         sendCallbackResult(callbackContext, "{\"result\":\"WebimSession Close\"}");
@@ -498,6 +544,15 @@ public class WebimSDK extends CordovaPlugin {
         });
     }
 
+    private void setChatRead(final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+
+        session.getStream().setChatRead();
+    }
+
     private void sendDialogToEmailAddress(String emailAddress, final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
@@ -526,6 +581,15 @@ public class WebimSDK extends CordovaPlugin {
                         }
                     }
                 });
+    }
+
+    private void getUnreadByVisitorMessageCount(CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        int count = session.getStream().getUnreadByVisitorMessageCount();
+        sendCallbackResult(callbackContext, "{\"unreadByVisitorMessageCount\":" + count + "}");
     }
 
     private void sendNoResult(CallbackContext callbackContext) {
@@ -612,16 +676,19 @@ public class WebimSDK extends CordovaPlugin {
 
         @Override
         public void messageAdded(@Nullable Message before, @NonNull Message message) {
+            ru.webim.plugin.models.Message msg = ru.webim.plugin.models.Message.fromWebimMessage(message);
             if (message.getType() != Message.Type.FILE_FROM_OPERATOR
                     && message.getType() != Message.Type.FILE_FROM_VISITOR) {
                 if (receiveMessageCallback != null && message.getType() != Message.Type.VISITOR) {
-                    sendNotificationCallbackResult(receiveMessageCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(message));
+                    sendNotificationCallbackResult(receiveMessageCallback, msg);
                 }
             } else {
                 if (receiveFileCallback != null) {
-                    sendNotificationCallbackResult(receiveFileCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(message));
+                    if (hasFirstMessage) {
+                        msg.isFirst = true;
+                        hasFirstMessage = false;
+                    }
+                    sendNotificationCallbackResult(receiveFileCallback, msg);
                 }
             }
         }
@@ -634,16 +701,19 @@ public class WebimSDK extends CordovaPlugin {
 
         @Override
         public void messageChanged(@NonNull Message from, @NonNull Message to) {
+            ru.webim.plugin.models.Message message = ru.webim.plugin.models.Message.fromWebimMessage(to);
             if (to.getType() != Message.Type.FILE_FROM_OPERATOR
                     && to.getType() != Message.Type.FILE_FROM_VISITOR) {
                 if (confirmMessageCallback != null) {
-                    sendNotificationCallbackResult(confirmMessageCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(to).id);
+                    if (hasFirstMessage) {
+                        message.isFirst = true;
+                        hasFirstMessage = false;
+                    }
+                    sendNotificationCallbackResult(confirmMessageCallback, message);
                 }
             } else {
                 if (receiveFileCallback != null) {
-                    sendNotificationCallbackResult(receiveFileCallback,
-                            ru.webim.plugin.models.Message.fromWebimMessage(to));
+                    sendNotificationCallbackResult(receiveFileCallback, message);
                 }
             }
         }
