@@ -145,21 +145,21 @@ import Photos
             session = nil
             messageTracker = nil
             onMessageCallbackId = nil
-            onTypingCallbackId = nil
             onFileCallbackId = nil
             onBanCallbackId = nil
-            onDialogCallbackId = nil
             onFileMessageErrorCallbackId = nil
             onConfirmCallbackId = nil
             onFatalErrorCallbackId = nil
             onRateOperatorCallbackId = nil
             sendDialogToEmailAddressCallbackId = nil
-            onUnreadByVisitorMessageCountCallbackId = nil
             onDeletedMessageCallbackId = nil
-            onSurveyCallbackId = nil
-            onNextQuestionCallbackId = nil
-            onSurveyCancelCallbackId = nil
             if let callbackId = callbackId {
+                onTypingCallbackId = nil
+                onUnreadByVisitorMessageCountCallbackId = nil
+                onDialogCallbackId = nil
+                onSurveyCallbackId = nil
+                onNextQuestionCallbackId = nil
+                onSurveyCancelCallbackId = nil
                 sendCallbackResult(callbackId: callbackId)
             }
         } else {

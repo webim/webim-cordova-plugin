@@ -475,14 +475,19 @@ public class WebimSDK extends CordovaPlugin {
         }
         receiveMessageCallback = null;
         receiveFileCallback = null;
-        typingMessageCallback = null;
         confirmMessageCallback = null;
-        dialogCallback = null;
         banCallback = null;
         rateOperatorCallback = null;
         sendDialogToEmailAddressCallback = null;
-        onUnreadByVisitorMessageCountCallback = null;
         onDeletedMessageCallback = null;
+        if (callbackContext != null) {
+            typingMessageCallback = null;
+            onUnreadByVisitorMessageCountCallback = null;
+            dialogCallback = null;
+            onSurveyCallback = null;
+            onSurveyCancelCallback = null;
+            onNextQuestionCallback = null;
+        }
 
         if (closeWithClearVisitorData) {
             session.destroyWithClearVisitorData();
