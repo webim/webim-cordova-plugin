@@ -189,9 +189,7 @@ public class WebimSDK extends CordovaPlugin {
     private void init(final JSONObject args, final CallbackContext callbackContext)
             throws JSONException {
         if (session != null) {
-            CallbackContext savedUnreadHandler = onUnreadByVisitorMessageCountCallback;
             close(null);
-            onUnreadByVisitorMessageCountCallback = savedUnreadHandler;
         }
         if (!args.has("accountName")) {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
