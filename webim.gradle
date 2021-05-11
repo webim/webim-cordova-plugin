@@ -6,9 +6,12 @@ android {
 }
 
 dependencies {
-    implementation 'com.webimapp.sdk:webimclientsdkandroid:3.35.5'
+    implementation "ru.webim.sdk:webimclientsdkandroid:3.36.3"
     implementation 'com.google.code.gson:gson:2.8.0'
     api 'com.squareup.retrofit2:retrofit:2.2.0'
     api 'com.squareup.retrofit2:converter-gson:2.2.0'
     api 'com.squareup.okhttp3:logging-interceptor:3.11.0'
+    repositories {
+        mavenCentral()
+    }
 }

@@ -5,7 +5,7 @@ public class Employee {
     public String firstname;
     public String avatar;
 
-    public static Employee getEmployee(com.webimapp.android.sdk.Operator operator) {
+    public static Employee getEmployee(ru.webim.android.sdk.Operator operator) {
         Employee resultEmployee = new Employee();
         if (operator != null) {
             resultEmployee.id = operator.getId().toString();

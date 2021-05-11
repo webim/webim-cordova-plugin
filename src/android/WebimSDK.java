@@ -19,17 +19,17 @@ import android.webkit.MimeTypeMap;
 
 import com.google.gson.Gson;
 
-import com.webimapp.android.sdk.FatalErrorHandler;
-import com.webimapp.android.sdk.Message;
-import com.webimapp.android.sdk.MessageListener;
-import com.webimapp.android.sdk.MessageStream;
-import com.webimapp.android.sdk.MessageTracker;
-import com.webimapp.android.sdk.Operator;
-import com.webimapp.android.sdk.Survey;
-import com.webimapp.android.sdk.Webim;
-import com.webimapp.android.sdk.WebimSession;
-import com.webimapp.android.sdk.Webim.SessionBuilder;
-import com.webimapp.android.sdk.WebimError;
+import ru.webim.android.sdk.FatalErrorHandler;
+import ru.webim.android.sdk.Message;
+import ru.webim.android.sdk.MessageListener;
+import ru.webim.android.sdk.MessageStream;
+import ru.webim.android.sdk.MessageTracker;
+import ru.webim.android.sdk.Operator;
+import ru.webim.android.sdk.Survey;
+import ru.webim.android.sdk.Webim;
+import ru.webim.android.sdk.WebimSession;
+import ru.webim.android.sdk.Webim.SessionBuilder;
+import ru.webim.android.sdk.WebimError;
 
 import java.io.File;
 import java.util.ArrayList;
