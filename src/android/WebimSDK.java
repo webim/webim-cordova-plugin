@@ -195,7 +195,7 @@ public class WebimSDK extends CordovaPlugin {
                 .setErrorHandler(new FatalErrorHandler() {
                     @Override
                     public void onError(@NonNull WebimError<FatalErrorType> error) {
-                        sendCallbackError(callbackContext, "{\"result\":\"Fail\"}");
+                        sendCallbackError(callbackContext, "{\"result\":\"Fail: \"" + error.getErrorString() + "}");
                         switch (error.getErrorType()) {
                             case ACCOUNT_BLOCKED:
                             case VISITOR_BANNED:
