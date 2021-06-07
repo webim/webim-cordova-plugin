@@ -297,30 +297,31 @@ final class DeltaCallback {
                 return
         }
         
+        currentChat?.set(unreadByVisitorMessageCount: 0)
         currentChat?.set(readByVisitor: readByVisitor)
-        
+
         if readByVisitor {
             messageStream?.set(unreadByVisitorTimestamp: nil)
             messageStream?.set(unreadByVisitorMessageCount: 0)
         }
     }
-    
+
     private func handleChatStateUpdateBy(delta: DeltaItem) {
         guard delta.getEvent() == .update,
             let chatState = delta.getData() as? String else {
                 return
         }
-        
+
         currentChat?.set(state: ChatItem.ChatItemState(withType: chatState))
 
         messageStream?.changingChatStateOf(chat: currentChat)
     }
-    
+
     private func handleUnreadByOperatorTimestampUpdateBy(delta: DeltaItem) {
         guard delta.getEvent() == .update else {
             return
         }
-        
+
         var unreadByOperatorTimestamp: Double?
         if delta.getData() != nil {
             unreadByOperatorTimestamp = delta.getData() as? Double
@@ -328,12 +329,12 @@ final class DeltaCallback {
         currentChat?.set(unreadByOperatorTimestamp: unreadByOperatorTimestamp)
         messageStream?.set(unreadByOperatorTimestamp: (unreadByOperatorTimestamp != nil ? Date(timeIntervalSince1970: unreadByOperatorTimestamp!) : nil))
     }
-    
+
     private func handleDepartmentListUpdateBy(delta: DeltaItem) {
         guard let deltaData = delta.getData() as? [Any] else {
             return
         }
-        
+
         var departmentItems = [DepartmentItem]()
         for departmentData in deltaData {
             if let departmentDictionary = departmentData as? [String: Any] {
@@ -342,7 +343,7 @@ final class DeltaCallback {
                 }
             }
         }
-        
+
         messageStream?.onReceiving(departmentItemList: departmentItems)
     }
 
@@ -350,7 +351,7 @@ final class DeltaCallback {
         guard let deltaData = delta.getData() as? [String: Any] else {
             return
         }
-        
+
         if let rating = RatingItem(jsonDictionary: deltaData) {
             if delta.getEvent() == .update {
                 currentChat?.set(rating: rating,
@@ -358,7 +359,7 @@ final class DeltaCallback {
             }
         }
     }
-    
+
     private func handleSurveyBy(delta: DeltaItem) {
         if let deltaData = delta.getData() as? [String: Any] {
             messageStream?.onReceived(surveyItem: SurveyItem(jsonDictionary: deltaData))
@@ -366,17 +367,19 @@ final class DeltaCallback {
             messageStream?.onSurveyCancelled()
         }
     }
-    
+
     private func handleUnreadByVisitorUpdateBy(delta: DeltaItem) {
         guard delta.getEvent() == .update,
             let unreadByVisitorUpdate = delta.getData() as? [String: Any],
-            let unreadByVisitorMessageConut = unreadByVisitorUpdate[DeltaItem.UnreadByVisitorField.messageCount.rawValue] as? Int,
-            let unreadByVisitorTimestamp = unreadByVisitorUpdate[DeltaItem.UnreadByVisitorField.timestamp.rawValue] as? Double else {
+            let unreadByVisitorMessageConut = unreadByVisitorUpdate[DeltaItem.UnreadByVisitorField.messageCount.rawValue] as? Int else {
                 return
         }
         currentChat?.set(unreadByVisitorMessageCount: unreadByVisitorMessageConut)
-        messageStream?.set(unreadByVisitorTimestamp: Date(timeIntervalSince1970: unreadByVisitorTimestamp))
         messageStream?.set(unreadByVisitorMessageCount: unreadByVisitorMessageConut)
+
+        if let unreadByVisitorTimestamp = unreadByVisitorUpdate[DeltaItem.UnreadByVisitorField.timestamp.rawValue] as? Double {
+            messageStream?.set(unreadByVisitorTimestamp: Date(timeIntervalSince1970: unreadByVisitorTimestamp))
+        }
     }
     
     private func handleVisitSessionStateUpdateBy(delta: DeltaItem) {
