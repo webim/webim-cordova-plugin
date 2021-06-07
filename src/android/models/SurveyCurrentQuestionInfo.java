@@ -13,7 +13,7 @@ public class SurveyCurrentQuestionInfo {
         return resultSurveyCurrentQuestionInfo;
     }
 
-    public static SurveyCurrentQuestionInfo fromWebimSurveyCurrentQuestionInfo(com.webimapp.android.sdk.Survey.CurrentQuestionInfo surveyCurrentQuestionInfo) {
+    public static SurveyCurrentQuestionInfo fromWebimSurveyCurrentQuestionInfo(ru.webim.android.sdk.Survey.CurrentQuestionInfo surveyCurrentQuestionInfo) {
         SurveyCurrentQuestionInfo resultSurveyCurrentQuestionInfo = new SurveyCurrentQuestionInfo();
         resultSurveyCurrentQuestionInfo.formId = Integer.toString(surveyCurrentQuestionInfo.getFormId());
         resultSurveyCurrentQuestionInfo.questionId = Integer.toString(surveyCurrentQuestionInfo.getQuestionId());

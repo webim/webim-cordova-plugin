@@ -13,7 +13,7 @@ public class SurveyConfig {
         return resultSurveyConfig;
     }
 
-    public static SurveyConfig fromWebimSurveyConfig(com.webimapp.android.sdk.Survey.Config surveyConfig) {
+    public static SurveyConfig fromWebimSurveyConfig(ru.webim.android.sdk.Survey.Config surveyConfig) {
         SurveyConfig resultSurveyConfig = new SurveyConfig();
         resultSurveyConfig.id = Integer.toString(surveyConfig.getId());
         resultSurveyConfig.version = surveyConfig.getVersion();

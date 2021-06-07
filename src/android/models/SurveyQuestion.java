@@ -13,7 +13,7 @@ public class SurveyQuestion {
         return resultSurveyQuestion;
     }
 
-    public static SurveyQuestion fromWebimSurveyQuestion(com.webimapp.android.sdk.Survey.Question surveyQuestion) {
+    public static SurveyQuestion fromWebimSurveyQuestion(ru.webim.android.sdk.Survey.Question surveyQuestion) {
         SurveyQuestion resultSurveyQuestion = new SurveyQuestion();
         switch (surveyQuestion.getType()) {
             case RADIO:
