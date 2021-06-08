@@ -16,7 +16,7 @@ public class Survey {
         return resultSurvey;
     }
 
-    public static Survey fromWebimSurvey(com.webimapp.android.sdk.Survey survey) {
+    public static Survey fromWebimSurvey(ru.webim.android.sdk.Survey survey) {
         Survey resultSurvey = new Survey();
         resultSurvey.id = survey.getId();
         resultSurvey.config = SurveyConfig.fromWebimSurveyConfig(survey.getConfig());
