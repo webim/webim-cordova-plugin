@@ -69,5 +69,8 @@ module.exports = {
     },
     getUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "getUnreadByVisitorMessageCount", [])
+    },
+    onLogging: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onLogging", [])
     }
 };

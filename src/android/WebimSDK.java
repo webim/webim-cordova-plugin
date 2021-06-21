@@ -30,9 +30,11 @@ import ru.webim.android.sdk.Webim;
 import ru.webim.android.sdk.WebimSession;
 import ru.webim.android.sdk.Webim.SessionBuilder;
 import ru.webim.android.sdk.WebimError;
+import ru.webim.android.sdk.WebimLog;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class WebimSDK extends CordovaPlugin {
@@ -59,6 +61,7 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext onSurveyCallback;
     private CallbackContext onNextQuestionCallback;
     private CallbackContext onSurveyCancelCallback;
+    private CallbackContext onLoggingCallback;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -173,6 +176,10 @@ public class WebimSDK extends CordovaPlugin {
                 getUnreadByVisitorMessageCount(callbackContext);
                 return true;
 
+            case "onLogging":
+                onLoggingCallback = callbackContext;
+                return true;
+
             default:
                 return false;
         }
@@ -228,6 +235,15 @@ public class WebimSDK extends CordovaPlugin {
 
         if (args.has("visitorFields")) {
             sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
+        }
+        if (onLoggingCallback != null) {
+            sessionBuilder.setLogger(new WebimLog() {
+                        @Override
+                        public void log(String log) {
+                            sendNotificationCallbackResult(onLoggingCallback, "{\"log\":\"" + log + "\"}");
+                        }
+                    },
+                    Webim.SessionBuilder.WebimLogVerbosityLevel.VERBOSE);
         }
         session = sessionBuilder.build(new WebimSession.SessionCallback() {
             @Override
@@ -487,6 +503,7 @@ public class WebimSDK extends CordovaPlugin {
             onSurveyCallback = null;
             onSurveyCancelCallback = null;
             onNextQuestionCallback = null;
+            onLoggingCallback = null;
         }
 
         if (closeWithClearVisitorData) {

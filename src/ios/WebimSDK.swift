@@ -21,6 +21,7 @@ import Photos
     var onSurveyCallbackId: String?
     var onNextQuestionCallbackId: String?
     var onSurveyCancelCallbackId: String?
+    var onLoggingCallbackId: String?
 
 
     @objc(init:)
@@ -45,6 +46,9 @@ import Photos
                 .set(remoteNotificationSystem: ((deviceToken != nil) ? .APNS : .NONE))
                 .set(deviceToken: deviceToken)
                 .set(isLocalHistoryStoragingEnabled: isLocalHistoryStoragingEnabled ?? false)
+            if onLoggingCallbackId != nil {
+                sessionBuilder = sessionBuilder.set(webimLogger: self, verbosityLevel: .VERBOSE)
+            }
             if let visitorFields = args["visitorFields"] as? NSDictionary {
                 let jsonData = try? JSONSerialization.data(withJSONObject: visitorFields, options: [])
                 let jsonString = String(data: jsonData!, encoding: .utf8)
@@ -125,6 +129,11 @@ import Photos
         onSurveyCancelCallbackId = command.callbackId
     }
 
+    @objc(onLogging:)
+    func onLogging(_ command: CDVInvokedUrlCommand) {
+        onLoggingCallbackId = command.callbackId
+    }
+
     @objc(close:)
     func close(_ command: CDVInvokedUrlCommand) {
         closeInternal(command)
@@ -160,6 +169,7 @@ import Photos
                 onSurveyCallbackId = nil
                 onNextQuestionCallbackId = nil
                 onSurveyCancelCallbackId = nil
+                onLoggingCallbackId = nil
                 sendCallbackResult(callbackId: callbackId)
             }
         } else {
@@ -669,33 +679,33 @@ class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletion
 }
 
 class WebimFile {
-    
+
     let data: Data
     let fileName: String
     let mimeType: MimeType
     let url: URL
-    
+
     init(url fileUrl: URL, data fileData: Data) {
         self.data = fileData
         self.fileName = fileUrl.lastPathComponent
         self.mimeType = MimeType(url: fileUrl)
         self.url = fileUrl
     }
-    
+
     private func sendInternal(session: WebimSession,
               completionHandler: SendFileCompletionHandler?,
               completion: @escaping (Error?) -> Void) {
-        
+
         var resultData = self.data
             var resultMimeType = self.mimeType
         var resultFileName = self.fileName
-        
+
         let imageExtension = self.url.pathExtension.lowercased()
         if (imageExtension != "jpg"
             && imageExtension != "jpeg"
             && imageExtension != "png"
             && isImage(contentType: self.mimeType.value)) {
-            
+
             let image = UIImage(data: self.data)!
             if imageExtension == "heic" || imageExtension == "heif" {
                 resultData = UIImageJPEGRepresentation(image, 0.5)!
@@ -710,7 +720,7 @@ class WebimFile {
                 resultData = UIImagePNGRepresentation(image)!
             }
         }
-        
+
         // Run in main thread to prevent INVALID_THREAD error
         DispatchQueue.main.async {
             do {
@@ -724,15 +734,23 @@ class WebimFile {
             }
         }
     }
-    
+
     func send(session: WebimSession,
               completionHandler: SendFileCompletionHandler?,
               completion: @escaping (Error?) -> Void) {
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             self.sendInternal(session: session,
                               completionHandler: completionHandler,
                               completion: completion)
         }
+    }
+}
+
+extension WebimSDK: WebimLogger {
+    func log(entry: String) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"log\":\"\(entry)\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        commandDelegate!.send(pluginResult, callbackId: onLoggingCallbackId)
     }
 }

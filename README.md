@@ -29,6 +29,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
 <p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#get-unread-by-visitor-message-count">method getUnreadByVisitorMessageCount</a></p>
+<p style="padding-left: 30px;"><a href="#on-logging">method onLogging</a></p>
 <p style="padding-left: 30px;"><a href="#close">method close</a></p>
 
 <a href="#objects">Objects</a>
@@ -168,12 +169,17 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 
 <h4 id="on-unread-by-visitor-message-count" style="padding-left: 30px;"><b>method webimsdk.onUnreadByVisitorMessage(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback called when operator send new message.</p>
-<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> is executed when value of unread by visitor message count changed. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> is executed when value of unread by visitor message count changed. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <em>Int</em>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="get-unread-by-visitor-message-count" style="padding-left: 30px;"><b>method webimsdk.getUnreadByVisitorMessage(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback returns unread by visitor message count.</p>
-<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> returns value of unread by visitor message count. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> returns value of unread by visitor message count. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <em>Int</em>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="on-logging" style="padding-left: 30px;"><b>method webimsdk.onLogging(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when new log entry appears.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(log)</em> returns new log entry appears. <em>log</em> parameter contains new log entry, type — <em>String</em>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="close" style="padding-left: 30px;"><b>method webimsdk.close(successCallback, errorCallback)</b></h4>
