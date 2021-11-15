@@ -11,6 +11,7 @@ public class Message {
     public String sender;
     public Employee operator;
     public boolean isFirst = false;
+    public boolean isReadByOperator;
 
     public static Message fromParams(String id,
                                      String text,
@@ -25,6 +26,7 @@ public class Message {
         resultMessage.timestamp = timestamp;
         resultMessage.url = url;
         resultMessage.isFirst = isFirst;
+        resultMessage.isReadByOperator = false;
 
         return resultMessage;
     }
@@ -33,6 +35,7 @@ public class Message {
         Message resultMessage = new Message();
         resultMessage.id = message.getClientSideId().toString();
         resultMessage.text = message.getText();
+        resultMessage.isReadByOperator = message.isReadByOperator();
         if (message.getType() != ru.webim.android.sdk.Message.Type.FILE_FROM_OPERATOR
                 && message.getType() != ru.webim.android.sdk.Message.Type.OPERATOR) {
             resultMessage.sender = message.getSenderName();

@@ -346,6 +346,7 @@ import Photos
         dict["id"] = message.getID()
         dict["text"] = message.getText()
         dict["isFirst"] = isFirst
+        dict["isReadByOperator"] = message.isReadByOperator()
         if let attachment = message.getAttachment() {
             dict["url"] = (attachment.getURL()).absoluteString
             if let imageInfo = attachment.getImageInfo() {
@@ -383,6 +384,7 @@ import Photos
         dict["sender"] = sender
         dict["timestamp"] = timestamp
         dict["isFirst"] = isFirst
+        dict["isReadByOperator"] = false
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {

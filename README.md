@@ -197,6 +197,8 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;"><em>sender</em> field — message sender name. No field if message is system message. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>operator</em> field — operator information. No field if message isn't operator message. Type — <em>Employee.</em></p>
 <p style="padding-left: 60px;"><em>isFirst</em> field — true if message is the first message in current chat. Type — <em>Boolean.</em></p>
+<p style="padding-left: 60px;"><em>isReadByOperator</em> field — true if message is read by operator. Type — <em>Boolean.</em></p>
+
 
 <h4 id="dialog-state" style="padding-left: 30px;"><b>DialogState</b></h4>
 <p style="padding-left: 60px;">Dialog state info. See method <em><a href="#on-dialog">onDialog</a>.</em></p>
