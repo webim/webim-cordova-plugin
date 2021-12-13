@@ -318,6 +318,8 @@ final class MessageHolder {
 
         let newMessage = MessageImpl(serverURLString: messageImpl.getServerUrlString(),
                                      id: messageID,
+                                     keyboard: messageImpl.getKeyboard(),
+                                     keyboardRequest: messageImpl.getKeyboardRequest(),
                                      operatorID: messageImpl.getOperatorID(),
                                      senderAvatarURLString: messageImpl.getSenderAvatarURLString(),
                                      senderName: messageImpl.getSenderName(),
@@ -356,6 +358,8 @@ final class MessageHolder {
 
         let newMessage = MessageImpl(serverURLString: messageImpl.getServerUrlString(),
                                      id: messageID,
+                                     keyboard: messageImpl.getKeyboard(),
+                                     keyboardRequest: messageImpl.getKeyboardRequest(),
                                      operatorID: messageImpl.getOperatorID(),
                                      senderAvatarURLString: messageImpl.getSenderAvatarURLString(),
                                      senderName: messageImpl.getSenderName(),

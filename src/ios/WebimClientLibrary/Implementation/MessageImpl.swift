@@ -38,6 +38,8 @@ class MessageImpl {
     // MARK: - Properties
     let attachment: MessageAttachment?
     let id: String
+    let keyboard: Keyboard?
+    let keyboardRequest: KeyboardRequest?
     let operatorID: String?
     let rawText: String?
     let senderAvatarURLString: String?
@@ -57,6 +59,8 @@ class MessageImpl {
     // MARK: - Initialization
     init(serverURLString: String,
          id: String,
+         keyboard: Keyboard?,
+         keyboardRequest: KeyboardRequest?,
          operatorID: String?,
          senderAvatarURLString: String?,
          senderName: String,
@@ -74,6 +78,8 @@ class MessageImpl {
         self.attachment = attachment
         self.data = data
         self.id = id
+        self.keyboard = keyboard
+        self.keyboardRequest = keyboardRequest
         self.operatorID = operatorID
         self.rawText = rawText
         self.senderAvatarURLString = senderAvatarURLString
@@ -123,18 +129,7 @@ class MessageImpl {
         
         return historyID
     }
-    
-    func getCurrentChatID() -> String? {
-        guard currentChatID != nil else {
-            WebimInternalLogger.shared.log(entry: "Message \(self.toString()) do not have an ID in current chat or do not exist in current chat or chat exists itself not.",
-                verbosityLevel: .DEBUG)
-            
-            return nil
-        }
-        
-        return currentChatID
-    }
-    
+
     func getServerUrlString() -> String {
         return serverURLString
     }
@@ -290,7 +285,26 @@ extension MessageImpl: Message {
     func getID() -> String {
         return id
     }
-    
+
+    func getCurrentChatID() -> String? {
+        guard let currentChatID = currentChatID else {
+            WebimInternalLogger.shared.log(entry: "Message \(self.toString()) do not have an ID in current chat or do not exist in current chat or chat exists itself not.",
+                                           verbosityLevel: .DEBUG)
+
+            return nil
+        }
+
+        return currentChatID
+    }
+
+    func getKeyboard() -> Keyboard? {
+        return keyboard
+    }
+
+    func getKeyboardRequest() -> KeyboardRequest? {
+        return keyboardRequest
+    }
+
     func getOperatorID() -> String? {
         return operatorID
     }
@@ -533,5 +547,153 @@ final class ImageInfoImpl: ImageInfo {
     func getWidth() -> Int? {
         return width
     }
-    
+
+}
+
+// MARK: -
+/**
+ - seealso:
+ `Keyboard`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+final class KeyboardImpl: Keyboard {
+
+    var keyboardItem: KeyboardItem
+
+    init?(data: [String: Any?]) {
+        if let keyboard = KeyboardItem(jsonDictionary: data) {
+            self.keyboardItem = keyboard
+        } else {
+            return nil
+        }
+    }
+
+    static func getKeyboard(jsonDictionary: [String : Any?]) -> Keyboard? {
+        return KeyboardImpl(data: jsonDictionary)
+    }
+
+    func getButtons() -> [[KeyboardButton]] {
+        var buttonArrayArray = [[KeyboardButton]]()
+        for buttonArray in keyboardItem.getButtons() {
+            var newButtonArray = [KeyboardButton]()
+            for button in buttonArray {
+                guard let buttonImpl = KeyboardButtonImpl(data: button) else {
+                    WebimInternalLogger.shared.log(entry: "Getting KeyboardButtonImpl from data failure in KeyboardImpl.\(#function)")
+                    return []
+                }
+                newButtonArray.append(buttonImpl)
+            }
+            buttonArrayArray.append(newButtonArray)
+        }
+        return buttonArrayArray
+    }
+
+    func getState() -> KeyboardState {
+        return keyboardItem.getState()
+    }
+
+    func getResponse() -> KeyboardResponse? {
+        return KeyboardResponseImpl(data: keyboardItem.getResponse())
+    }
+}
+
+// MARK: -
+/**
+ - seealso:
+ `KeyboardButton`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+final class KeyboardButtonImpl: KeyboardButton {
+
+    let buttonItem: KeyboardButtonItem
+
+    init?(data: KeyboardButtonItem?) {
+        if let buttonItem = data {
+            self.buttonItem = buttonItem
+        } else {
+            return nil
+        }
+    }
+
+    func getID() -> String {
+        return buttonItem.getId()
+    }
+
+    func getText() -> String {
+        return buttonItem.getText()
+    }
+}
+
+// MARK: -
+/**
+ - seealso:
+ `KeyboardResponse`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+final class KeyboardResponseImpl: KeyboardResponse {
+
+    let keyboardResponseItem: KeyboardResponseItem
+
+    init?(data: KeyboardResponseItem?) {
+        if let keyboardResponse = data {
+            self.keyboardResponseItem = keyboardResponse
+        } else {
+            return nil
+        }
+    }
+
+    func getButtonID() -> String {
+        return keyboardResponseItem.getButtonId()
+    }
+
+    func getMessageID() -> String {
+        return keyboardResponseItem.getMessageId()
+    }
+}
+
+// MARK: -
+/**
+ - seealso:
+ `KeyboardResponse`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+final class KeyboardRequestImpl: KeyboardRequest {
+
+    let keyboardRequestItem: KeyboardRequestItem
+
+    init?(data: [String: Any?]) {
+        if let keyboardRequest = KeyboardRequestItem(jsonDictionary: data) {
+            self.keyboardRequestItem = keyboardRequest
+        } else {
+            return nil
+        }
+    }
+
+    static func getKeyboardRequest(jsonDictionary: [String : Any?]) -> KeyboardRequest? {
+        return KeyboardRequestImpl(data: jsonDictionary)
+    }
+
+    func getButton() -> KeyboardButton {
+        guard let buttonImpl = KeyboardButtonImpl(data: keyboardRequestItem.getButton()) else {
+            WebimInternalLogger.shared.log(entry: "Getting KeyboardButtonImpl from data failure in KeyboardRequestImpl.\(#function)")
+            fatalError("Getting KeyboardButtonImpl from data failure in KeyboardRequestImpl.\(#function)")
+        }
+        return buttonImpl
+    }
+
+    func getMessageID() -> String {
+        return keyboardRequestItem.getMessageId()
+    }
 }

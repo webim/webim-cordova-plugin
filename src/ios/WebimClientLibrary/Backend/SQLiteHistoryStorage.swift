@@ -566,16 +566,25 @@ final class SQLiteHistoryStorage: HistoryStorage {
             data = NSKeyedUnarchiver.unarchiveObject(with: Data.fromDatatypeValue(dataValue)) as? [String: Any?]
         }
         
-        
+        var keyboard: Keyboard? = nil
+        var keyboardRequest: KeyboardRequest? = nil
+        if let data = data {
+            keyboard = KeyboardImpl.getKeyboard(jsonDictionary: data)
+            keyboardRequest = KeyboardRequestImpl.getKeyboardRequest(jsonDictionary: data)
+        }
+
+
         var attachment: MessageAttachment? = nil
         if let rawText = rawText {
             attachment = MessageAttachmentImpl.getAttachment(byServerURL: serverURLString,
                                                              webimClient: webimClient,
                                                              text: rawText)
         }
-        
+
         return MessageImpl(serverURLString: serverURLString,
                            id: (clientSideID ?? id),
+                           keyboard: keyboard,
+                           keyboardRequest: keyboardRequest,
                            operatorID: row[SQLiteHistoryStorage.senderID],
                            senderAvatarURLString: row[SQLiteHistoryStorage.avatarURLString],
                            senderName: row[SQLiteHistoryStorage.senderName],

@@ -13,6 +13,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#typing-message">method typingMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-message">method sendMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-file">method sendFile</a></p>
+<p style="padding-left: 30px;"><a href="#send-keyboard-request">method sendKeyboardRequest</a></p>
 <p style="padding-left: 30px;"><a href="#send-survey-answer">method sendSurveyAnswer</a></p>
 <p style="padding-left: 30px;"><a href="#cancel-survey">method cancelSurvey</a></p>
 <p style="padding-left: 30px;"><a href="#on-message">method onMessage</a></p>
@@ -40,6 +41,10 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#survey-config">SurveyConfig</a></p>
 <p style="padding-left: 30px;"><a href="#survey-current-question-info">SurveyCurrentQuestionInfo</a></p>
 <p style="padding-left: 30px;"><a href="#survey-question">SurveyQuestion</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard">Keyboard</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard-button">KeyboardButton</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard-request">KeyboardRequest</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard-response">KeyboardResponse</a></p>
 
 <h2 id="installation"><b>Setting up</b></h2>
 
@@ -90,6 +95,13 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="send-file" style="padding-left: 30px;"><b>method webimsdk.sendFile(filePath, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Sends a file message.</p>
 <p style="padding-left: 60px;"><em>filePath</em> parameter — file path.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(id)</em> is executed when the method is successfully completed. <em>id</em> parameter contains file message <em>ID</em>, type — <em>String</em>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="send-keyboard-request" style="padding-left: 30px;"><b>method webimsdk.sendKeyboardRequest(requestMessageCurrentChatId, buttonId, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Sends a file keyboard request.</p>
+<p style="padding-left: 60px;"><em>requestMessageCurrentChatId</em> parameter — message current chat id.</p>
+<p style="padding-left: 60px;"><em>buttonID</em> parameter — selected button id.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(id)</em> is executed when the method is successfully completed. <em>id</em> parameter contains file message <em>ID</em>, type — <em>String</em>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
@@ -230,3 +242,24 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Survey question information.</p>
 <p style="padding-left: 60px;"><em>type</em> field — survey question type. Type can be "stars", "radio", "comment". Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>text</em> field — survey question text. Type — <em>String</em>.</p>
+
+<h4 id="keyboard" style="padding-left: 30px;"><b>Keyboard</b></h4>
+<p style="padding-left: 60px;">Keyboard information.</p>
+<p style="padding-left: 60px;"><em>state</em> field — keyboard state. Type can be "pending" (all buttons aren't selected), "completed" (keyboard has selected button), "canceled" (keyboard is canceled without selected button). Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>buttons</em> field contains buttons array. See <a href="#keyboard-button"><em>KeyboardButton</em></a>.</p>
+<p style="padding-left: 60px;"><em>keyboardResponse</em> field contains information about selected button. Type — <em>KeyboardResponse</em>.</p>
+
+<h4 id="keyboard-button" style="padding-left: 30px;"><b>KeyboardButton</b></h4>
+<p style="padding-left: 60px;">Keyboard button information.</p>
+<p style="padding-left: 60px;"><em>text</em> field — text on button. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>id</em> field — button id.. Type — <em>String</em>.</p>
+
+<h4 id="keyboard-request" style="padding-left: 30px;"><b>KeyboardRequest</b></h4>
+<p style="padding-left: 60px;">Keyboard request information.</p>
+<p style="padding-left: 60px;"><em>messageID</em> field — id of message with keyboard. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>button</em> field — selected button. Type — <a href="#keyboard-button"><em>KeyboardButton</em></a>.</p>
+
+<h4 id="keyboard-request" style="padding-left: 30px;"><b>KeyboardRequest</b></h4>
+<p style="padding-left: 60px;">Keyboard request information.</p>
+<p style="padding-left: 60px;"><em>buttonID</em> field — selected button id. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>messageID</em> field — id of message with keyboard. Type — <em>String</em>.</p>

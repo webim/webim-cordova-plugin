@@ -276,6 +276,16 @@ import Photos
         } catch { }
     }
 
+    @objc(sendKeyboardRequest:)
+    func sendKeyboardRequest(_ command: CDVInvokedUrlCommand) {
+        let callbackContextId = command.callbackId
+        let requestMessageCurrentChatId = command.arguments[0] as? String ?? ""
+        let buttonID = command.arguments[1] as? String ?? ""
+        do {
+            try session?.getStream().sendKeyboardRequest(buttonID: buttonID, messageCurrentChatID: requestMessageCurrentChatId, completionHandler: SendKeyboardRequestCompletionHandlerImpl(webimSDK: self, callbackContextId: callbackContextId))
+        } catch { }
+    }
+
     @objc(rateOperator:)
     func rateOperator(_ command: CDVInvokedUrlCommand) {
         onRateOperatorCallbackId = command.callbackId
@@ -344,6 +354,7 @@ import Photos
     func messageToDictionary(message: Message, isFirst: Bool = false) -> [String: Any] {
         var dict = [String: Any]()
         dict["id"] = message.getID()
+        dict["currentChatID"] = message.getCurrentChatID()
         dict["text"] = message.getText()
         dict["isFirst"] = isFirst
         dict["isReadByOperator"] = message.isReadByOperator()
@@ -367,6 +378,39 @@ import Photos
             dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000 - 1)
         } else {
             dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
+        }
+        if message.getType() == .keyboard,
+           let keyboard = message.getKeyboard() {
+            var keyboardDict = [String: Any]()
+            switch keyboard.getState() {
+            case .pending:
+                keyboardDict["state"] = "pending"
+            case .completed:
+                keyboardDict["state"] = "completed"
+            case .canceled:
+                keyboardDict["state"] = "canceled"
+            }
+            let keyboardButtons = keyboard.getButtons()
+            var keyboardButtonsDict = [[String: String]]()
+            for array in keyboardButtons {
+                for button in array {
+                    keyboardButtonsDict.append(["text": button.getText(), "id": button.getID()])
+                }
+            }
+            keyboardDict["buttons"] = keyboardButtonsDict
+            if let keyboardResponse = keyboard.getResponse() {
+                keyboardDict["keyboardResponse"] = ["messageID": keyboardResponse.getMessageID(), "buttonID": keyboardResponse.getButtonID()]
+            }
+
+
+            dict["keyboard"] = keyboardDict
+
+        }
+        if message.getType() == .keyboardResponse,
+           let keyboardRequest = message.getKeyboardRequest() {
+            var keyboardRequestDict: [String: Any] = ["messageID": keyboardRequest.getMessageID()]
+            keyboardRequestDict["button"] = ["id": keyboardRequest.getButton().getID(), "text": keyboardRequest.getButton().getText()]
+            dict["keyboardRequest"] = keyboardRequest
         }
         return dict;
     }
@@ -678,6 +722,29 @@ class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletion
     }
 
 
+}
+
+class SendKeyboardRequestCompletionHandlerImpl: SendKeyboardRequestCompletionHandler {
+    let webimSDK: WebimSDK
+    let callbackContextId: String?
+
+    init(webimSDK: WebimSDK,
+         callbackContextId: String?) {
+        self.webimSDK = webimSDK
+        self.callbackContextId = callbackContextId
+    }
+
+    func onSuccess(messageID: String) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(pluginResult, callbackId: callbackContextId)
+    }
+
+    func onFailure(messageID: String, error: KeyboardResponseError) {
+        let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        errorPluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(errorPluginResult, callbackId: callbackContextId)
+    }
 }
 
 class WebimFile {

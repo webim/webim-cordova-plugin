@@ -534,6 +534,16 @@ extension MessageStreamImpl: MessageStream {
         }
     }
     
+    func sendKeyboardRequest(buttonID: String,
+                             messageCurrentChatID: String,
+                             completionHandler: SendKeyboardRequestCompletionHandler?) throws {
+        try accessChecker.checkAccess()
+
+        webimActions.sendKeyboardRequest(buttonId: buttonID,
+                                         messageId: messageCurrentChatID,
+                                         completionHandler: completionHandler)
+    }
+
     func set(prechatFields: String) throws {
         try accessChecker.checkAccess()
         

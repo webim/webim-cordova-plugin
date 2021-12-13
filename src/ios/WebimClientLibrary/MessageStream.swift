@@ -572,6 +572,26 @@ public protocol MessageStream: class {
     func set(surveyListener: SurveyListener)
     
     /**
+     Send keyboard request with button.
+     - parameter buttonID:
+     ID of selected button.
+     - parameter messageID:
+     Current chat ID of message with keyboard.
+     - parameter completionHandler:
+     Completion handler that executes when operation is done.
+     - throws:
+     `AccessError.invalidThread` if the method was called not from the thread the WebimSession was created in.
+     `AccessError.invalidSession` if WebimSession was destroyed.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2020 Webim
+     */
+    func sendKeyboardRequest(buttonID: String,
+                             messageCurrentChatID: String,
+                             completionHandler: SendKeyboardRequestCompletionHandler?) throws
+
+    /**
      `MessageTracker` (via `MessageTracker.getNextMessages(byLimit:completion:)`) allows to request the messages which are above in the history. Each next call `MessageTracker.getNextMessages(byLimit:completion:)` returns earlier messages in relation to the already requested ones.
      Changes of user-visible messages (e.g. ever requested from `MessageTracker`) are transmitted to `MessageListener`. That is why `MessageListener` is needed when creating `MessageTracker`.
      - important:
@@ -589,7 +609,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func newMessageTracker(messageListener: MessageListener) throws -> MessageTracker
-    
+
     /**
      Sets `VisitSessionStateListener` object.
      - seealso:
@@ -603,7 +623,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func set(visitSessionStateListener: VisitSessionStateListener)
-    
+
     /**
      Sets the `ChatState` change listener.
      - parameter chatStateListener:
@@ -614,7 +634,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func set(chatStateListener: ChatStateListener)
-    
+
     /**
      Sets the current `Operator` change listener.
      - parameter currentOperatorChangeListener:
@@ -625,7 +645,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func set(currentOperatorChangeListener: CurrentOperatorChangeListener)
-    
+
     /**
      Sets `DepartmentListChangeListener` object.
      - seealso:
@@ -639,7 +659,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func set(departmentListChangeListener: DepartmentListChangeListener)
-    
+
     /**
      Sets the listener of the MessageStream LocationSettings changes.
      - parameter locationSettingsChangeListener:
@@ -650,7 +670,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func set(locationSettingsChangeListener: LocationSettingsChangeListener)
-    
+
     /**
      Sets the listener of the "operator typing" status changes.
      - parameter operatorTypingListener:
@@ -661,7 +681,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func set(operatorTypingListener: OperatorTypingListener)
-    
+
     /**
      Sets the listener of session status changes.
      - parameter onlineStatusChangeListener:
@@ -674,7 +694,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func set(onlineStatusChangeListener: OnlineStatusChangeListener)
-    
+
     /**
      Sets listener for parameter that is to be returned by `MessageStream.getUnreadByOperatorTimestamp()` method.
      - parameter unreadByOperatorTimestampChangeListener:
@@ -685,7 +705,7 @@ public protocol MessageStream: class {
      2018 Webim
      */
     func set(unreadByOperatorTimestampChangeListener: UnreadByOperatorTimestampChangeListener)
-    
+
     /**
      Sets listener for parameter that is to be returned by `MessageStream.getUnreadByVisitorMessageCount()` method.
      - parameter unreadByVisitorMessageCountChangeListener:
@@ -696,7 +716,7 @@ public protocol MessageStream: class {
      2018 Webim
      */
     func set(unreadByVisitorMessageCountChangeListener: UnreadByVisitorMessageCountChangeListener)
-    
+
     /**
      Sets listener for parameter that is to be returned by `MessageStream.getUnreadByVisitorTimestamp()` method.
      - parameter unreadByVisitorTimestampChangeListener:
@@ -720,7 +740,7 @@ public protocol MessageStream: class {
  2017 Webim
  */
 public protocol LocationSettings {
-    
+
     /**
      This method shows to an app if it should show hint questions to visitor.
      - returns:
@@ -731,7 +751,7 @@ public protocol LocationSettings {
      2017 Webim
      */
     func areHintsEnabled() -> Bool
-    
+
 }
 
 // MARK: -
@@ -744,7 +764,7 @@ public protocol LocationSettings {
  2018 Webim
  */
 public protocol DataMessageCompletionHandler: class {
-    
+
     /**
      Executed when operation is done successfully.
      - parameter messageID:
@@ -755,7 +775,7 @@ public protocol DataMessageCompletionHandler: class {
      2018 Webim
      */
     func onSuccess(messageID: String)
-    
+
     /**
      Executed when operation is failed.
      - parameter messageID:
@@ -771,7 +791,7 @@ public protocol DataMessageCompletionHandler: class {
      */
     func onFailure(messageID: String,
                    error: DataMessageError)
-    
+
 }
 
 /**
@@ -793,7 +813,7 @@ public protocol EditMessageCompletionHandler: class {
      2018 Webim
      */
     func onSuccess(messageID: String)
-    
+
     /**
      Executed when operation is failed.
      - parameter messageID:
@@ -830,7 +850,7 @@ public protocol DeleteMessageCompletionHandler: class {
      2018 Webim
      */
     func onSuccess(messageID: String)
-    
+
     /**
      Executed when operation is failed.
      - parameter messageID:
@@ -857,7 +877,7 @@ public protocol DeleteMessageCompletionHandler: class {
  2017 Webim
  */
 public protocol SendFileCompletionHandler: class {
-    
+
     /**
      Executed when operation is done successfully.
      - parameter messageID:
@@ -868,7 +888,7 @@ public protocol SendFileCompletionHandler: class {
      2017 Webim
      */
     func onSuccess(messageID: String)
-    
+
     /**
      Executed when operation is failed.
      - parameter messageID:
@@ -884,7 +904,46 @@ public protocol SendFileCompletionHandler: class {
      */
     func onFailure(messageID: String,
                    error: SendFileError)
-    
+
+}
+
+/**
+ - seealso:
+ `MessageStream.sendKeyboardRequest(button:message:completionHandler:)`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public protocol SendKeyboardRequestCompletionHandler: class {
+
+    /**
+     Executed when operation is done successfully.
+     - parameter messageID:
+     ID of the message.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func onSuccess(messageID: String)
+
+    /**
+     Executed when operation is failed.
+     - parameter messageID:
+     ID of the message.
+     - parameter error:
+     Error.
+     - seealso:
+     `KeyboardResponseError`.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func onFailure(messageID: String,
+                   error: KeyboardResponseError)
+
 }
 
 /**
@@ -896,7 +955,7 @@ public protocol SendFileCompletionHandler: class {
  2017 Webim
  */
 public protocol RateOperatorCompletionHandler: class {
-    
+
     /**
      Executed when operation is done successfully.
      - author:
@@ -905,7 +964,7 @@ public protocol RateOperatorCompletionHandler: class {
      2017 Webim
      */
     func onSuccess()
-    
+
     /**
      Executed when operation is failed.
      - parameter error:
@@ -918,7 +977,7 @@ public protocol RateOperatorCompletionHandler: class {
      2017 Webim
      */
     func onFailure(error: RateOperatorError)
-    
+
 }
 
 /**
@@ -964,7 +1023,7 @@ Nikita Kaberov
 2020 Webim
 */
 public protocol SendSurveyAnswerCompletionHandler {
-    
+
     /**
      Executed when operation is done successfully.
      - author:
@@ -973,7 +1032,7 @@ public protocol SendSurveyAnswerCompletionHandler {
      2020 Webim
      */
     func onSuccess()
-    
+
     /**
      Executed when operation is failed.
      - parameter error:
@@ -997,7 +1056,7 @@ Nikita Kaberov
 2020 Webim
 */
 public protocol SurveyCloseCompletionHandler {
-    
+
     /**
      Invoked when survey was successfully closed on server.
      - author:
@@ -1027,7 +1086,7 @@ public protocol SurveyCloseCompletionHandler {
  2017 Webim
  */
 public protocol VisitSessionStateListener: class {
-    
+
     /**
      Called when `VisitSessionState` status is changed.
      - parameter previousState:
@@ -1041,7 +1100,7 @@ public protocol VisitSessionStateListener: class {
      */
     func changed(state previousState: VisitSessionState,
                  to newState: VisitSessionState)
-    
+
 }
 
 /**
@@ -1055,7 +1114,7 @@ public protocol VisitSessionStateListener: class {
  2017 Webim
  */
 public protocol ChatStateListener: class {
-    
+
     /**
      Called during `ChatState` transition.
      - parameter previousState:
@@ -1069,7 +1128,7 @@ public protocol ChatStateListener: class {
      */
     func changed(state previousState: ChatState,
                  to newState: ChatState)
-    
+
 }
 
 /**
@@ -1082,7 +1141,7 @@ public protocol ChatStateListener: class {
  2017 Webim
  */
 public protocol CurrentOperatorChangeListener: class {
-    
+
     /**
      Called when `Operator` of the current chat changed.
      - parameter previousOperator:
@@ -1096,7 +1155,7 @@ public protocol CurrentOperatorChangeListener: class {
      */
     func changed(operator previousOperator: Operator?,
                  to newOperator: Operator?)
-    
+
 }
 
 /**
@@ -1109,7 +1168,7 @@ public protocol CurrentOperatorChangeListener: class {
  2017 Webim
  */
 public protocol DepartmentListChangeListener: class {
-    
+
     /**
      Called when department list is received.
      - seealso:
@@ -1122,7 +1181,7 @@ public protocol DepartmentListChangeListener: class {
      2017 Webim
      */
     func received(departmentList: [Department])
-    
+
 }
 
 /**
@@ -1135,7 +1194,7 @@ public protocol DepartmentListChangeListener: class {
  2017 Webim
  */
 public protocol LocationSettingsChangeListener: class {
-    
+
     /**
      Method called by an app when new LocationSettings object is received.
      - parameter previousLocationSettings:
@@ -1149,7 +1208,7 @@ public protocol LocationSettingsChangeListener: class {
      */
     func changed(locationSettings previousLocationSettings: LocationSettings,
                  to newLocationSettings: LocationSettings)
-    
+
 }
 
 /**
@@ -1161,7 +1220,7 @@ public protocol LocationSettingsChangeListener: class {
  2017 Webim
  */
 public protocol OperatorTypingListener: class {
-    
+
     /**
      Called when operator typing state changed.
      - parameter isTyping:
@@ -1172,7 +1231,7 @@ public protocol OperatorTypingListener: class {
      2017 Webim
      */
     func onOperatorTypingStateChanged(isTyping: Bool)
-    
+
 }
 
 /**
@@ -1185,7 +1244,7 @@ public protocol OperatorTypingListener: class {
  2017 Webim
  */
 public protocol OnlineStatusChangeListener: class {
-    
+
     /**
      Called when new session status is received.
      - parameter previousOnlineStatus:
@@ -1201,7 +1260,7 @@ public protocol OnlineStatusChangeListener: class {
      */
     func changed(onlineStatus previousOnlineStatus: OnlineStatus,
                  to newOnlineStatus: OnlineStatus)
-    
+
 }
 
 /**
@@ -1214,7 +1273,7 @@ Nikita Kaberov
 2020 Webim
 */
 public protocol SurveyListener: class {
-    
+
     /**
     Method to be called one time when new survey was sent by server.
     - parameter survey:
@@ -1257,7 +1316,7 @@ public protocol SurveyListener: class {
  2018 Webim
  */
 public protocol UnreadByOperatorTimestampChangeListener: class {
-    
+
     /**
      Method to be called when parameter that is to be returned by `MessageStream.getUnreadByOperatorTimestamp()` method is changed.
      - parameter newValue:
@@ -1268,7 +1327,7 @@ public protocol UnreadByOperatorTimestampChangeListener: class {
      2018 Webim
      */
     func changedUnreadByOperatorTimestampTo(newValue: Date?)
-    
+
 }
 
 /**
@@ -1281,7 +1340,7 @@ public protocol UnreadByOperatorTimestampChangeListener: class {
  2018 Webim
  */
 public protocol UnreadByVisitorMessageCountChangeListener: class {
-    
+
     /**
      Interface that provides methods for handling changes of parameter that is to be returned by `MessageStream.getUnreadByVisitorMessageCount()` method.
      - parameter newValue:
@@ -1292,7 +1351,7 @@ public protocol UnreadByVisitorMessageCountChangeListener: class {
      2018 Webim
      */
     func changedUnreadByVisitorMessageCountTo(newValue: Int)
-    
+
 }
 
 /**
@@ -1305,7 +1364,7 @@ public protocol UnreadByVisitorMessageCountChangeListener: class {
  2018 Webim
  */
 public protocol UnreadByVisitorTimestampChangeListener: class {
-    
+
     /**
      Interface that provides methods for handling changes of parameter that is to be returned by `MessageStream.getUnreadByVisitorTimestamp()` method.
      - parameter newValue:
@@ -1316,7 +1375,7 @@ public protocol UnreadByVisitorTimestampChangeListener: class {
      2018 Webim
      */
     func changedUnreadByVisitorTimestampTo(newValue: Date?)
-    
+
 }
 
 // MARK: -
@@ -1335,7 +1394,7 @@ public protocol UnreadByVisitorTimestampChangeListener: class {
  2017 Webim
  */
 public enum ChatState {
-    
+
     /**
      Means that an operator has taken a chat for processing.
      From this state a chat can be turned into:
@@ -1348,7 +1407,7 @@ public enum ChatState {
      2017 Webim
      */
     case CHATTING
-    
+
     /**
      Means that chat is picked up by a bot.
      From this state a chat can be turned into:
@@ -1361,7 +1420,7 @@ public enum ChatState {
      2018 Webim
      */
     case CHATTING_WITH_ROBOT
-    
+
     /**
      Means that an operator has closed the chat.
      From this state a chat can be turned into:
@@ -1373,7 +1432,7 @@ public enum ChatState {
      2017 Webim
      */
     case CLOSED_BY_OPERATOR
-    
+
     /**
      Means that a visitor has closed the chat.
      From this state a chat can be turned into:
@@ -1385,7 +1444,7 @@ public enum ChatState {
      2017 Webim
      */
     case CLOSED_BY_VISITOR
-    
+
     /**
      Means that a chat has been started by an operator and at this moment is waiting for a visitor's response.
      From this state a chat can be turned into:
@@ -1397,7 +1456,7 @@ public enum ChatState {
      2017 Webim
      */
     case INVITATION
-    
+
     /**
      Means the absence of a chat as such, e.g. a chat has not been started by a visitor nor by an operator.
      From this state a chat can be turned into:
@@ -1409,7 +1468,7 @@ public enum ChatState {
      2017 Webim
      */
     case NONE
-    
+
     /**
      Means that a chat has been started by a visitor and at this moment is being in the queue for processing by an operator.
      From this state a chat can be turned into:
@@ -1422,7 +1481,7 @@ public enum ChatState {
      2017 Webim
      */
     case QUEUE
-    
+
     /**
      The state is undefined.
      This state is set as the initial when creating a new session, until the first response of the server containing the actual state is got. This state is also used as a fallback if WebimClientLibrary can not identify the server state (e.g. if the server has been updated to a version that contains new states).
@@ -1432,7 +1491,7 @@ public enum ChatState {
      2017 Webim
      */
     case UNKNOWN
-    
+
 }
 
 /**
@@ -1445,7 +1504,7 @@ public enum ChatState {
  2017 Webim
  */
 public enum OnlineStatus {
-    
+
     /**
      Offline state with chats' count limit exceeded.
      Means that visitor is not able to send messages at all.
@@ -1455,7 +1514,7 @@ public enum OnlineStatus {
      2017 Webim
      */
     case BUSY_OFFLINE
-    
+
     /**
      Online state with chats' count limit exceeded.
      Visitor is able send offline messages, but the server can reject it.
@@ -1465,7 +1524,7 @@ public enum OnlineStatus {
      2017 Webim
      */
     case BUSY_ONLINE
-    
+
     /**
      Visitor is able to send offline messages.
      - author:
@@ -1474,7 +1533,7 @@ public enum OnlineStatus {
      2017 Webim
      */
     case OFFLINE
-    
+
     /**
      Visitor is able to send both online and offline messages.
      - author:
@@ -1483,7 +1542,7 @@ public enum OnlineStatus {
      2017 Webim
      */
     case ONLINE
-    
+
     /**
      First status is not recieved yet or status is not supported by this version of the library.
      - author:
@@ -1492,7 +1551,7 @@ public enum OnlineStatus {
      2017 Webim
      */
     case UNKNOWN
-    
+
 }
 
 /**
@@ -1506,7 +1565,7 @@ public enum OnlineStatus {
  2017 Webim
  */
 public enum VisitSessionState {
-    
+
     /**
      Chat in progress.
      - author:
@@ -1515,7 +1574,7 @@ public enum VisitSessionState {
      2017 Webim
      */
     case CHAT
-    
+
     /**
      Chat must be started with department selected (there was a try to start chat without department selected).
      - seealso:
@@ -1526,7 +1585,7 @@ public enum VisitSessionState {
      2017 Webim
      */
     case DEPARTMENT_SELECTION
-    
+
     /**
      Session is active but no chat is occuring (chat was not started yet).
      - author:
@@ -1535,7 +1594,7 @@ public enum VisitSessionState {
      2017 Webim
      */
     case IDLE
-    
+
     /**
      Session is active but no chat is occuring (chat was closed recently).
      - author:
@@ -1544,7 +1603,7 @@ public enum VisitSessionState {
      2017 Webim
      */
     case IDLE_AFTER_CHAT
-    
+
     /**
      Offline state.
      - author:
@@ -1553,7 +1612,7 @@ public enum VisitSessionState {
      2017 Webim
      */
     case OFFLINE_MESSAGE
-    
+
     /**
      First status is not received yet or status is not supported by this version of the library.
      - author:
@@ -1562,7 +1621,7 @@ public enum VisitSessionState {
      2017 Webim
      */
     case UNKNOWN
-    
+
 }
 
 /**
@@ -1574,7 +1633,7 @@ public enum VisitSessionState {
  2018 Webim
  */
 public enum DataMessageError: Error {
-    
+
     /**
      Received error is not supported by current WebimClientLibrary version.
      - author:
@@ -1583,10 +1642,10 @@ public enum DataMessageError: Error {
      2018 Webim
      */
     case UNKNOWN
-    
+
     // MARK: Quoted message errors
     // Note that quoted message mechanism is not a standard feature – it must be implemented by a server. For more information please contact with Webim support service.
-    
+
     /**
      To be raised when quoted message ID belongs to a message without `canBeReplied` flag set to `true` (this flag is to be set on the server-side).
      - author:
@@ -1595,7 +1654,7 @@ public enum DataMessageError: Error {
      2018 Webim
      */
     case QUOTED_MESSAGE_CANNOT_BE_REPLIED
-    
+
     /**
      To be raised when quoted message ID belongs to another visitor's chat.
      - author:
@@ -1604,7 +1663,7 @@ public enum DataMessageError: Error {
      2018 Webim
      */
     case QUOTED_MESSAGE_FROM_ANOTHER_VISITOR
-    
+
     /**
      To be raised when quoted message ID belongs to multiple messages (server DB error).
      - author:
@@ -1613,7 +1672,7 @@ public enum DataMessageError: Error {
      2018 Webim
      */
     case QUOTED_MESSAGE_MULTIPLE_IDS
-    
+
     /**
      To be raised when one or more required arguments of quoting mechanism are missing.
      - author:
@@ -1622,7 +1681,7 @@ public enum DataMessageError: Error {
      2018 Webim
      */
     case QUOTED_MESSAGE_REQUIRED_ARGUMENTS_MISSING
-    
+
     /**
      To be raised when wrong quoted message ID is sent.
      - author:
@@ -1631,7 +1690,7 @@ public enum DataMessageError: Error {
      2018 Webim
      */
     case QUOTED_MESSAGE_WRONG_ID
-    
+
 }
 
 /**
@@ -1748,7 +1807,7 @@ public enum DeleteMessageError: Error {
  2017 Webim
  */
 public enum SendFileError: Error {
-    
+
     /**
      The server may deny a request if the file size exceeds a limit.
      The maximum size of a file is configured on the server.
@@ -1758,7 +1817,7 @@ public enum SendFileError: Error {
      2017 Webim
      */
     case FILE_SIZE_EXCEEDED
-    
+
     /**
      The server may deny a request if the file type is not allowed.
      The list of allowed file types is configured on the server.
@@ -1768,7 +1827,7 @@ public enum SendFileError: Error {
      2017 Webim
      */
     case FILE_TYPE_NOT_ALLOWED
-    
+
     /**
      Sending files in body is not supported. Use multipart form only.
      - author:
@@ -1785,6 +1844,78 @@ public enum SendFileError: Error {
      2018 Webim
      */
     case UNKNOWN
+
+}
+
+/**
+ - seealso:
+ `KeyboardResponseCompletionHandler.onFailure(error:)`.
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public enum KeyboardResponseError: Error {
+
+    /**
+     Received error is not supported by current WebimClientLibrary version.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case unknown
+
+    @available(*, unavailable, renamed: "unknown")
+    case UNKNOWN
+
+    /**
+     Arised when trying to response if no chat is exists.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case noChat
+
+    @available(*, unavailable, renamed: "noChat")
+    case NO_CHAT
+
+    /**
+     Arised when trying to response without button id.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case buttonIdNotSet
+
+    @available(*, unavailable, renamed: "buttonIdNotSet")
+    case BUTTON_ID_NOT_SET
+
+    /**
+     Arised when trying to response without request message id.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case requestMessageIdNotSet
+
+    @available(*, unavailable, renamed: "requestMessageIdNotSet")
+    case REQUEST_MESSAGE_ID_NOT_SET
+
+    /**
+     Arised when trying to response with wrong data.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case canNotCreateResponse
+
+    @available(*, unavailable, renamed: "canNotCreateResponse")
+    case CAN_NOT_CREATE_RESPONSE
 
 }
 

@@ -197,43 +197,53 @@ final class MessageItem {
         case fileFromVisitor = "file_visitor"
         case forOperator = "for_operator"
         case info = "info"
+        case keyboard = "keyboard"
+        case keyboardResponse = "keyboard_response"
         case operatorMessage = "operator"
         case operatorBusy = "operator_busy"
         case visitorMessage = "visitor"
-        
+
         // MARK: - Initialization
         init(messageType: MessageType) {
             switch messageType {
             case .ACTION_REQUEST:
                 self = .actionRequest
-                
+
                 break
             case .CONTACTS_REQUEST:
                 self = .contactInformationRequest
-                
+
                 break
             case .FILE_FROM_OPERATOR:
                 self = .fileFromOperator
-                
+
                 break
             case .FILE_FROM_VISITOR:
                 self = .fileFromVisitor
-                
+
                 break
             case .INFO:
                 self = .info
-                
+
                 break
             case .OPERATOR:
                 self = .operatorMessage
-                
+
                 break
             case .OPERATOR_BUSY:
                 self = .operatorBusy
-                
+
                 break
             case .VISITOR:
                 self = .visitorMessage
+
+                break
+            case .keyboard:
+                self = .keyboard
+
+                break
+            case .keyboardResponse:
+                self = .keyboardResponse
                 
                 break
             }

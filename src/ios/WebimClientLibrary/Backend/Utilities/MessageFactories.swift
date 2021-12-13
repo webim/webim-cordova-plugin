@@ -64,6 +64,10 @@ class MessageMapper {
             return .FILE_FROM_VISITOR
         case .info:
             return .INFO
+        case .keyboard:
+            return .keyboard
+        case .keyboardResponse:
+            return .keyboardResponse
         case .operatorMessage:
             return .OPERATOR
         case .operatorBusy:
@@ -73,11 +77,11 @@ class MessageMapper {
         default:
             WebimInternalLogger.shared.log(entry: "Invalid message type received: \(messageKind.rawValue)",
                 verbosityLevel: .WARNING)
-            
+
             return nil
         }
     }
-    
+
     func convert(messageItem: MessageItem,
                  historyMessage: Bool) -> MessageImpl? {
         let kind = messageItem.getKind()
@@ -90,11 +94,13 @@ class MessageMapper {
         if type == nil {
             return nil
         }
-        
+
         var attachment: MessageAttachment? = nil
+        var keyboard: Keyboard?
+        var keyboardRequest: KeyboardRequest?
         var text: String? = nil
         var rawText: String? = nil
-        
+
         let messageItemText = messageItem.getText()
         if (kind == .fileFromVisitor)
             || (kind == .fileFromOperator) {
@@ -104,15 +110,24 @@ class MessageMapper {
             if attachment == nil {
                 return nil
             }
-            
+
             text = attachment?.getFileName()
             rawText = messageItemText!
         } else {
             text = messageItemText ?? ""
         }
-        
+        if kind == .keyboard, let data = messageItem.getData() {
+            keyboard = KeyboardImpl.getKeyboard(jsonDictionary: data)
+        }
+
+        if kind == .keyboardResponse, let data = messageItem.getData() {
+            keyboardRequest = KeyboardRequestImpl.getKeyboardRequest(jsonDictionary: data)
+        }
+
         return MessageImpl(serverURLString: serverURLString,
                            id: messageItem.getClientSideID()!,
+                           keyboard: keyboard,
+                           keyboardRequest: keyboardRequest,
                            operatorID: messageItem.getSenderID(),
                            senderAvatarURLString: messageItem.getSenderAvatarURLString(),
                            senderName: messageItem.getSenderName()!,

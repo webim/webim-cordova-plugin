@@ -48,6 +48,7 @@ class WebimActions {
         case applicationVersion = "app-version"
         case authorizationToken = "auth-token"
         case beforeTimestamp = "before-ts"
+        case buttonId = "button-id"
         case chatMode = "chat-mode"
         case clientSideID = "client-side-id"
         case data = "data"
@@ -69,6 +70,7 @@ class WebimActions {
         case providedAuthenticationToken = "provided_auth_token"
         case rating = "rate"
         case respondImmediately = "respond-immediately"
+        case requestMessageId = "request-message-id"
         case visitSessionID = "visit-session-id"
         case since = "since"
         case surveyAnswer = "answer"
@@ -105,6 +107,7 @@ class WebimActions {
         case respondSentryCall = "chat.action_request.call_sentry_action_request"
         case sendMessage = "chat.message"
         case deleteMessage = "chat.delete_message"
+        case keyboardResponse = "chat.keyboard_response"
         case sendChatHistory = "chat.send_chat_history"
         case setDeviceToken = "set_push_token"
         case setPrechat = "chat.set_prechat_fields"
@@ -114,20 +117,20 @@ class WebimActions {
         case surveyCancel = "survey.cancel"
         case chatRead = "chat.read_by_visitor"
     }
-    
+
     // MARK: - Properties
     private let baseURL: String
     private let actionRequestLoop: ActionRequestLoop
-    
+
     // MARK: - Initialization
     init(baseURL: String,
          actionRequestLoop: ActionRequestLoop) {
         self.baseURL = baseURL
         self.actionRequestLoop = actionRequestLoop
     }
-    
+
     // MARK: - Methods
-    
+
     func send(message: String,
               clientSideID: String,
               dataJSONString: String?,
@@ -143,9 +146,9 @@ class WebimActions {
         if let dataJSONString = dataJSONString {
             dataToPost[Parameter.data.rawValue] = dataJSONString
         }
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         messageID: clientSideID,
@@ -154,7 +157,7 @@ class WebimActions {
                                                         dataMessageCompletionHandler: dataMessageCompletionHandler,
                                                         editMessageCompletionHandler: editMessageCompletionHandler))
     }
-    
+
     func send(file: Data,
               filename: String,
               mimeType: String,
@@ -162,11 +165,11 @@ class WebimActions {
               completionHandler: SendFileCompletionHandler?) {
         let dataToPost = [Parameter.chatMode.rawValue: ChatMode.online.rawValue,
                           Parameter.clientSideID.rawValue: clientSideID] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.uploadFile.rawValue
-        
+
         let boundaryString = NSUUID().uuidString
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         messageID: clientSideID,
@@ -183,9 +186,9 @@ class WebimActions {
                 completionHandler: DeleteMessageCompletionHandler?) {
         let dataToPost = [Parameter.actionn.rawValue: Action.deleteMessage.rawValue,
                           Parameter.clientSideID.rawValue: clientSideID] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         messageID: clientSideID,
@@ -193,7 +196,7 @@ class WebimActions {
                                                         baseURLString: urlString,
                                                         deleteMessageCompletionHandler: completionHandler))
     }
-    
+
     func startChat(withClientSideID clientSideID: String,
                    firstQuestion: String? = nil,
                    departmentKey: String? = nil,
@@ -210,26 +213,26 @@ class WebimActions {
         if let custom_fields = customFields {
             dataToPost[Parameter.customFields.rawValue] = custom_fields
         }
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString))
     }
-    
+
     func closeChat() {
         let dataToPost = [Parameter.actionn.rawValue: Action.closeChat.rawValue] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString))
     }
-    
+
     func set(visitorTyping: Bool,
              draft: String?,
              deleteDraft: Bool) {
@@ -239,54 +242,54 @@ class WebimActions {
         if let draft = draft {
             dataToPost[Parameter.draft.rawValue] = draft
         }
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString))
     }
-    
+
     func set(prechatFields: String) {
         let dataToPost = [Parameter.actionn.rawValue: Action.setPrechat.rawValue,
                           Parameter.prechat.rawValue: prechatFields] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString))
     }
-    
+
     func requestHistory(since: String?,
                         completion: @escaping (_ data: Data?) throws -> ()) {
         var dataToPost = [String: Any]()
         if let since = since {
             dataToPost[Parameter.since.rawValue] = since
         }
-        
+
         let urlString = baseURL + ServerPathSuffix.getHistory.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .get,
                                                         primaryData: dataToPost,
                                                         baseURLString: urlString,
                                                         historyRequestCompletionHandler: completion))
     }
-    
+
     func requestHistory(beforeMessageTimestamp: Int64,
                         completion: @escaping (_ data: Data?) throws -> ()) {
         let dataToPost = [Parameter.beforeTimestamp.rawValue: String(beforeMessageTimestamp)] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.getHistory.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .get,
                                                         primaryData: dataToPost,
                                                         baseURLString: urlString,
                                                         historyRequestCompletionHandler: completion))
     }
-    
+
     func rateOperatorWith(id: String?,
                           rating: Int,
                           completionHandler: RateOperatorCompletionHandler?) {
@@ -295,45 +298,45 @@ class WebimActions {
         if let id = id {
             dataToPost[Parameter.operatorID.rawValue] = id
         }
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString,
                                                         rateOperatorCompletionHandler: completionHandler))
     }
-    
+
     func respondSentryCall(id: String) {
         let dataToPost = [Parameter.actionn.rawValue: Action.respondSentryCall.rawValue,
                           Parameter.clientSideID.rawValue: id] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString))
     }
-    
+
     func update(deviceToken: String) {
         let dataToPost = [Parameter.actionn.rawValue: Action.setDeviceToken.rawValue,
                           Parameter.deviceToken.rawValue: deviceToken] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString))
     }
-    
+
     func setChatRead() {
         let dataToPost = [Parameter.actionn.rawValue: Action.chatRead.rawValue] as [String: Any]
-        
+
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue
-        
+
         actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         contentType: ContentType.urlEncoded.rawValue,
@@ -352,6 +355,23 @@ class WebimActions {
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString,
                                                         sendDialogToEmailAddressCompletionHandler: completionHandler))
+    }
+
+    func sendKeyboardRequest(buttonId: String,
+                             messageId: String,
+                             completionHandler: SendKeyboardRequestCompletionHandler?) {
+        let dataToPost = [Parameter.actionn.rawValue: Action.keyboardResponse.rawValue,
+                          Parameter.buttonId.rawValue: buttonId,
+                          Parameter.requestMessageId.rawValue: messageId] as [String: Any]
+
+        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+
+        actionRequestLoop.enqueue(request: WebimRequest(httpMethod: .post,
+                                                        primaryData: dataToPost,
+                                                        messageID: messageId,
+                                                        contentType: ContentType.urlEncoded.rawValue,
+                                                        baseURLString: urlString,
+                                                        keyboardResponseCompletionHandler: completionHandler))
     }
     
     func sendQuestionAnswer(surveyID: String,

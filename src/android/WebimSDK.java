@@ -113,6 +113,12 @@ public class WebimSDK extends CordovaPlugin {
                 cancelSurvey(callbackContext);
                 return true;
 
+            case "sendKeyboardRequest":
+                String requestMessageCurrentChatId = data.getString(0);
+                String buttonID = data.getString(1);
+                sendKeyboardRequest(requestMessageCurrentChatId, buttonID, callbackContext);
+                return true;
+
             case "onMessage":
                 receiveMessageCallback = callbackContext;
                 return true;
@@ -468,6 +474,24 @@ public class WebimSDK extends CordovaPlugin {
             @Override
             public void onFailure(WebimError<MessageStream.SurveyCloseCallback.SurveyCloseError> webimError) {
                 sendCallbackError(callbackContext, "{\"result\":\"Failure\"}");
+            }
+        });
+    }
+
+    private void sendKeyboardRequest(String requestMessageCurrentChatId, String buttonID, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        session.getStream().sendKeyboardRequest(requestMessageCurrentChatId, buttonID, new MessageStream.SendKeyboardCallback() {
+            @Override
+            public void onSuccess(@NonNull Message.Id messageId) {
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
+            }
+
+            @Override
+            public void onFailure(@NonNull Message.Id messageId, @NonNull WebimError<SendKeyboardError> error) {
+                sendCallbackError(callbackContext, "{\"result\":\"" + error.getErrorString() + "\"}");
             }
         });
     }
