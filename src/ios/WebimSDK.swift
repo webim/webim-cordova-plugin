@@ -286,6 +286,14 @@ import Photos
         } catch { }
     }
 
+    @objc(setChatRead:)
+    func setChatRead(_ command: CDVInvokedUrlCommand) {
+        let callbackContextId = command.callbackId
+        do {
+            try session?.getStream().setChatRead()
+        } catch { }
+    }
+
     @objc(rateOperator:)
     func rateOperator(_ command: CDVInvokedUrlCommand) {
         onRateOperatorCallbackId = command.callbackId

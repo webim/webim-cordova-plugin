@@ -162,6 +162,10 @@ public class WebimSDK extends CordovaPlugin {
                 sendDialogToEmailAddress(emailAddress, callbackContext);
                 return true;
 
+            case "setChatRead":
+                setChatRead(callbackContext);
+                return true;
+
             case "onUnreadByVisitorMessageCount":
                 onUnreadByVisitorMessageCountCallback = callbackContext;
                 return true;
@@ -599,6 +603,14 @@ public class WebimSDK extends CordovaPlugin {
                         }
                     }
                 });
+    }
+
+    private void setChatRead(final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        session.getStream().setChatRead();
     }
 
     private void getUnreadByVisitorMessageCount(CallbackContext callbackContext) {

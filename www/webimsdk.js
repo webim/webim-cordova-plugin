@@ -73,6 +73,9 @@ module.exports = {
     sendKeyboardRequest: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendKeyboardRequest", [requestMessageCurrentChatId, buttonId])
     },
+    setChatRead: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "setChatRead", [])
+    },
     onLogging: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onLogging", [])
     }
