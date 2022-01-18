@@ -4,6 +4,7 @@ import Photos
     
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
+    private var accountName: String?
     private var closeWithClearVisitorData = false
     private var isFirstMessage = false
     var onMessageCallbackId: String?
@@ -33,7 +34,7 @@ import Photos
         let callbackId = command.callbackId
         onFatalErrorCallbackId = callbackId
         let args = command.arguments[0] as! NSDictionary
-        let accountName = args["accountName"] as? String
+        accountName = args["accountName"] as? String
         let location = args["location"] as? String
         let deviceToken = args["pushToken"] as? String
         let isLocalHistoryStoragingEnabled = args["storeHistoryLocally"] as? Bool
@@ -323,6 +324,41 @@ import Photos
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
+
+    @objc(getShowEmailButton:)
+        func getShowEmailButton(_ command: CDVInvokedUrlCommand) {
+            let callbackId = command.callbackId
+            if var accountName = accountName {
+                let url: URL?
+                if accountName.contains("https://") || accountName.contains("http://") {
+                    if accountName.last == "/" {
+                        accountName.removeLast()
+                    }
+                    url = URL(string: "\(accountName)/js/v/all-settings.js.php")
+                } else {
+                    url = URL(string: "https://\(accountName).webim.ru/js/v/all-settings.js.php")
+                }
+                if let url = url {
+                    let dataTask = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+                        var dataString = String(data: data ?? Data(), encoding: .utf8)
+                        dataString?.removeFirst(29)
+                        dataString?.removeLast(2)
+                        let dataJSON = try? JSONSerialization.jsonObject(with: dataString?.data(using: .utf8, allowLossyConversion: false) ?? Data()) as? [String: Any]
+                        let accountConfig = dataJSON??["accountConfig"] as? [String: Any?]
+                        if let showEmailButton = accountConfig?["show_visitor_send_chat_to_email_button"] as? Bool {
+                            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"showEmailButton\":\(showEmailButton)}")
+                            pluginResult?.setKeepCallbackAs(true)
+                            self?.commandDelegate!.send(pluginResult, callbackId: callbackId)
+                        } else {
+                            self?.sendCallbackError(callbackId: callbackId!, error: "Show email button key not found")
+                        }
+                    }
+                    dataTask.resume()
+                }
+            } else {
+                sendCallbackError(callbackId: callbackId!, error: "Account name is nil")
+            }
+        }
 
     private func sendCallbackResult(callbackId: String) {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)

@@ -31,6 +31,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#get-unread-by-visitor-message-count">method getUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#set-chat-read">method setChatRead</a></p>
+<p style="padding-left: 30px;"><a href="#get-show-email-button">method getShowEmailButton</a></p>
 <p style="padding-left: 30px;"><a href="#on-logging">method onLogging</a></p>
 <p style="padding-left: 30px;"><a href="#close">method close</a></p>
 
@@ -193,6 +194,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="set-chat-read" style="padding-left: 30px;"><b>method webimsdk.setChatRead(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">All messages will be read by visitor.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="get-show-email-button" style="padding-left: 30px;"><b>method webimsdk.getShowEmailButton(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Method returns true if app should show send chat to email button.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>showEmailButton</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
 <h4 id="on-logging" style="padding-left: 30px;"><b>method webimsdk.onLogging(successCallback, errorCallback)</b></h4>

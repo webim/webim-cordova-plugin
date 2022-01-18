@@ -19,6 +19,10 @@ import android.webkit.MimeTypeMap;
 
 import com.google.gson.Gson;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 import ru.webim.android.sdk.FatalErrorHandler;
 import ru.webim.android.sdk.Message;
 import ru.webim.android.sdk.MessageListener;
@@ -34,7 +38,6 @@ import ru.webim.android.sdk.WebimLog;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 public class WebimSDK extends CordovaPlugin {
@@ -42,6 +45,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private Activity activity;
     private Context context;
+    private String accountName;
     private WebimSession session;
     private Handler handler;
     private ListController listController;
@@ -186,6 +190,10 @@ public class WebimSDK extends CordovaPlugin {
                 getUnreadByVisitorMessageCount(callbackContext);
                 return true;
 
+            case "getShowEmailButton":
+                getShowEmailButton(callbackContext);
+                return true;
+
             case "onLogging":
                 onLoggingCallback = callbackContext;
                 return true;
@@ -204,6 +212,7 @@ public class WebimSDK extends CordovaPlugin {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
             return;
         }
+        accountName = args.getString("accountName");
         if (args.has("closeWithClearVisitorData")) {
             closeWithClearVisitorData = args.getBoolean("closeWithClearVisitorData");
         }
@@ -541,6 +550,7 @@ public class WebimSDK extends CordovaPlugin {
             session.destroy();
         }
         session = null;
+        accountName = null;
         listController = null;
         sendCallbackResult(callbackContext, "{\"result\":\"WebimSession Close\"}");
 
@@ -620,6 +630,34 @@ public class WebimSDK extends CordovaPlugin {
         }
         int count = session.getStream().getUnreadByVisitorMessageCount();
         sendCallbackResult(callbackContext, "{\"unreadByVisitorMessageCount\":" + count + "}");
+    }
+
+    private void getShowEmailButton(CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        String url;
+        if (accountName.contains("https://") || accountName.contains("http://")) {
+            if (accountName.endsWith("/")) {
+                accountName = accountName.substring(0, accountName.length() - 1);
+            }
+            url = accountName + "/js/v/all-settings.js.php";
+        } else {
+            url ="https://" + accountName + ".webim.ru/js/v/all-settings.js.php";
+        }
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(url).build();
+        try {
+            Response response = client.newCall(request).execute();
+            String bodyString = response.body().string();
+            String jsonString = bodyString.substring(29, bodyString.length() - 2);
+            JSONObject obj = new JSONObject(jsonString);
+            boolean showEmailButton = obj.getJSONObject("accountConfig").getBoolean("show_visitor_send_chat_to_email_button");
+            sendCallbackResult(callbackContext, "{\"showEmailButton\":" + showEmailButton + "}");
+        } catch (Exception e) {
+            sendCallbackError(callbackContext, e.toString());
+        }
     }
 
     private void sendNoResult(CallbackContext callbackContext) {

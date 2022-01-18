@@ -76,6 +76,9 @@ module.exports = {
     setChatRead: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "setChatRead", [])
     },
+    getShowEmailButton: function  (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "getShowEmailButton", [])
+    },
     onLogging: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onLogging", [])
     }
