@@ -302,6 +302,21 @@ import Photos
         let rating = command.arguments[1] as? Int
         do {
             try session?.getStream().rateOperatorWith(id: operatorId,
+                                                      note: nil,
+                                                      byRating: rating ?? -1,
+                                                      comletionHandler: self)
+        } catch { }
+    }
+
+    @objc(rateOperatorWithNote:)
+    func rateOperatorWithNote(_ command: CDVInvokedUrlCommand) {
+        onRateOperatorCallbackId = command.callbackId
+        let operatorId = command.arguments[0] as? String
+        let rating = command.arguments[1] as? Int
+        let note = command.arguments[2] as? String
+        do {
+            try session?.getStream().rateOperatorWith(id: operatorId,
+                                                      note: note,
                                                       byRating: rating ?? -1,
                                                       comletionHandler: self)
         } catch { }

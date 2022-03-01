@@ -81,6 +81,7 @@ class WebimActions {
         case title = "title"
         case visitor = "visitor"
         case visitorExt = "visitor-ext"
+        case visitorNote = "visitor_note"
         case visitorTyping = "typing"
         case prechat = "prechat-key-independent-fields"
         case customFields = "custom_fields"
@@ -291,12 +292,17 @@ class WebimActions {
     }
 
     func rateOperatorWith(id: String?,
+                          note: String?,
                           rating: Int,
                           completionHandler: RateOperatorCompletionHandler?) {
         var dataToPost = [Parameter.actionn.rawValue: Action.rateOperator.rawValue,
                           Parameter.rating.rawValue: String(rating)] as [String: Any]
         if let id = id {
             dataToPost[Parameter.operatorID.rawValue] = id
+        }
+
+        if let note = note {
+            dataToPost[Parameter.visitorNote.rawValue] = note
         }
 
         let urlString = baseURL + ServerPathSuffix.doAction.rawValue

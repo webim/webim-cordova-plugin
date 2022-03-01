@@ -158,7 +158,14 @@ public class WebimSDK extends CordovaPlugin {
             case "rateOperator":
                 String id = data.getString(0);
                 int rating = Integer.parseInt(data.getString(1));
-                rateOperator(id, rating, callbackContext);
+                rateOperator(id, rating, null, callbackContext);
+                return true;
+
+            case "rateOperatorWithNote":
+                String idWithNote = data.getString(0);
+                int ratingWithNote = Integer.parseInt(data.getString(1));
+                String note = data.getString(2);
+                rateOperator(idWithNote, ratingWithNote, note, callbackContext);
                 return true;
 
             case "sendDialogToEmailAddress":
@@ -556,13 +563,13 @@ public class WebimSDK extends CordovaPlugin {
 
     }
 
-    private void rateOperator(String id, int rating, final CallbackContext callbackContext) {
+    private void rateOperator(String id, int rating, String note, final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
         rateOperatorCallback = callbackContext;
-        session.getStream().rateOperator(id, rating, new MessageStream.RateOperatorCallback() {
+        session.getStream().rateOperator(id, note, rating, new MessageStream.RateOperatorCallback() {
             @Override
             public void onSuccess() {
                 sendCallbackResult(rateOperatorCallback, "{\"result\":\"Rate operator successfully.\"}");

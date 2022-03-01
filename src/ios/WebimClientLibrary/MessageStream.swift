@@ -157,6 +157,7 @@ public protocol MessageStream: class {
      2017 Webim
      */
     func rateOperatorWith(id: String?,
+                          note: String?,
                           byRating rating: Int,
                           comletionHandler: RateOperatorCompletionHandler?) throws
     

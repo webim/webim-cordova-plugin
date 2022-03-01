@@ -347,19 +347,21 @@ extension MessageStreamImpl: MessageStream {
 
     
     func rateOperatorWith(id: String?,
+                          note: String?,
                           byRating rating: Int,
                           comletionHandler: RateOperatorCompletionHandler?) throws {
         guard rating >= 1,
             rating <= 5 else {
             WebimInternalLogger.shared.log(entry: "Rating must be within from 1 to 5 range. Passed value: \(rating)",
                 verbosityLevel: .WARNING)
-            
+
             return
         }
-        
+
         try accessChecker.checkAccess()
-        
+
         webimActions.rateOperatorWith(id: id,
+                                      note: note,
                                       rating: (rating - 3), // Accepted range: (-2, -1, 0, 1, 2).
                                       completionHandler: comletionHandler)
     }

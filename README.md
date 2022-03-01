@@ -27,6 +27,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-next-question">method onNextQuestion</a></p>
 <p style="padding-left: 30px;"><a href="#on-survey-cancel">method onSurveyCancel</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
+<p style="padding-left: 30px;"><a href="#rateOperatorWithNote">method rateOperatorWithNote</a></p>
 <p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
 <p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#get-unread-by-visitor-message-count">method getUnreadByVisitorMessageCount</a></p>
@@ -172,6 +173,14 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Rates an operator.</p>
 <p style="padding-left: 60px;"><em>id</em> parameter — operator id. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>rating</em> parameter — a number in range (1...5) that represents an operator rating. If the number is out of range, rating will not be sent to a server. Type — <em>Int</em>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="rateOperatorWithNote" style="padding-left: 30px;"><b>method webimsdk.rateOperatorWithNote(id, rating, note, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Rates an operator.</p>
+<p style="padding-left: 60px;"><em>id</em> parameter — operator id. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>rating</em> parameter — a number in range (1...5) that represents an operator rating. If the number is out of range, rating will not be sent to a server. Type — <em>Int</em>.</p>
+<p style="padding-left: 60px;"><em>note</em> parameter — some commentary. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
