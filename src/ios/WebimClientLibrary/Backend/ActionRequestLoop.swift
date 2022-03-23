@@ -168,6 +168,12 @@ class ActionRequestLoop: AbstractRequestLoop {
                             self.handleDeleteMessage(error: error,
                                                     ofRequest: request)
                             break
+                        case WebimInternalError.buttonIdNotSet.rawValue,
+                             WebimInternalError.requestMessageIdNotSet.rawValue,
+                             WebimInternalError.canNotCreateResponse.rawValue:
+                            self.handleKeyboardResponse(error: error,
+                                                        ofRequest: request)
+                            break
                         case WebimInternalError.sentTooManyTimes.rawValue:
                             self.handleSendDialogResponse(error: error,
                                                           ofRequest: request)
@@ -187,24 +193,24 @@ class ActionRequestLoop: AbstractRequestLoop {
                             break
                         default:
                             self.running = false
-                            
+
                             self.completionHandlerExecutor.execute(task: DispatchWorkItem {
                                 self.internalErrorListener.on(error: error)
                             })
-                            
+
                             break
                         }
-                        
+
                         return
                     }
-                    
+
                     // Some internal errors can be received inside "error" field inside "data" field.
                     if let dataDictionary = dataJSON?[AbstractRequestLoop.ResponseFields.data.rawValue] as? [String: Any],
                         let errorString = dataDictionary[AbstractRequestLoop.DataFields.error.rawValue] as? String {
                         self.handleDataMessage(error: errorString,
                                                ofRequest: request)
                     }
-                    
+
                     if let completionHandler = request.getCompletionHandler() {
                         self.completionHandlerExecutor.execute(task: DispatchWorkItem {
                             do {
@@ -213,10 +219,10 @@ class ActionRequestLoop: AbstractRequestLoop {
                                 WebimInternalLogger.shared.log(entry: "Error executing callback on receiver data: \(String(data: data, encoding: .utf8) ?? "unreadable data").",
                                     verbosityLevel: .WARNING)
                             }
-                            
+
                         })
                     }
-                    
+
                     self.handleClientCompletionHandlerOf(request: request)
                 } else {
                     WebimInternalLogger.shared.log(entry: "Error de-serializing server response: \(String(data: data, encoding: .utf8) ?? "unreadable data")",
@@ -236,20 +242,20 @@ class ActionRequestLoop: AbstractRequestLoop {
             }
         }
     }
-    
+
     // MARK: Private methods
-    
+
     private func createHTTPBody(filename: String,
                                 mimeType: String,
                                 fileData: Data,
                                 boundaryString: String,
                                 primaryData: [String: Any]) -> Data {
-        
+
         let boundaryStart = "--\(boundaryString)\r\n"
         let contentDispositionString = "Content-Disposition: form-data; name=\"webim_upload_file\"; filename=\"\(filename)\"\r\n"
         let contentTypeString = "Content-Type: \(mimeType)\r\n\r\n"
         let boundaryEnd = "--\(boundaryString)--\r\n"
-        
+
         var requestBodyData = Data()
         for (key, value) in primaryData {
             requestBodyData.append("--\(boundaryString)\r\n".data(using: .utf8)!)
@@ -262,24 +268,24 @@ class ActionRequestLoop: AbstractRequestLoop {
         requestBodyData.append(fileData)
         requestBodyData.append("\r\n".data(using: .utf8)!)
         requestBodyData.append(boundaryEnd.data(using: .utf8)!)
-        
+
         return requestBodyData
     }
-    
+
     private func awaitForNewAuthorizationData(withLastAuthorizationData lastAuthorizationData: AuthorizationData?) throws -> AuthorizationData {
         while isRunning()
             && (lastAuthorizationData == authorizationData) {
                 usleep(100_000) // 0.1 s.
         }
-        
+
         if authorizationData == nil {
             // Interrupted request.
             throw AbstractRequestLoop.UnknownError.interrupted
         }
-        
+
         return authorizationData!
     }
-    
+
     private func handleDataMessage(error errorString: String,
                                    ofRequest webimRequest: WebimRequest) {
         if let dataMessageCompletionHandler = webimRequest.getDataMessageCompletionHandler() {
@@ -289,7 +295,7 @@ class ActionRequestLoop: AbstractRequestLoop {
             })
         }
     }
-    
+
     private func handleRateOperator(error errorString: String,
                                     ofRequest webimRequest: WebimRequest) {
         if let rateOperatorCompletionhandler = webimRequest.getRateOperatorCompletionHandler() {
@@ -300,12 +306,12 @@ class ActionRequestLoop: AbstractRequestLoop {
                 } else {
                     rateOperatorError = .WRONG_OPERATOR_ID
                 }
-                
+
                 rateOperatorCompletionhandler.onFailure(error: rateOperatorError)
             })
         }
     }
-    
+
     private func handleEditMessage(error errorString: String,
                                    ofRequest webimRequest: WebimRequest) {
         if let editMessageCompletionHandler = webimRequest.getEditMessageCompletionHandler() {
@@ -330,13 +336,13 @@ class ActionRequestLoop: AbstractRequestLoop {
                 default:
                     editMessageError = .UNKNOWN
                 }
-                
+
                 editMessageCompletionHandler.onFailure(messageID: webimRequest.getMessageID()!,
                                                        error: editMessageError)
             })
         }
     }
-    
+
     private func handleDeleteMessage(error errorString: String,
                                     ofRequest webimRequest: WebimRequest) {
         if let deleteMessageCompletionHandler = webimRequest.getDeleteMessageCompletionHandler() {
@@ -355,13 +361,13 @@ class ActionRequestLoop: AbstractRequestLoop {
                 default:
                     deleteMessageError = .UNKNOWN
                 }
-                
+
                 deleteMessageCompletionHandler.onFailure(messageID: webimRequest.getMessageID()!,
                                                          error: deleteMessageError)
             })
         }
     }
-    
+
     private func handleSendFile(error errorString: String,
                                 ofRequest webimRequest: WebimRequest) {
         if let sendFileCompletionHandler = webimRequest.getSendFileCompletionHandler() {
@@ -380,7 +386,7 @@ class ActionRequestLoop: AbstractRequestLoop {
                 default:
                     sendFileError = .UNKNOWN
                 }
-                
+
                 sendFileCompletionHandler.onFailure(messageID: webimRequest.getMessageID()!,
                                                     error: sendFileError)
             })
@@ -461,12 +467,12 @@ class ActionRequestLoop: AbstractRequestLoop {
             })
         }
     }
-    
+
     private func handleWrongArgumentValueError(ofRequest webimRequest: WebimRequest) {
         WebimInternalLogger.shared.log(entry: "Request \(webimRequest.getBaseURLString()) with parameters \(webimRequest.getPrimaryData().stringFromHTTPParameters()) failed with error \(WebimInternalError.wrongArgumentValue.rawValue)",
             verbosityLevel: .WARNING)
     }
-    
+
     private func handleClientCompletionHandlerOf(request: WebimRequest) {
         completionHandlerExecutor.execute(task: DispatchWorkItem {
             request.getDataMessageCompletionHandler()?.onSuccess(messageID: request.getMessageID()!)
@@ -474,8 +480,37 @@ class ActionRequestLoop: AbstractRequestLoop {
             request.getRateOperatorCompletionHandler()?.onSuccess()
             request.getDeleteMessageCompletionHandler()?.onSuccess(messageID: request.getMessageID()!)
             request.getEditMessageCompletionHandler()?.onSuccess(messageID: request.getMessageID()!)
+            request.getKeyboardResponseCompletionHandler()?.onSuccess(messageID: request.getMessageID()!)
             request.getSendDialogToEmailAddressCompletionHandler()?.onSuccess()
         })
+    }
+
+    private func handleKeyboardResponse(error errorString: String,
+                                        ofRequest webimRequest: WebimRequest) {
+        if let keyboardResponseCompletionHandler = webimRequest.getKeyboardResponseCompletionHandler() {
+            completionHandlerExecutor.execute(task: DispatchWorkItem {
+                let keyboardResponseError: KeyboardResponseError
+                switch errorString {
+                case WebimInternalError.buttonIdNotSet.rawValue:
+                    keyboardResponseError = .buttonIdNotSet
+                    break
+                case WebimInternalError.requestMessageIdNotSet.rawValue:
+                    keyboardResponseError = .requestMessageIdNotSet
+                    break
+                case WebimInternalError.canNotCreateResponse.rawValue:
+                    keyboardResponseError = .canNotCreateResponse
+                    break
+                default:
+                    keyboardResponseError = .unknown
+                }
+
+                guard let messageID = webimRequest.getMessageID() else {
+                    WebimInternalLogger.shared.log(entry: "Webim Request has not message ID in ActionRequestLoop.\(#function)")
+                    return
+                }
+                keyboardResponseCompletionHandler.onFailure(messageID: messageID, error: keyboardResponseError)
+            })
+        }
     }
     
     private static func convertToPublic(dataMessageErrorString: String) -> DataMessageError {

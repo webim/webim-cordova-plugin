@@ -52,7 +52,7 @@ public protocol Message {
      2017 Webim
      */
     func getAttachment() -> MessageAttachment?
-    
+
     /**
      Messages of type `MessageType.ACTION_REQUEST` contain custom dictionary.
      - returns:
@@ -63,7 +63,7 @@ public protocol Message {
      2017 Webim
      */
     func getData() -> [String: Any?]?
-    
+
     /**
      Every message can be uniquefied by its ID. Messages also can be lined up by its IDs.
      - important:
@@ -76,7 +76,20 @@ public protocol Message {
      2017 Webim
      */
     func getID() -> String
-    
+
+    /**
+     Current chat id of the message.
+     - important:
+     ID doesn’t change while changing the content of a message.
+     - returns:
+     Unique ID of the message.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getCurrentChatID() -> String?
+
     /**
      - returns:
      ID of a message sender, if the sender is an operator.
@@ -86,7 +99,7 @@ public protocol Message {
      2017 Webim
      */
     func getOperatorID() -> String?
-    
+
     /**
      - returns:
      URL of a sender's avatar or `nil` if one does not exist.
@@ -96,7 +109,7 @@ public protocol Message {
      2017 Webim
      */
     func getSenderAvatarFullURL() -> URL?
-    
+
     /**
      - returns:
      Name of a message sender.
@@ -106,7 +119,7 @@ public protocol Message {
      2017 Webim
      */
     func getSenderName() -> String
-    
+
     /**
      - returns:
      `MessageSendStatus.SENT` if a message had been sent to the server, was received by the server and was delivered to all the clients; `MessageSendStatus.SENDING` if not.
@@ -116,7 +129,7 @@ public protocol Message {
      2017 Webim
      */
     func getSendStatus() -> MessageSendStatus
-    
+
     /**
      - returns:
      Text of the message.
@@ -126,7 +139,7 @@ public protocol Message {
      2017 Webim
      */
     func getText() -> String
-    
+
     /**
      - returns:
      Timestamp of the moment the message was processed by the server.
@@ -136,7 +149,7 @@ public protocol Message {
      2017 Webim
      */
     func getTime() -> Date
-    
+
     /**
      - seealso:
      `MessageType` enum.
@@ -148,7 +161,7 @@ public protocol Message {
      2017 Webim
      */
     func getType() -> MessageType
-    
+
     /**
      Method which can be used to compare if two Message objects have identical contents.
      - parameter message:
@@ -161,7 +174,7 @@ public protocol Message {
      2017 Webim
      */
     func isEqual(to message: Message) -> Bool
-    
+
     /**
      - returns:
      True if visitor message read by operator or this message is not by visitor and false otherwise.
@@ -171,7 +184,7 @@ public protocol Message {
      2018 Webim
      */
     func isReadByOperator() -> Bool
-    
+
     /**
      - returns:
      True if this message can be edited or deleted.
@@ -181,7 +194,29 @@ public protocol Message {
      2018 Webim
      */
     func canBeEdited() -> Bool
-    
+
+    /**
+     Messages of type `MessageType.keyboard` contain keyboard from script bot.
+     - returns:
+     Keyboard with buttons.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getKeyboard() -> Keyboard?
+
+    /**
+     Messages of type `MessageType.keyboardResponse` contain keyboard request from script bot.
+     - returns:
+     Keyboard request.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getKeyboardRequest() -> KeyboardRequest?
+
 }
 
 /**
@@ -194,7 +229,7 @@ public protocol Message {
  2017 Webim
  */
 public protocol MessageAttachment {
-    
+
     /**
      - returns:
      MIME-type of an attachment file.
@@ -204,7 +239,7 @@ public protocol MessageAttachment {
      2017 Webim
      */
     func getContentType() -> String
-    
+
     /**
      - returns:
      Name of an attachment file.
@@ -214,7 +249,7 @@ public protocol MessageAttachment {
      2017 Webim
      */
     func getFileName() -> String
-    
+
     /**
      - seealso:
      `ImageInfo` protocol.
@@ -226,7 +261,7 @@ public protocol MessageAttachment {
      2017 Webim
      */
     func getImageInfo() -> ImageInfo?
-    
+
     /**
      - returns:
      Attachment file size in bytes.
@@ -236,7 +271,7 @@ public protocol MessageAttachment {
      2017 Webim
      */
     func getSize() -> Int64?
-    
+
     /**
      - important:
      Notice that this URL is short-living and is tied to a session.
@@ -248,7 +283,7 @@ public protocol MessageAttachment {
      2017 Webim
      */
     func getURL() -> URL
-    
+
 }
 
 /**
@@ -261,7 +296,7 @@ public protocol MessageAttachment {
  2017 Webim
  */
 public protocol ImageInfo {
-    
+
     /**
      Returns a URL String of an image thumbnail.
      The maximum width and height is usually 300 px but it can be adjusted at server settings.
@@ -288,7 +323,7 @@ public protocol ImageInfo {
      2017 Webim
      */
     func getThumbURL() -> URL
-    
+
     /**
      - returns:
      Height of an image in pixels.
@@ -298,7 +333,7 @@ public protocol ImageInfo {
      2017 Webim
      */
     func getHeight() -> Int?
-    
+
     /**
      - returns:
      Width of an image in pixels.
@@ -309,6 +344,193 @@ public protocol ImageInfo {
      */
     func getWidth() -> Int?
 }
+
+/**
+ Provides information about a keyboard from script board.
+ - seealso:
+ `Message.getKeyboard()`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public protocol Keyboard {
+
+    /**
+     - returns:
+     Keyboard buttons.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getButtons() -> [[KeyboardButton]]
+
+    /**
+     - returns:
+     Kayboard state.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getState() -> KeyboardState
+
+    /**
+     - returns:
+     Keyboard response.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getResponse() -> KeyboardResponse?
+}
+
+/**
+ Supported keyboard States.
+ - seealso:
+ `Keyboard.getState()`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public enum KeyboardState {
+
+    /**
+     A keyboard is waiting for answer.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case pending
+
+    @available(*, unavailable, renamed: "pending")
+    case PENDING
+
+    /**
+     A keyboard has response.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case completed
+
+    @available(*, unavailable, renamed: "completed")
+    case COMPLETED
+
+    /**
+     A keyboard cancelled without response.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case canceled
+
+    @available(*, unavailable, renamed: "canceled")
+    case CANCELLED
+}
+
+/**
+ Provides information about a keyboard response to script board.
+ - seealso:
+ `Message.getKeyboard()`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public protocol KeyboardResponse {
+
+    /**
+     - returns:
+     ID of a button.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getButtonID() -> String
+
+    /**
+     - returns:
+     ID of a message.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getMessageID() -> String
+}
+
+/**
+ Keyboard button.
+ - seealso:
+ `Keyboard.getButtons()`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public protocol KeyboardButton {
+
+    /**
+     - returns:
+     ID of a button.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getID() -> String
+
+    /**
+     - returns:
+     Text of a button.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getText() -> String
+}
+
+/**
+ Keyboard request.
+ - seealso:
+ `Message.getRequest()`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public protocol KeyboardRequest {
+
+    /**
+     - returns:
+     Request button.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getButton() -> KeyboardButton
+
+    /**
+     - returns:
+     Request message ID.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getMessageID() -> String
+}
+
 
 // MARK: -
 /**
@@ -321,7 +543,7 @@ public protocol ImageInfo {
  2017 Webim
  */
 public enum MessageType {
-    
+
     /**
      A message from operator which requests some actions from a visitor.
      E.g. choose an operator group by clicking on a button in this message.
@@ -333,7 +555,7 @@ public enum MessageType {
      2017 Webim
      */
     case ACTION_REQUEST
-    
+
     /**
      Message type that is received after operator clicked contacts request button.
      - important:
@@ -346,7 +568,7 @@ public enum MessageType {
      2017 Webim
      */
     case CONTACTS_REQUEST
-    
+
     /**
      A message sent by an operator which contains an attachment.
      - important:
@@ -359,7 +581,7 @@ public enum MessageType {
      2017 Webim
      */
     case FILE_FROM_OPERATOR
-    
+
     /**
      A message sent by a visitor which contains an attachment.
      - important:
@@ -372,7 +594,7 @@ public enum MessageType {
      2017 Webim
      */
     case FILE_FROM_VISITOR
-    
+
     /**
      A system information message.
      Messages of this type are automatically sent at specific events. E.g. when starting a chat, closing a chat or when an operator joins a chat.
@@ -382,7 +604,26 @@ public enum MessageType {
      2017 Webim
      */
     case INFO
-    
+
+    /**
+     Message with buttons for visitor choise.
+     Messages of this type are sent by script robot.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case keyboard
+
+    /**
+     Response to messages of `keyboard` type.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case keyboardResponse
+
     /**
      A text message sent by an operator.
      - seealso:
@@ -393,7 +634,7 @@ public enum MessageType {
      2017 Webim
      */
     case OPERATOR
-    
+
     /**
      A system information message which indicates that an operator is busy and can't reply to a visitor at the moment.
      - author:
@@ -402,7 +643,7 @@ public enum MessageType {
      2017 Webim
      */
     case OPERATOR_BUSY
-    
+
     /**
      A text message sent by a visitor.
      - seealso:
@@ -424,7 +665,7 @@ public enum MessageType {
  2017 Webim
  */
 public enum MessageSendStatus {
-    
+
     /**
      A message is being sent.
      - author:
@@ -433,7 +674,7 @@ public enum MessageSendStatus {
      2017 Webim
      */
     case SENDING
-    
+
     /**
      A message had been sent to the server, received by the server and was spreaded among clients.
      - author:
@@ -442,5 +683,5 @@ public enum MessageSendStatus {
      2017 Webim
      */
     case SENT
-    
+
 }

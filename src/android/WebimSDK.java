@@ -19,6 +19,10 @@ import android.webkit.MimeTypeMap;
 
 import com.google.gson.Gson;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 import ru.webim.android.sdk.FatalErrorHandler;
 import ru.webim.android.sdk.Message;
 import ru.webim.android.sdk.MessageListener;
@@ -30,6 +34,7 @@ import ru.webim.android.sdk.Webim;
 import ru.webim.android.sdk.WebimSession;
 import ru.webim.android.sdk.Webim.SessionBuilder;
 import ru.webim.android.sdk.WebimError;
+import ru.webim.android.sdk.WebimLog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,6 +45,7 @@ public class WebimSDK extends CordovaPlugin {
 
     private Activity activity;
     private Context context;
+    private String accountName;
     private WebimSession session;
     private Handler handler;
     private ListController listController;
@@ -59,6 +65,7 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext onSurveyCallback;
     private CallbackContext onNextQuestionCallback;
     private CallbackContext onSurveyCancelCallback;
+    private CallbackContext onLoggingCallback;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -118,6 +125,12 @@ public class WebimSDK extends CordovaPlugin {
                 cancelSurvey(callbackContext);
                 return true;
 
+            case "sendKeyboardRequest":
+                String requestMessageCurrentChatId = data.getString(0);
+                String buttonID = data.getString(1);
+                sendKeyboardRequest(requestMessageCurrentChatId, buttonID, callbackContext);
+                return true;
+
             case "onMessage":
                 receiveMessageCallback = callbackContext;
                 return true;
@@ -153,12 +166,23 @@ public class WebimSDK extends CordovaPlugin {
             case "rateOperator":
                 String id = data.getString(0);
                 int rating = Integer.parseInt(data.getString(1));
-                rateOperator(id, rating, callbackContext);
+                rateOperator(id, rating, null, callbackContext);
+                return true;
+
+            case "rateOperatorWithNote":
+                String idWithNote = data.getString(0);
+                int ratingWithNote = Integer.parseInt(data.getString(1));
+                String note = data.getString(2);
+                rateOperator(idWithNote, ratingWithNote, note, callbackContext);
                 return true;
 
             case "sendDialogToEmailAddress":
                 String emailAddress = data.getString(0);
                 sendDialogToEmailAddress(emailAddress, callbackContext);
+                return true;
+
+            case "setChatRead":
+                setChatRead(callbackContext);
                 return true;
 
             case "onUnreadByVisitorMessageCount":
@@ -181,6 +205,14 @@ public class WebimSDK extends CordovaPlugin {
                 getUnreadByVisitorMessageCount(callbackContext);
                 return true;
 
+            case "getShowEmailButton":
+                getShowEmailButton(callbackContext);
+                return true;
+
+            case "onLogging":
+                onLoggingCallback = callbackContext;
+                return true;
+
             default:
                 return false;
         }
@@ -195,6 +227,7 @@ public class WebimSDK extends CordovaPlugin {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
             return;
         }
+        accountName = args.getString("accountName");
         if (args.has("closeWithClearVisitorData")) {
             closeWithClearVisitorData = args.getBoolean("closeWithClearVisitorData");
         }
@@ -236,6 +269,15 @@ public class WebimSDK extends CordovaPlugin {
 
         if (args.has("visitorFields")) {
             sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
+        }
+        if (onLoggingCallback != null) {
+            sessionBuilder.setLogger(new WebimLog() {
+                        @Override
+                        public void log(String log) {
+                            sendNotificationCallbackResult(onLoggingCallback, "{\"log\":\"" + log + "\"}");
+                        }
+                    },
+                    Webim.SessionBuilder.WebimLogVerbosityLevel.VERBOSE);
         }
         session = sessionBuilder.build(new WebimSession.SessionCallback() {
             @Override
@@ -473,6 +515,24 @@ public class WebimSDK extends CordovaPlugin {
         });
     }
 
+    private void sendKeyboardRequest(String requestMessageCurrentChatId, String buttonID, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        session.getStream().sendKeyboardRequest(requestMessageCurrentChatId, buttonID, new MessageStream.SendKeyboardCallback() {
+            @Override
+            public void onSuccess(@NonNull Message.Id messageId) {
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
+            }
+
+            @Override
+            public void onFailure(@NonNull Message.Id messageId, @NonNull WebimError<SendKeyboardError> error) {
+                sendCallbackError(callbackContext, "{\"result\":\"" + error.getErrorString() + "\"}");
+            }
+        });
+    }
+
     private void typingMessage(String text, final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
@@ -504,6 +564,7 @@ public class WebimSDK extends CordovaPlugin {
             onSurveyCallback = null;
             onSurveyCancelCallback = null;
             onNextQuestionCallback = null;
+            onLoggingCallback = null;
         }
 
         if (closeWithClearVisitorData) {
@@ -513,18 +574,19 @@ public class WebimSDK extends CordovaPlugin {
             session.destroy();
         }
         session = null;
+        accountName = null;
         listController = null;
         sendCallbackResult(callbackContext, "{\"result\":\"WebimSession Close\"}");
 
     }
 
-    private void rateOperator(String id, int rating, final CallbackContext callbackContext) {
+    private void rateOperator(String id, int rating, String note, final CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
         rateOperatorCallback = callbackContext;
-        session.getStream().rateOperator(id, rating, new MessageStream.RateOperatorCallback() {
+        session.getStream().rateOperator(id, note, rating, new MessageStream.RateOperatorCallback() {
             @Override
             public void onSuccess() {
                 sendCallbackResult(rateOperatorCallback, "{\"result\":\"Rate operator successfully.\"}");
@@ -586,6 +648,14 @@ public class WebimSDK extends CordovaPlugin {
                 });
     }
 
+    private void setChatRead(final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        session.getStream().setChatRead();
+    }
+
     private void getUnreadByVisitorMessageCount(CallbackContext callbackContext) {
         if (session == null) {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
@@ -593,6 +663,34 @@ public class WebimSDK extends CordovaPlugin {
         }
         int count = session.getStream().getUnreadByVisitorMessageCount();
         sendCallbackResult(callbackContext, "{\"unreadByVisitorMessageCount\":" + count + "}");
+    }
+
+    private void getShowEmailButton(CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        String url;
+        if (accountName.contains("https://") || accountName.contains("http://")) {
+            if (accountName.endsWith("/")) {
+                accountName = accountName.substring(0, accountName.length() - 1);
+            }
+            url = accountName + "/js/v/all-settings.js.php";
+        } else {
+            url ="https://" + accountName + ".webim.ru/js/v/all-settings.js.php";
+        }
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(url).build();
+        try {
+            Response response = client.newCall(request).execute();
+            String bodyString = response.body().string();
+            String jsonString = bodyString.substring(29, bodyString.length() - 2);
+            JSONObject obj = new JSONObject(jsonString);
+            boolean showEmailButton = obj.getJSONObject("accountConfig").getBoolean("show_visitor_send_chat_to_email_button");
+            sendCallbackResult(callbackContext, "{\"showEmailButton\":" + showEmailButton + "}");
+        } catch (Exception e) {
+            sendCallbackError(callbackContext, e.toString());
+        }
     }
 
     private void sendNoResult(CallbackContext callbackContext) {

@@ -2,6 +2,7 @@ package ru.webim.plugin.models;
 
 public class Message {
     public String id;
+    public String currentChatID;
     public String text;
     public String url;
     public int imageWidth;
@@ -10,7 +11,10 @@ public class Message {
     public String timestamp;
     public String sender;
     public Employee operator;
+    public Keyboard keyboard;
+    public KeyboardRequest keyboardRequest;
     public boolean isFirst = false;
+    public boolean isReadByOperator;
 
     public static Message fromParams(String id,
                                      String text,
@@ -25,6 +29,7 @@ public class Message {
         resultMessage.timestamp = timestamp;
         resultMessage.url = url;
         resultMessage.isFirst = isFirst;
+        resultMessage.isReadByOperator = false;
 
         return resultMessage;
     }
@@ -32,12 +37,14 @@ public class Message {
     public static Message fromWebimMessage(ru.webim.android.sdk.Message message) {
         Message resultMessage = new Message();
         resultMessage.id = message.getClientSideId().toString();
+        resultMessage.currentChatID = message.getServerSideId();
         resultMessage.text = message.getText();
+        resultMessage.isReadByOperator = message.isReadByOperator();
         if (message.getType() != ru.webim.android.sdk.Message.Type.FILE_FROM_OPERATOR
                 && message.getType() != ru.webim.android.sdk.Message.Type.OPERATOR) {
             resultMessage.sender = message.getSenderName();
         } else {
-            resultMessage.operator = Employee.getEmployeeFromParams(message.getSenderName(),
+            resultMessage.operator = ru.webim.plugin.models.Employee.getEmployeeFromParams(message.getSenderName(),
                     message.getSenderAvatarUrl());
         }
         ru.webim.android.sdk.Message.Attachment attachment = message.getAttachment();
@@ -58,6 +65,14 @@ public class Message {
             resultMessage.timestamp = Long.toString(message.getTime() - 1);
         } else {
             resultMessage.timestamp = Long.toString(message.getTime());
+        }
+
+        if (message.getType() == ru.webim.android.sdk.Message.Type.KEYBOARD) {
+            resultMessage.keyboard = ru.webim.plugin.models.Keyboard.getKeyboard(message.getKeyboard());
+        }
+
+        if (message.getType() == ru.webim.android.sdk.Message.Type.KEYBOARD_RESPONSE) {
+            resultMessage.keyboardRequest = ru.webim.plugin.models.KeyboardRequest.getKeyboardRequest(message.getKeyboardRequest());
         }
 
         return resultMessage;

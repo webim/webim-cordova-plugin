@@ -58,6 +58,9 @@ module.exports = {
     rateOperator: function (id, rating, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "rateOperator", [id, rating]);
     },
+    rateOperatorWithNote: function (id, rating, note, successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "rateOperator", [id, rating, note]);
+    },
     sendDialogToEmailAddress: function (emailAddress, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendDialogToEmailAddress", [emailAddress]);
     },
@@ -75,5 +78,17 @@ module.exports = {
     },
     getUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "getUnreadByVisitorMessageCount", [])
+    },
+    sendKeyboardRequest: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "sendKeyboardRequest", [requestMessageCurrentChatId, buttonId])
+    },
+    setChatRead: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "setChatRead", [])
+    },
+    getShowEmailButton: function  (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "getShowEmailButton", [])
+    },
+    onLogging: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onLogging", [])
     }
 };

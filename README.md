@@ -13,6 +13,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#typing-message">method typingMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-message">method sendMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-file">method sendFile</a></p>
+<p style="padding-left: 30px;"><a href="#send-keyboard-request">method sendKeyboardRequest</a></p>
 <p style="padding-left: 30px;"><a href="#send-survey-answer">method sendSurveyAnswer</a></p>
 <p style="padding-left: 30px;"><a href="#cancel-survey">method cancelSurvey</a></p>
 <p style="padding-left: 30px;"><a href="#on-message">method onMessage</a></p>
@@ -26,9 +27,13 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-next-question">method onNextQuestion</a></p>
 <p style="padding-left: 30px;"><a href="#on-survey-cancel">method onSurveyCancel</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
+<p style="padding-left: 30px;"><a href="#rateOperatorWithNote">method rateOperatorWithNote</a></p>
 <p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
 <p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#get-unread-by-visitor-message-count">method getUnreadByVisitorMessageCount</a></p>
+<p style="padding-left: 30px;"><a href="#set-chat-read">method setChatRead</a></p>
+<p style="padding-left: 30px;"><a href="#get-show-email-button">method getShowEmailButton</a></p>
+<p style="padding-left: 30px;"><a href="#on-logging">method onLogging</a></p>
 <p style="padding-left: 30px;"><a href="#close">method close</a></p>
 
 <a href="#objects">Objects</a>
@@ -39,6 +44,10 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#survey-config">SurveyConfig</a></p>
 <p style="padding-left: 30px;"><a href="#survey-current-question-info">SurveyCurrentQuestionInfo</a></p>
 <p style="padding-left: 30px;"><a href="#survey-question">SurveyQuestion</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard">Keyboard</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard-button">KeyboardButton</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard-request">KeyboardRequest</a></p>
+<p style="padding-left: 30px;"><a href="#keyboard-response">KeyboardResponse</a></p>
 
 <h2 id="installation"><b>Setting up</b></h2>
 
@@ -89,6 +98,13 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="send-file" style="padding-left: 30px;"><b>method webimsdk.sendFile(filePath, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Sends a file message.</p>
 <p style="padding-left: 60px;"><em>filePath</em> parameter — file path.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(id)</em> is executed when the method is successfully completed. <em>id</em> parameter contains file message <em>ID</em>, type — <em>String</em>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="send-keyboard-request" style="padding-left: 30px;"><b>method webimsdk.sendKeyboardRequest(requestMessageCurrentChatId, buttonId, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Sends a file keyboard request.</p>
+<p style="padding-left: 60px;"><em>requestMessageCurrentChatId</em> parameter — message current chat id.</p>
+<p style="padding-left: 60px;"><em>buttonID</em> parameter — selected button id.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(id)</em> is executed when the method is successfully completed. <em>id</em> parameter contains file message <em>ID</em>, type — <em>String</em>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
@@ -160,6 +176,14 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
+<h4 id="rateOperatorWithNote" style="padding-left: 30px;"><b>method webimsdk.rateOperatorWithNote(id, rating, note, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Rates an operator.</p>
+<p style="padding-left: 60px;"><em>id</em> parameter — operator id. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>rating</em> parameter — a number in range (1...5) that represents an operator rating. If the number is out of range, rating will not be sent to a server. Type — <em>Int</em>.</p>
+<p style="padding-left: 60px;"><em>note</em> parameter — some commentary. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
 <h4 id="sendDialogToEmailAddress" style="padding-left: 30px;"><b>method webimsdk.sendDialogToEmailAddress(emailAddress, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Rates an operator.</p>
 <p style="padding-left: 60px;"><em>emailAddress</em> parameter — send dialog to this email address. Type — <em>String</em>.</p>
@@ -168,12 +192,27 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 
 <h4 id="on-unread-by-visitor-message-count" style="padding-left: 30px;"><b>method webimsdk.onUnreadByVisitorMessage(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback called when operator send new message.</p>
-<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> is executed when value of unread by visitor message count changed. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> is executed when value of unread by visitor message count changed. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <em>Int</em>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="get-unread-by-visitor-message-count" style="padding-left: 30px;"><b>method webimsdk.getUnreadByVisitorMessage(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback returns unread by visitor message count.</p>
-<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> returns value of unread by visitor message count. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <a href="#dialog-state"><em>int</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(unreadByVisitorMessageCount)</em> returns value of unread by visitor message count. <em>unreadByVisitorMessageCount</em> parameter contains unread by visitor message count, type — <em>Int</em>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="set-chat-read" style="padding-left: 30px;"><b>method webimsdk.setChatRead(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">All messages will be read by visitor.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="get-show-email-button" style="padding-left: 30px;"><b>method webimsdk.getShowEmailButton(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Method returns true if app should show send chat to email button.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>showEmailButton</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="on-logging" style="padding-left: 30px;"><b>method webimsdk.onLogging(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when new log entry appears.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(log)</em> returns new log entry appears. <em>log</em> parameter contains new log entry, type — <em>String</em>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="close" style="padding-left: 30px;"><b>method webimsdk.close(successCallback, errorCallback)</b></h4>
@@ -191,6 +230,8 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;"><em>sender</em> field — message sender name. No field if message is system message. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>operator</em> field — operator information. No field if message isn't operator message. Type — <em>Employee.</em></p>
 <p style="padding-left: 60px;"><em>isFirst</em> field — true if message is the first message in current chat. Type — <em>Boolean.</em></p>
+<p style="padding-left: 60px;"><em>isReadByOperator</em> field — true if message is read by operator. Type — <em>Boolean.</em></p>
+
 
 <h4 id="dialog-state" style="padding-left: 30px;"><b>DialogState</b></h4>
 <p style="padding-left: 60px;">Dialog state info. See method <em><a href="#on-dialog">onDialog</a>.</em></p>
@@ -222,3 +263,24 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Survey question information.</p>
 <p style="padding-left: 60px;"><em>type</em> field — survey question type. Type can be "stars", "radio", "comment". Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>text</em> field — survey question text. Type — <em>String</em>.</p>
+
+<h4 id="keyboard" style="padding-left: 30px;"><b>Keyboard</b></h4>
+<p style="padding-left: 60px;">Keyboard information.</p>
+<p style="padding-left: 60px;"><em>state</em> field — keyboard state. Type can be "pending" (all buttons aren't selected), "completed" (keyboard has selected button), "canceled" (keyboard is canceled without selected button). Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>buttons</em> field contains buttons array. See <a href="#keyboard-button"><em>KeyboardButton</em></a>.</p>
+<p style="padding-left: 60px;"><em>keyboardResponse</em> field contains information about selected button. Type — <em>KeyboardResponse</em>.</p>
+
+<h4 id="keyboard-button" style="padding-left: 30px;"><b>KeyboardButton</b></h4>
+<p style="padding-left: 60px;">Keyboard button information.</p>
+<p style="padding-left: 60px;"><em>text</em> field — text on button. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>id</em> field — button id.. Type — <em>String</em>.</p>
+
+<h4 id="keyboard-request" style="padding-left: 30px;"><b>KeyboardRequest</b></h4>
+<p style="padding-left: 60px;">Keyboard request information.</p>
+<p style="padding-left: 60px;"><em>messageID</em> field — id of message with keyboard. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>button</em> field — selected button. Type — <a href="#keyboard-button"><em>KeyboardButton</em></a>.</p>
+
+<h4 id="keyboard-request" style="padding-left: 30px;"><b>KeyboardRequest</b></h4>
+<p style="padding-left: 60px;">Keyboard request information.</p>
+<p style="padding-left: 60px;"><em>buttonID</em> field — selected button id. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>messageID</em> field — id of message with keyboard. Type — <em>String</em>.</p>

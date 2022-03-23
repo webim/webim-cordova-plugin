@@ -81,6 +81,11 @@ enum WebimInternalError: String, Error {
     case noChat = "no-chat"
     case operatorNotInChat = "operator-not-in-chat"
 
+    // Keyboard response errors
+    case buttonIdNotSet = "button-id-not-set"
+    case requestMessageIdNotSet = "request-message-id-not-set"
+    case canNotCreateResponse = "can-not-create-response"
+
     // Send Dialog errors
     case sentTooManyTimes = "chat-history-sent-too-many-times"
     

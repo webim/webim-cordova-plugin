@@ -484,7 +484,9 @@ final class HistoryPoller {
             }
 
             self.lastPollingTime = Int64(ProcessInfo.processInfo.systemUptime)
-            self.lastRevision = revision
+            if revision != nil {
+                self.lastRevision = revision
+            }
 
             if isInitial && !hasMore {
                 self.messageHolder.set(endOfHistoryReached: true)
@@ -496,7 +498,7 @@ final class HistoryPoller {
                                                         completion: { [weak self] in
                                                             // Revision is saved after history is saved only.
                                                             // I.e. if history will not be saved, then revision will not be overwritten. History will be re-requested.
-                                                            self?.historyMetaInformationStorage.set(revision: revision)
+                                                            self?.historyMetaInformationStorage.set(revision: self?.lastRevision)
             })
 
             if self.running != true {
@@ -510,14 +512,14 @@ final class HistoryPoller {
 
             if !isInitial
                 && hasMore {
-                self.requestHistory(since: revision,
+                self.requestHistory(since: self.lastRevision,
                                     completion: self.createHistorySinceCompletionHandler())
             } else {
                 self.dispatchWorkItem = DispatchWorkItem() { [weak self] in
                     guard let `self` = self else {
                         return
                     }
-                    self.requestHistory(since: revision,
+                    self.requestHistory(since: self.lastRevision,
                                            completion: self.createHistorySinceCompletionHandler())
 
 

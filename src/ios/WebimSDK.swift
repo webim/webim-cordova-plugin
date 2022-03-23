@@ -4,6 +4,7 @@ import Photos
     
     private var session: WebimSession?
     private var messageTracker: MessageTracker?
+    private var accountName: String?
     private var closeWithClearVisitorData = false
     private var isFirstMessage = false
     var onMessageCallbackId: String?
@@ -21,6 +22,7 @@ import Photos
     var onSurveyCallbackId: String?
     var onNextQuestionCallbackId: String?
     var onSurveyCancelCallbackId: String?
+    var onLoggingCallbackId: String?
 
 
     @objc(init:)
@@ -32,7 +34,7 @@ import Photos
         let callbackId = command.callbackId
         onFatalErrorCallbackId = callbackId
         let args = command.arguments[0] as! NSDictionary
-        let accountName = args["accountName"] as? String
+        accountName = args["accountName"] as? String
         let location = args["location"] as? String
         let deviceToken = args["pushToken"] as? String
         let isLocalHistoryStoragingEnabled = args["storeHistoryLocally"] as? Bool
@@ -45,6 +47,9 @@ import Photos
                 .set(remoteNotificationSystem: ((deviceToken != nil) ? .APNS : .NONE))
                 .set(deviceToken: deviceToken)
                 .set(isLocalHistoryStoragingEnabled: isLocalHistoryStoragingEnabled ?? false)
+            if onLoggingCallbackId != nil {
+                sessionBuilder = sessionBuilder.set(webimLogger: self, verbosityLevel: .VERBOSE)
+            }
             if let visitorFields = args["visitorFields"] as? NSDictionary {
                 let jsonData = try? JSONSerialization.data(withJSONObject: visitorFields, options: [])
                 let jsonString = String(data: jsonData!, encoding: .utf8)
@@ -125,6 +130,11 @@ import Photos
         onSurveyCancelCallbackId = command.callbackId
     }
 
+    @objc(onLogging:)
+    func onLogging(_ command: CDVInvokedUrlCommand) {
+        onLoggingCallbackId = command.callbackId
+    }
+
     @objc(close:)
     func close(_ command: CDVInvokedUrlCommand) {
         closeInternal(command)
@@ -160,6 +170,7 @@ import Photos
                 onSurveyCallbackId = nil
                 onNextQuestionCallbackId = nil
                 onSurveyCancelCallbackId = nil
+                onLoggingCallbackId = nil
                 sendCallbackResult(callbackId: callbackId)
             }
         } else {
@@ -287,6 +298,24 @@ import Photos
         } catch { }
     }
 
+    @objc(sendKeyboardRequest:)
+    func sendKeyboardRequest(_ command: CDVInvokedUrlCommand) {
+        let callbackContextId = command.callbackId
+        let requestMessageCurrentChatId = command.arguments[0] as? String ?? ""
+        let buttonID = command.arguments[1] as? String ?? ""
+        do {
+            try session?.getStream().sendKeyboardRequest(buttonID: buttonID, messageCurrentChatID: requestMessageCurrentChatId, completionHandler: SendKeyboardRequestCompletionHandlerImpl(webimSDK: self, callbackContextId: callbackContextId))
+        } catch { }
+    }
+
+    @objc(setChatRead:)
+    func setChatRead(_ command: CDVInvokedUrlCommand) {
+        let callbackContextId = command.callbackId
+        do {
+            try session?.getStream().setChatRead()
+        } catch { }
+    }
+
     @objc(rateOperator:)
     func rateOperator(_ command: CDVInvokedUrlCommand) {
         onRateOperatorCallbackId = command.callbackId
@@ -294,6 +323,21 @@ import Photos
         let rating = command.arguments[1] as? Int
         do {
             try session?.getStream().rateOperatorWith(id: operatorId,
+                                                      note: nil,
+                                                      byRating: rating ?? -1,
+                                                      comletionHandler: self)
+        } catch { }
+    }
+
+    @objc(rateOperatorWithNote:)
+    func rateOperatorWithNote(_ command: CDVInvokedUrlCommand) {
+        onRateOperatorCallbackId = command.callbackId
+        let operatorId = command.arguments[0] as? String
+        let rating = command.arguments[1] as? Int
+        let note = command.arguments[2] as? String
+        do {
+            try session?.getStream().rateOperatorWith(id: operatorId,
+                                                      note: note,
                                                       byRating: rating ?? -1,
                                                       comletionHandler: self)
         } catch { }
@@ -316,6 +360,41 @@ import Photos
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
+
+    @objc(getShowEmailButton:)
+        func getShowEmailButton(_ command: CDVInvokedUrlCommand) {
+            let callbackId = command.callbackId
+            if var accountName = accountName {
+                let url: URL?
+                if accountName.contains("https://") || accountName.contains("http://") {
+                    if accountName.last == "/" {
+                        accountName.removeLast()
+                    }
+                    url = URL(string: "\(accountName)/js/v/all-settings.js.php")
+                } else {
+                    url = URL(string: "https://\(accountName).webim.ru/js/v/all-settings.js.php")
+                }
+                if let url = url {
+                    let dataTask = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+                        var dataString = String(data: data ?? Data(), encoding: .utf8)
+                        dataString?.removeFirst(29)
+                        dataString?.removeLast(2)
+                        let dataJSON = try? JSONSerialization.jsonObject(with: dataString?.data(using: .utf8, allowLossyConversion: false) ?? Data()) as? [String: Any]
+                        let accountConfig = dataJSON??["accountConfig"] as? [String: Any?]
+                        if let showEmailButton = accountConfig?["show_visitor_send_chat_to_email_button"] as? Bool {
+                            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"showEmailButton\":\(showEmailButton)}")
+                            pluginResult?.setKeepCallbackAs(true)
+                            self?.commandDelegate!.send(pluginResult, callbackId: callbackId)
+                        } else {
+                            self?.sendCallbackError(callbackId: callbackId!, error: "Show email button key not found")
+                        }
+                    }
+                    dataTask.resume()
+                }
+            } else {
+                sendCallbackError(callbackId: callbackId!, error: "Account name is nil")
+            }
+        }
 
     private func sendCallbackResult(callbackId: String) {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
@@ -360,8 +439,10 @@ import Photos
     func messageToDictionary(message: Message, isFirst: Bool = false) -> [String: Any] {
         var dict = [String: Any]()
         dict["id"] = message.getID()
+        dict["currentChatID"] = message.getCurrentChatID()
         dict["text"] = message.getText()
         dict["isFirst"] = isFirst
+        dict["isReadByOperator"] = message.isReadByOperator()
         if let attachment = message.getAttachment() {
             dict["url"] = (attachment.getURL()).absoluteString
             if let imageInfo = attachment.getImageInfo() {
@@ -383,6 +464,39 @@ import Photos
         } else {
             dict["timestamp"] = String(message.getTime().timeIntervalSince1970 * 1000)
         }
+        if message.getType() == .keyboard,
+           let keyboard = message.getKeyboard() {
+            var keyboardDict = [String: Any]()
+            switch keyboard.getState() {
+            case .pending:
+                keyboardDict["state"] = "pending"
+            case .completed:
+                keyboardDict["state"] = "completed"
+            case .canceled:
+                keyboardDict["state"] = "canceled"
+            }
+            let keyboardButtons = keyboard.getButtons()
+            var keyboardButtonsDict = [[String: String]]()
+            for array in keyboardButtons {
+                for button in array {
+                    keyboardButtonsDict.append(["text": button.getText(), "id": button.getID()])
+                }
+            }
+            keyboardDict["buttons"] = keyboardButtonsDict
+            if let keyboardResponse = keyboard.getResponse() {
+                keyboardDict["keyboardResponse"] = ["messageID": keyboardResponse.getMessageID(), "buttonID": keyboardResponse.getButtonID()]
+            }
+
+
+            dict["keyboard"] = keyboardDict
+
+        }
+        if message.getType() == .keyboardResponse,
+           let keyboardRequest = message.getKeyboardRequest() {
+            var keyboardRequestDict: [String: Any] = ["messageID": keyboardRequest.getMessageID()]
+            keyboardRequestDict["button"] = ["id": keyboardRequest.getButton().getID(), "text": keyboardRequest.getButton().getText()]
+            dict["keyboardRequest"] = keyboardRequest
+        }
         return dict;
     }
 
@@ -399,6 +513,7 @@ import Photos
         dict["sender"] = sender
         dict["timestamp"] = timestamp
         dict["isFirst"] = isFirst
+        dict["isReadByOperator"] = false
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
@@ -694,34 +809,57 @@ class SendDialogToEmailAddressCompletionImpl: SendDialogToEmailAddressCompletion
 
 }
 
+class SendKeyboardRequestCompletionHandlerImpl: SendKeyboardRequestCompletionHandler {
+    let webimSDK: WebimSDK
+    let callbackContextId: String?
+
+    init(webimSDK: WebimSDK,
+         callbackContextId: String?) {
+        self.webimSDK = webimSDK
+        self.callbackContextId = callbackContextId
+    }
+
+    func onSuccess(messageID: String) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(pluginResult, callbackId: callbackContextId)
+    }
+
+    func onFailure(messageID: String, error: KeyboardResponseError) {
+        let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        errorPluginResult?.setKeepCallbackAs(true)
+        webimSDK.commandDelegate!.send(errorPluginResult, callbackId: callbackContextId)
+    }
+}
+
 class WebimFile {
-    
+
     let data: Data
     let fileName: String
     let mimeType: MimeType
     let url: URL
-    
+
     init(url fileUrl: URL, data fileData: Data) {
         self.data = fileData
         self.fileName = fileUrl.lastPathComponent
         self.mimeType = MimeType(url: fileUrl)
         self.url = fileUrl
     }
-    
+
     private func sendInternal(session: WebimSession,
               completionHandler: SendFileCompletionHandler?,
               completion: @escaping (Error?) -> Void) {
-        
+
         var resultData = self.data
             var resultMimeType = self.mimeType
         var resultFileName = self.fileName
-        
+
         let imageExtension = self.url.pathExtension.lowercased()
         if (imageExtension != "jpg"
             && imageExtension != "jpeg"
             && imageExtension != "png"
             && isImage(contentType: self.mimeType.value)) {
-            
+
             let image = UIImage(data: self.data)!
             if imageExtension == "heic" || imageExtension == "heif" {
                 resultData = UIImageJPEGRepresentation(image, 0.5)!
@@ -736,7 +874,7 @@ class WebimFile {
                 resultData = UIImagePNGRepresentation(image)!
             }
         }
-        
+
         // Run in main thread to prevent INVALID_THREAD error
         DispatchQueue.main.async {
             do {
@@ -750,15 +888,23 @@ class WebimFile {
             }
         }
     }
-    
+
     func send(session: WebimSession,
               completionHandler: SendFileCompletionHandler?,
               completion: @escaping (Error?) -> Void) {
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             self.sendInternal(session: session,
                               completionHandler: completionHandler,
                               completion: completion)
         }
+    }
+}
+
+extension WebimSDK: WebimLogger {
+    func log(entry: String) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"log\":\"\(entry)\"}")
+        pluginResult?.setKeepCallbackAs(true)
+        commandDelegate!.send(pluginResult, callbackId: onLoggingCallbackId)
     }
 }
