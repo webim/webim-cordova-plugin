@@ -107,9 +107,9 @@ public class WebimSDK extends CordovaPlugin {
                 typingMessage(data.getString(0), callbackContext);
                 return true;
 
-            case "setChatRead":
-                setChatRead(callbackContext);
-                return true;
+//            case "setChatRead":
+//                setChatRead(callbackContext);
+//                return true;
 
             case "sendFile":
                 String filePath = data.getString(0);
@@ -609,14 +609,14 @@ public class WebimSDK extends CordovaPlugin {
         });
     }
 
-    private void setChatRead(final CallbackContext callbackContext) {
-        if (session == null) {
-            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
-            return;
-        }
-
-        session.getStream().setChatRead();
-    }
+//    private void setChatRead(final CallbackContext callbackContext) {
+//        if (session == null) {
+//            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+//            return;
+//        }
+//
+//        session.getStream().setChatRead();
+//    }
 
     private void sendDialogToEmailAddress(String emailAddress, final CallbackContext callbackContext) {
         if (session == null) {
