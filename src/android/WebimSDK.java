@@ -35,6 +35,7 @@ import ru.webim.android.sdk.WebimSession;
 import ru.webim.android.sdk.Webim.SessionBuilder;
 import ru.webim.android.sdk.WebimError;
 import ru.webim.android.sdk.WebimLog;
+import ru.webim.android.sdk.impl.StringId;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -569,7 +570,7 @@ public class WebimSDK extends CordovaPlugin {
             return;
         }
         rateOperatorCallback = callbackContext;
-        session.getStream().rateOperator(id, note, rating, new MessageStream.RateOperatorCallback() {
+        session.getStream().rateOperator(StringId.forOperator(id), note, rating, new MessageStream.RateOperatorCallback() {
             @Override
             public void onSuccess() {
                 sendCallbackResult(rateOperatorCallback, "{\"result\":\"Rate operator successfully.\"}");
