@@ -225,16 +225,6 @@ import Photos
         sendCallbackResult(callbackId: callbackId!, resultObject: currentOperator)
     }
 
-    @objc(setChatRead:)
-    func setChatRead(_ command: CDVInvokedUrlCommand) {
-        let callbackId = command.callbackId
-
-        do {
-            try session?.getStream().setChatRead()
-        } catch { }
-        sendCallbackResult(callbackId: callbackId!)
-    }
-
     @objc(requestDialog:)
     func requestDialog(_ command: CDVInvokedUrlCommand) {
         do {
