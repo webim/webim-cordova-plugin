@@ -82,6 +82,9 @@ module.exports = {
     getShowEmailButton: function  (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "getShowEmailButton", [])
     },
+    showRateOperatorWindow: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "showRateOperatorWindow", [])
+    },
     onLogging: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onLogging", [])
     }

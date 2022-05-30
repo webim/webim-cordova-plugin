@@ -28,6 +28,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-survey-cancel">method onSurveyCancel</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperatorWithNote">method rateOperatorWithNote</a></p>
+<p style="padding-left: 30px;"><a href="#showRateOperatorWindow">method showRateOperatorWindow</a></p>
 <p style="padding-left: 30px;"><a href="#sendDialogToEmailAddress">method sendDialogToEmailAddress</a></p>
 <p style="padding-left: 30px;"><a href="#on-unread-by-visitor-message-count">method onUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#get-unread-by-visitor-message-count">method getUnreadByVisitorMessageCount</a></p>
@@ -183,6 +184,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;"><em>note</em> parameter — some commentary. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="showRateOperatorWindow" style="padding-left: 30px;"><b>method webimsdk.showRateOperatorWindow(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when the visitor should rate an operator at the end of chat.</p>
+<p style="padding-left: 60px;">Function <em> successCallback()</em> is executed when the method is successfully completed.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="sendDialogToEmailAddress" style="padding-left: 30px;"><b>method webimsdk.sendDialogToEmailAddress(emailAddress, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Rates an operator.</p>

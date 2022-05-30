@@ -61,6 +61,7 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext banCallback;
     private CallbackContext rateOperatorCallback;
     private CallbackContext sendDialogToEmailAddressCallback;
+    private CallbackContext showRateOperatorWindowCallback;
     private CallbackContext onUnreadByVisitorMessageCountCallback;
     private CallbackContext onDeletedMessageCallback;
     private CallbackContext onSurveyCallback;
@@ -167,6 +168,10 @@ public class WebimSDK extends CordovaPlugin {
                 int ratingWithNote = Integer.parseInt(data.getString(1));
                 String note = data.getString(2);
                 rateOperator(idWithNote, ratingWithNote, note, callbackContext);
+                return true;
+
+            case "showRateOperatorWindow":
+                showRateOperatorWindowCallback = callbackContext;
                 return true;
 
             case "sendDialogToEmailAddress":
@@ -321,6 +326,19 @@ public class WebimSDK extends CordovaPlugin {
             @Override
             public void onSurveyCancelled() {
                 sendNotificationCallbackResult(onSurveyCancelCallback, "{\"result\":\"Success\"}");
+            }
+        });
+        session.getStream().setChatStateListener(new MessageStream.ChatStateListener() {
+            @Override
+            public void onStateChange(@androidx.annotation.NonNull MessageStream.ChatState oldState, @androidx.annotation.NonNull MessageStream.ChatState newState) {
+                if (oldState == MessageStream.ChatState.CHATTING &&
+                        (newState == MessageStream.ChatState.CLOSED_BY_OPERATOR || newState == MessageStream.ChatState.NONE) ||
+                        oldState == MessageStream.ChatState.UNKNOWN && newState == MessageStream.ChatState.CLOSED_BY_OPERATOR) {
+                    Operator currentOperator = session.getStream().getCurrentOperator();
+                    if (currentOperator != null && session.getStream().getLastOperatorRating(currentOperator.getId()) == 0) {
+                        sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
+                    }
+                }
             }
         });
         session.resume();
@@ -539,6 +557,7 @@ public class WebimSDK extends CordovaPlugin {
         confirmMessageCallback = null;
         banCallback = null;
         rateOperatorCallback = null;
+        showRateOperatorWindowCallback = null;
         sendDialogToEmailAddressCallback = null;
         onDeletedMessageCallback = null;
         if (callbackContext != null) {

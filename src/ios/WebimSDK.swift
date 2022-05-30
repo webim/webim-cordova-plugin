@@ -16,6 +16,7 @@ import Photos
     var onConfirmCallbackId: String?
     var onFatalErrorCallbackId: String?
     var onRateOperatorCallbackId: String?
+    var showRateOperatorWindowCallbackId: String?
     var sendDialogToEmailAddressCallbackId: String?
     var onUnreadByVisitorMessageCountCallbackId: String?
     var onDeletedMessageCallbackId: String?
@@ -62,17 +63,20 @@ import Photos
                 session?.getStream().set(operatorTypingListener:self)
                 session?.getStream().set(currentOperatorChangeListener: self)
                 session?.getStream().set(unreadByVisitorMessageCountChangeListener: self)
+                session?.getStream().set(chatStateListener: self)
                 self.session?.getStream().set(surveyListener: self)
                 try messageTracker = session?.getStream().newMessageTracker(messageListener: self)
                 try session?.resume()
-                pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+                pluginResult = nil
             } catch { }
         }
-        pluginResult?.setKeepCallbackAs(true)
-        self.commandDelegate!.send(
-            pluginResult,
-            callbackId: callbackId
-        )
+        if let pluginResult = pluginResult {
+            pluginResult.setKeepCallbackAs(true)
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: callbackId
+            )
+        }
     }
 
     @objc(onMessage:)
@@ -161,6 +165,7 @@ import Photos
             onConfirmCallbackId = nil
             onFatalErrorCallbackId = nil
             onRateOperatorCallbackId = nil
+            showRateOperatorWindowCallbackId = nil
             sendDialogToEmailAddressCallbackId = nil
             onDeletedMessageCallbackId = nil
             if let callbackId = callbackId {
@@ -320,6 +325,11 @@ import Photos
                                                       byRating: rating ?? -1,
                                                       comletionHandler: self)
         } catch { }
+    }
+
+    @objc(showRateOperatorWindow:)
+    func showRateOperatorWindow(_ command: CDVInvokedUrlCommand) {
+        showRateOperatorWindowCallbackId = command.callbackId
     }
 
     @objc(sendDialogToEmailAddress:)
@@ -688,8 +698,32 @@ extension WebimSDK: UnreadByVisitorMessageCountChangeListener {
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onUnreadByVisitorMessageCountCallbackId)
     }
+}
 
-
+extension WebimSDK: ChatStateListener {
+    func changed(state previousState: ChatState, to newState: ChatState) {
+        if previousState == .UNKNOWN {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+            pluginResult?.setKeepCallbackAs(true)
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: onFatalErrorCallbackId
+            )
+        }
+        if previousState == .CHATTING && (newState == .CLOSED_BY_OPERATOR || newState == .NONE) ||
+            previousState == .UNKNOWN && newState == .CLOSED_BY_OPERATOR {
+            if let currentOperatorID = session?.getStream().getCurrentOperator()?.getID() {
+                if session?.getStream().getLastRatingOfOperatorWith(id: currentOperatorID) == 0 {
+                    let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+                    pluginResult?.setKeepCallbackAs(true)
+                    self.commandDelegate!.send(
+                        pluginResult,
+                        callbackId: showRateOperatorWindowCallbackId
+                    )
+                }
+            }
+        }
+    }
 }
 
 extension WebimSDK: SurveyListener {
