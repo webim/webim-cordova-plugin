@@ -331,13 +331,8 @@ public class WebimSDK extends CordovaPlugin {
         session.getStream().setChatStateListener(new MessageStream.ChatStateListener() {
             @Override
             public void onStateChange(@androidx.annotation.NonNull MessageStream.ChatState oldState, @androidx.annotation.NonNull MessageStream.ChatState newState) {
-                if (oldState == MessageStream.ChatState.CHATTING &&
-                        (newState == MessageStream.ChatState.CLOSED_BY_OPERATOR || newState == MessageStream.ChatState.NONE) ||
-                        oldState == MessageStream.ChatState.UNKNOWN && newState == MessageStream.ChatState.CLOSED_BY_OPERATOR) {
-                    Operator currentOperator = session.getStream().getCurrentOperator();
-                    if (currentOperator != null && session.getStream().getLastOperatorRating(currentOperator.getId()) == 0) {
-                        sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
-                    }
+                if (oldState == MessageStream.ChatState.CHATTING && newState == MessageStream.ChatState.CLOSED_BY_OPERATOR) {
+                    sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
                 }
             }
         });
