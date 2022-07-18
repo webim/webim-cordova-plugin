@@ -718,6 +718,17 @@ extension WebimSDK: ChatStateListener {
                 callbackId: showRateOperatorWindowCallbackId
             )
         }
+        if previousState == .NONE && newState == .CLOSED_BY_OPERATOR {
+            if let currentOperator = session?.getStream().getCurrentOperator(),
+               session?.getStream().getLastRatingOfOperatorWith(id: currentOperator.getID()) == 0 {
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"result\":\"Success\"}")
+                pluginResult?.setKeepCallbackAs(true)
+                self.commandDelegate!.send(
+                    pluginResult,
+                    callbackId: showRateOperatorWindowCallbackId
+                )
+            }
+        }
     }
 }
 

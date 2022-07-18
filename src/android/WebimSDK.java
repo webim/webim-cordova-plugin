@@ -333,6 +333,14 @@ public class WebimSDK extends CordovaPlugin {
             public void onStateChange(@androidx.annotation.NonNull MessageStream.ChatState oldState, @androidx.annotation.NonNull MessageStream.ChatState newState) {
                 if (oldState == MessageStream.ChatState.CHATTING && newState == MessageStream.ChatState.CLOSED_BY_OPERATOR) {
                     sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
+                } else if (oldState == MessageStream.ChatState.NONE && newState == MessageStream.ChatState.CLOSED_BY_OPERATOR) {
+                    Operator operator = session.getStream().getCurrentOperator();
+                    if (operator != null) {
+                        Operator.Id operatorId = operator.getId();
+                        if (session.getStream().getLastOperatorRating(operatorId) == 0) {
+                            sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
+                        }
+                    }
                 }
             }
         });
