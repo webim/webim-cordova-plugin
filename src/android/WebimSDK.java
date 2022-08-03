@@ -552,7 +552,6 @@ public class WebimSDK extends CordovaPlugin {
         confirmMessageCallback = null;
         banCallback = null;
         rateOperatorCallback = null;
-        showRateOperatorWindowCallback = null;
         sendDialogToEmailAddressCallback = null;
         onDeletedMessageCallback = null;
         if (callbackContext != null) {
@@ -562,6 +561,7 @@ public class WebimSDK extends CordovaPlugin {
             onSurveyCallback = null;
             onSurveyCancelCallback = null;
             onNextQuestionCallback = null;
+            showRateOperatorWindowCallback = null;
             onLoggingCallback = null;
         }
 

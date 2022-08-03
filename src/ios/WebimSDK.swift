@@ -165,7 +165,6 @@ import Photos
             onConfirmCallbackId = nil
             onFatalErrorCallbackId = nil
             onRateOperatorCallbackId = nil
-            showRateOperatorWindowCallbackId = nil
             sendDialogToEmailAddressCallbackId = nil
             onDeletedMessageCallbackId = nil
             if let callbackId = callbackId {
@@ -175,6 +174,7 @@ import Photos
                 onSurveyCallbackId = nil
                 onNextQuestionCallbackId = nil
                 onSurveyCancelCallbackId = nil
+                showRateOperatorWindowCallbackId = nil
                 onLoggingCallbackId = nil
                 sendCallbackResult(callbackId: callbackId)
             }
