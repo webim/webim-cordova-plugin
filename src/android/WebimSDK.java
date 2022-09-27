@@ -40,6 +40,7 @@ import ru.webim.android.sdk.impl.StringId;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class WebimSDK extends CordovaPlugin {
     private static final String DEFAULT_LOCATION = "mobile";
@@ -89,6 +90,12 @@ public class WebimSDK extends CordovaPlugin {
             case "sendMessage":
                 String message = data.getString(0);
                 sendMessage(message, callbackContext);
+                return true;
+
+            case "replyMessage":
+                String additionalMessage = data.getString(0);
+                JSONObject repliedMessageJSON = data.getJSONObject(1);
+                replyMessage(additionalMessage, repliedMessageJSON, callbackContext);
                 return true;
 
             case "requestDialog":
@@ -270,11 +277,11 @@ public class WebimSDK extends CordovaPlugin {
         }
         if (onLoggingCallback != null) {
             sessionBuilder.setLogger(new WebimLog() {
-                        @Override
-                        public void log(String log) {
-                            sendNotificationCallbackResult(onLoggingCallback, "{\"log\":\"" + log + "\"}");
-                        }
-                    },
+                                         @Override
+                                         public void log(String log) {
+                                             sendNotificationCallbackResult(onLoggingCallback, "{\"log\":\"" + log + "\"}");
+                                         }
+                                     },
                     Webim.SessionBuilder.WebimLogVerbosityLevel.VERBOSE);
         }
         session = sessionBuilder.build(new WebimSession.SessionCallback() {
@@ -367,11 +374,182 @@ public class WebimSDK extends CordovaPlugin {
         if (session.getStream().getChatState() == MessageStream.ChatState.NONE
                 || session.getStream().getChatState() == MessageStream.ChatState.UNKNOWN) {
             msg = ru.webim.plugin.models.Message.fromParams(id, message, null,
-                    Long.toString(System.currentTimeMillis()), null, true);
+                    Long.toString(System.currentTimeMillis()), null, null, true);
             hasFirstMessage = true;
         } else {
             msg = ru.webim.plugin.models.Message.fromParams(id, message, null,
-                    Long.toString(System.currentTimeMillis()), null, false);
+                    Long.toString(System.currentTimeMillis()), null, null, false);
+        }
+        sendNotificationCallbackResult(callbackContext, msg);
+    }
+
+    private void replyMessage(String additionalMessage, final JSONObject repliedMessageJSON, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+
+        ru.webim.android.sdk.Message repliedMessage = new Message() {
+            @androidx.annotation.NonNull
+            @Override
+            public Id getClientSideId() {
+                return new Id() {
+                    @Override
+                    public int hashCode() {
+                        return super.hashCode();
+                    }
+                };
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public String getSessionId() {
+                return null;
+            }
+
+            @androidx.annotation.NonNull
+            @Override
+            public String getServerSideId() {
+                try {
+                    return repliedMessageJSON.getString("currentChatID");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public Operator.Id getOperatorId() {
+                return null;
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public String getSenderAvatarUrl() {
+                try {
+                    return repliedMessageJSON.getJSONObject("operator").getString("avatar");
+                } catch (JSONException e) {
+                    return null;
+                }
+            }
+
+            @androidx.annotation.NonNull
+            @Override
+            public String getSenderName() {
+                try {
+                    return repliedMessageJSON.getJSONObject("operator").getString("firstname");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @androidx.annotation.NonNull
+            @Override
+            public Type getType() {
+                return Type.VISITOR;
+            }
+
+            @Override
+            public long getTime() {
+                try {
+                    return repliedMessageJSON.getLong("timestamp");
+                } catch (JSONException e) {
+                    return 0;
+                }
+            }
+
+            @androidx.annotation.NonNull
+            @Override
+            public String getText() {
+                try {
+                    return repliedMessageJSON.getString("text");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @androidx.annotation.NonNull
+            @Override
+            public SendStatus getSendStatus() {
+                return SendStatus.SENT;
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public String getData() {
+                return null;
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public Attachment getAttachment() {
+                return null;
+            }
+
+            @Override
+            public boolean isSavedInHistory() {
+                return false;
+            }
+
+            @Override
+            public boolean isReadByOperator() {
+                return false;
+            }
+
+            @Override
+            public boolean canBeEdited() {
+                return false;
+            }
+
+            @Override
+            public boolean canBeReplied() {
+                try {
+                    return repliedMessageJSON.getBoolean("canBeReplied");
+                } catch (JSONException e) {
+                    return false;
+                }
+            }
+
+            @Override
+            public boolean isEdited() {
+                return false;
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public Quote getQuote() {
+                return null;
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public Keyboard getKeyboard() {
+                return null;
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public KeyboardRequest getKeyboardRequest() {
+                return null;
+            }
+
+            @androidx.annotation.Nullable
+            @Override
+            public Sticker getSticker() {
+                return null;
+            }
+        };
+
+        session.getStream().replyMessage(additionalMessage, repliedMessage);
+        ru.webim.plugin.models.Message msg;
+        if (session.getStream().getChatState() == MessageStream.ChatState.NONE
+                || session.getStream().getChatState() == MessageStream.ChatState.UNKNOWN) {
+            msg = ru.webim.plugin.models.Message.fromParams(UUID.randomUUID().toString(), additionalMessage, null,
+                    Long.toString(System.currentTimeMillis()), null, repliedMessage, true);
+            hasFirstMessage = true;
+        } else {
+            msg = ru.webim.plugin.models.Message.fromParams(UUID.randomUUID().toString(), additionalMessage, null,
+                    Long.toString(System.currentTimeMillis()), null, repliedMessage, false);
         }
         sendNotificationCallbackResult(callbackContext, msg);
     }

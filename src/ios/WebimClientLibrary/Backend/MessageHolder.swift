@@ -321,6 +321,7 @@ final class MessageHolder {
                                      keyboard: messageImpl.getKeyboard(),
                                      keyboardRequest: messageImpl.getKeyboardRequest(),
                                      operatorID: messageImpl.getOperatorID(),
+                                     quote: messageImpl.getQuote(),
                                      senderAvatarURLString: messageImpl.getSenderAvatarURLString(),
                                      senderName: messageImpl.getSenderName(),
                                      sendStatus: .SENDING,
@@ -333,7 +334,8 @@ final class MessageHolder {
                                      internalID: messageImpl.getCurrentChatID(),
                                      rawText: messageImpl.getRawText(),
                                      read: messageImpl.isReadByOperator(),
-                                     messageCanBeEdited: messageImpl.canBeEdited())
+                                     messageCanBeEdited: messageImpl.canBeEdited(),
+                                     messageCanBeReplied: messageImpl.canBeReplied())
         messageTracker?.messageListener?.changed(message: messageImpl, to: newMessage)
         return messageImpl.getText()
     }
@@ -361,6 +363,7 @@ final class MessageHolder {
                                      keyboard: messageImpl.getKeyboard(),
                                      keyboardRequest: messageImpl.getKeyboardRequest(),
                                      operatorID: messageImpl.getOperatorID(),
+                                     quote: messageImpl.getQuote(),
                                      senderAvatarURLString: messageImpl.getSenderAvatarURLString(),
                                      senderName: messageImpl.getSenderName(),
                                      sendStatus: .SENT,
@@ -373,7 +376,8 @@ final class MessageHolder {
                                      internalID: messageImpl.getCurrentChatID(),
                                      rawText: messageImpl.getRawText(),
                                      read: messageImpl.isReadByOperator(),
-                                     messageCanBeEdited: messageImpl.canBeEdited())
+                                     messageCanBeEdited: messageImpl.canBeEdited(),
+                                     messageCanBeReplied: messageImpl.canBeReplied())
         messageTracker?.messageListener?.changed(message: messageImpl, to: newMessage)
     }
 

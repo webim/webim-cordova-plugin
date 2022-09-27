@@ -480,6 +480,24 @@ extension MessageStreamImpl: MessageStream {
         return messageID
     }
     
+    func reply(message: String, repliedMessage: Message) throws -> String? {
+        try startChat()
+
+        guard repliedMessage.canBeReplied() else {
+            return nil
+        }
+
+        let messageID = ClientSideID.generateClientSideID()
+        messageHolder.sending(message: sendingMessageFactory.createTextMessageToSendWithQuoteWith(id: messageID,
+                                                                                                  text: message,
+                                                                                                  repliedMessage: repliedMessage))
+        webimActions.replay(message: message,
+                            clientSideID: messageID,
+                            quotedMessageID: repliedMessage.getCurrentChatID() ?? repliedMessage.getID())
+
+        return messageID
+    }
+
     func edit(message: Message, text: String, completionHandler: EditMessageCompletionHandler?) throws -> Bool {
         try accessChecker.checkAccess()
         

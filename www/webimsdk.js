@@ -16,6 +16,9 @@ module.exports = {
     sendMessage: function (message, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendMessage", [message]);
     },
+    replyMessage: function (message, repliedMessage, successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "replyMessage", [message, repliedMessage]);
+    },
     sendFile: function (filePath, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendFile", [filePath]);
     },

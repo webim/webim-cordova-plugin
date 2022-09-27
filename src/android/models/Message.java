@@ -10,17 +10,20 @@ public class Message {
     public String thumbUrl;
     public String timestamp;
     public String sender;
-    public Employee operator;
-    public Keyboard keyboard;
-    public KeyboardRequest keyboardRequest;
+    public ru.webim.plugin.models.Quote quote;
+    public ru.webim.plugin.models.Employee operator;
+    public ru.webim.plugin.models.Keyboard keyboard;
+    public ru.webim.plugin.models.KeyboardRequest keyboardRequest;
     public boolean isFirst = false;
     public boolean isReadByOperator;
+    public boolean canBeReplied;
 
     public static Message fromParams(String id,
                                      String text,
                                      String url,
                                      String timestamp,
                                      String sender,
+                                     ru.webim.android.sdk.Message quote,
                                      boolean isFirst) {
         Message resultMessage = new Message();
         resultMessage.id = id;
@@ -29,6 +32,8 @@ public class Message {
         resultMessage.timestamp = timestamp;
         resultMessage.url = url;
         resultMessage.isFirst = isFirst;
+        resultMessage.quote = ru.webim.plugin.models.Quote.getQuote(quote.getQuote());
+        resultMessage.canBeReplied = false;
         resultMessage.isReadByOperator = false;
 
         return resultMessage;
@@ -40,6 +45,7 @@ public class Message {
         resultMessage.currentChatID = message.getServerSideId();
         resultMessage.text = message.getText();
         resultMessage.isReadByOperator = message.isReadByOperator();
+        resultMessage.canBeReplied = message.canBeReplied();
         if (message.getType() != ru.webim.android.sdk.Message.Type.FILE_FROM_OPERATOR
                 && message.getType() != ru.webim.android.sdk.Message.Type.OPERATOR) {
             resultMessage.sender = message.getSenderName();
@@ -73,6 +79,10 @@ public class Message {
 
         if (message.getType() == ru.webim.android.sdk.Message.Type.KEYBOARD_RESPONSE) {
             resultMessage.keyboardRequest = ru.webim.plugin.models.KeyboardRequest.getKeyboardRequest(message.getKeyboardRequest());
+        }
+
+        if (message.getQuote() != null) {
+            resultMessage.quote = ru.webim.plugin.models.Quote.getQuote(message.getQuote());
         }
 
         return resultMessage;

@@ -55,12 +55,14 @@ final class SQLiteHistoryStorage: HistoryStorage {
         case type = "type"
         case text = "text"
         case data = "data"
+        case canBeReplied = "can_be_replied"
+        case quote = "quote"
     }
-    
+
     // MARK: SQLite.swift abstractions
-    
+
     private static let history = Table(TableName.history.rawValue)
-    
+
     // In DB columns order.
     private static let id = Expression<String>(ColumnName.id.rawValue)
     private static let clientSideID = Expression<String?>(ColumnName.clientSideID.rawValue)
@@ -71,8 +73,10 @@ final class SQLiteHistoryStorage: HistoryStorage {
     private static let type = Expression<String>(ColumnName.type.rawValue)
     private static let text = Expression<String>(ColumnName.text.rawValue)
     private static let data = Expression<Blob?>(ColumnName.data.rawValue)
-    
-    
+    private static let canBeReplied = Expression<Bool?>(ColumnName.canBeReplied.rawValue)
+    private static let quote = Expression<Blob?>(ColumnName.quote.rawValue)
+
+
     // MARK: - Properties
     private static let queryQueue = DispatchQueue.global(qos: .background)
     private let completionHandlerQueue: DispatchQueue
@@ -83,8 +87,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
     private var readBeforeTimestamp: Int64
     private var prepared = false
     private var reachedHistoryEnd: Bool
-    
-    
+
+
     // MARK: - Initialization
     init(dbName: String,
          serverURL serverURLString: String,
@@ -97,38 +101,38 @@ final class SQLiteHistoryStorage: HistoryStorage {
         self.reachedHistoryEnd = reachedHistoryEnd
         self.completionHandlerQueue = queue
         self.readBeforeTimestamp = readBeforeTimestamp
-        
+
         createTableWith(name: dbName)
     }
-    
+
     // MARK: - Methods
-    
+
     // MARK: HistoryStorage protocol methods
-    
+
     func getMajorVersion() -> Int {
         // No need in this implementation.
-        return 1
+        return 2
     }
-    
+
     func getVersionDB() -> Int {
-        return 1
+        return 2
     }
-    
+
     func set(reachedHistoryEnd: Bool) {
         self.reachedHistoryEnd = reachedHistoryEnd
     }
-    
+
     func updateDB() {
         dropTables()
         createTables()
     }
-    
+
     func getFullHistory(completion: @escaping ([Message]) -> ()) {
         SQLiteHistoryStorage.queryQueue.sync { [weak self] in
             guard let `self` = self else {
                 return
             }
-            
+
             /*
              SELECT * FROM history
              ORDER BY timestamp_in_microsecond ASC
@@ -136,20 +140,20 @@ final class SQLiteHistoryStorage: HistoryStorage {
             let query = SQLiteHistoryStorage
                 .history
                 .order(SQLiteHistoryStorage.timestamp.asc)
-            
+
             var messages = [MessageImpl]()
-            
+
             do {
                 for row in try self.db!.prepare(query) {
                     let message = self.createMessageBy(row: row)
                     messages.append(message)
-                    
+
                     self.db?.trace {
                         WebimInternalLogger.shared.log(entry: "\($0)",
                             verbosityLevel: .DEBUG)
                     }
                 }
-                
+
                 completionHandlerQueue.async {
                     completion(messages as [Message])
                 }
@@ -159,14 +163,14 @@ final class SQLiteHistoryStorage: HistoryStorage {
             }
         }
     }
-    
+
     func getLatestHistory(byLimit limitOfMessages: Int,
                           completion: @escaping ([Message]) -> ()) {
         SQLiteHistoryStorage.queryQueue.sync { [weak self] in
             guard let `self` = self else {
                 return
             }
-            
+
             /*
              SELECT * FROM history
              ORDER BY timestamp_in_microsecond DESC
@@ -176,20 +180,20 @@ final class SQLiteHistoryStorage: HistoryStorage {
                 .history
                 .order(SQLiteHistoryStorage.timestamp.desc)
                 .limit(limitOfMessages)
-            
+
             var messages = [MessageImpl]()
-            
+
             do {
                 for row in try self.db!.prepare(query) {
                     let message = self.createMessageBy(row: row)
                     messages.append(message)
                 }
-                
+
                 self.db?.trace {
                     WebimInternalLogger.shared.log(entry: "\($0)",
                         verbosityLevel: .DEBUG)
                 }
-                
+
                 messages = messages.reversed()
                 completionHandlerQueue.async {
                     completion(messages as [Message])
@@ -200,7 +204,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
             }
         }
     }
-    
+
     func getHistoryBefore(id: HistoryID,
                           limitOfMessages: Int,
                           completion: @escaping ([Message]) -> ()) {
@@ -208,9 +212,9 @@ final class SQLiteHistoryStorage: HistoryStorage {
             guard let `self` = self else {
                 return
             }
-            
+
             let beforeTimeInMicrosecond = id.getTimeInMicrosecond()
-            
+
             /*
              SELECT * FROM history
              WHERE timestamp_in_microsecond < beforeTimeInMicrosecond
@@ -222,20 +226,20 @@ final class SQLiteHistoryStorage: HistoryStorage {
                 .filter(SQLiteHistoryStorage.timestamp < beforeTimeInMicrosecond)
                 .order(SQLiteHistoryStorage.timestamp.desc)
                 .limit(limitOfMessages)
-            
+
             var messages = [MessageImpl]()
-            
+
             do {
                 for row in try self.db!.prepare(query) {
                     let message = self.createMessageBy(row: row)
                     messages.append(message)
-                    
+
                     self.db?.trace {
                         WebimInternalLogger.shared.log(entry: "\($0)",
                             verbosityLevel: .DEBUG)
                     }
                 }
-                
+
                 messages = messages.reversed()
                 completionHandlerQueue.async {
                     completion(messages as [Message])
@@ -246,16 +250,16 @@ final class SQLiteHistoryStorage: HistoryStorage {
             }
         }
     }
-    
+
     func receiveHistoryBefore(messages: [MessageImpl],
                               hasMoreMessages: Bool) {
         SQLiteHistoryStorage.queryQueue.sync { [weak self] in
             guard let `self` = self else {
                 return
             }
-            
+
             var newFirstKnownTimeInMicrosecond = Int64.max
-            
+
             for message in messages {
                 newFirstKnownTimeInMicrosecond = min(newFirstKnownTimeInMicrosecond,
                                                      message.getHistoryID()!.getTimeInMicrosecond())
@@ -267,7 +271,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
                      VALUES
                      (message.getID(), message.getHistoryID()!.getTimeInMicrosecond(), message.getOperatorID(), message.getSenderName(), message.getSenderAvatarURLString(), MessageItem.MessageKind(messageType: message.getType()).rawValue, message.getRawText() ?? message.getText(), SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()))
                      */
-                    let statement = try self.db!.prepare("INSERT OR FAIL INTO history ("
+                    let query = "INSERT OR FAIL INTO history ("
                         + "\(SQLiteHistoryStorage.ColumnName.id.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.timestamp.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.senderID.rawValue), "
@@ -275,7 +279,10 @@ final class SQLiteHistoryStorage: HistoryStorage {
                         + "\(SQLiteHistoryStorage.ColumnName.avatarURLString.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.type.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.text.rawValue), "
-                        + "\(SQLiteHistoryStorage.ColumnName.data.rawValue)) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+                        + "\(SQLiteHistoryStorage.ColumnName.data.rawValue), "
+                        + "\(SQLiteHistoryStorage.ColumnName.canBeReplied.rawValue), "
+                        + "\(SQLiteHistoryStorage.ColumnName.quote.rawValue)) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ?)"
+                    let statement = try db!.prepare(query)
                     try statement.run(message.getID(),
                                       message.getHistoryID()!.getTimeInMicrosecond(),
                                       message.getOperatorID(),
@@ -283,7 +290,9 @@ final class SQLiteHistoryStorage: HistoryStorage {
                                       message.getSenderAvatarURLString(),
                                       MessageItem.MessageKind(messageType: message.getType()).rawValue,
                                       message.getRawText() ?? message.getText(),
-                                      SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()))
+                                      SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()),
+                                      message.canBeReplied(),
+                                      SQLiteHistoryStorage.convertToBlob(quote: message.getQuote()))
                     // Raw SQLite statement constructed because there's no way to implement INSERT OR FAIL query with SQLite.swift methods. Appropriate INSERT query can look like this:
                     /*try self.db!.run(SQLiteHistoryStorage
                      .history
@@ -295,7 +304,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
                      SQLiteHistoryStorage.type <- MessageItem.MessageKind(messageType: message.getType()).rawValue,
                      SQLiteHistoryStorage.text <- message.getText(),
                      SQLiteHistoryStorage.data <- SQLiteHistoryStorage.convertToBlob(dictionary: message.getData())))*/
-                    
+
                     self.db?.trace {
                         WebimInternalLogger.shared.log(entry: "\($0)",
                             verbosityLevel: .DEBUG)
@@ -305,13 +314,13 @@ final class SQLiteHistoryStorage: HistoryStorage {
                                                    verbosityLevel: .WARNING)
                 }
             }
-            
+
             if newFirstKnownTimeInMicrosecond != Int64.max {
                 self.firstKnownTimestamp = newFirstKnownTimeInMicrosecond
             }
         }
     }
-    
+
     func receiveHistoryUpdate(withMessages messages: [MessageImpl],
                               idsToDelete: Set<String>,
                               completion: @escaping (_ endOfBatch: Bool, _ messageDeleted: Bool, _ deletedMesageID: String?, _ messageChanged: Bool, _ changedMessage: MessageImpl?, _ messageAdded: Bool, _ addedMessage: MessageImpl?, _ idBeforeAddedMessage: HistoryID?) -> ()) {
@@ -319,28 +328,28 @@ final class SQLiteHistoryStorage: HistoryStorage {
             guard let `self` = self else {
                 return
             }
-            
+
             self.prepare()
-            
+
             var newFirstKnownTimestamp = Int64.max
-            
+
             for message in messages {
                 guard message.getHistoryID() != nil else {
                     continue
                 }
-                
+
                 if ((self.firstKnownTimestamp != -1)
                     && (message.getHistoryID()!.getTimeInMicrosecond() < self.firstKnownTimestamp))
                     && !self.reachedHistoryEnd {
                     continue
                 }
-                
+
                 newFirstKnownTimestamp = min(newFirstKnownTimestamp,
                                              message.getHistoryID()!.getTimeInMicrosecond())
-                
+
                 do {
                     try self.insert(message: message)
-                    
+
                     /*
                      SELECT *
                      FROM history
@@ -359,7 +368,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
                                 WebimInternalLogger.shared.log(entry: "\($0)",
                                     verbosityLevel: .DEBUG)
                             }
-                            
+
                             let nextMessage = self.createMessageBy(row: row)
                             completionHandlerQueue.async {
                                 completion(false,
@@ -390,7 +399,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
                 } catch let Result.error(_, code, _) /*where code == SQLITE_CONSTRAINT*/ {
                     do {
                         try update(message: message)
-                        
+
                         completionHandlerQueue.async {
                             completion(false, false, nil, true, message, false, nil, nil)
                         }
@@ -403,44 +412,55 @@ final class SQLiteHistoryStorage: HistoryStorage {
                         verbosityLevel: .ERROR)
                 }
             } // End of `for message in messages`
-            
+
             if (firstKnownTimestamp == -1)
                 && (newFirstKnownTimestamp != Int64.max) {
                 firstKnownTimestamp = newFirstKnownTimestamp
             }
-            
+
             self.completionHandlerQueue.async {
                 completion(true, false, nil, false, nil, false, nil, nil)
             }
         }
     }
-    
+
     func updateReadBeforeTimestamp(timestamp: Int64) {
         self.readBeforeTimestamp = timestamp
     }
-    
+
     // MARK: Private methods
-    
+
     private static func convertToBlob(dictionary: [String: Any?]?) -> Blob? {
         if let dictionary = dictionary {
             let data = NSKeyedArchiver.archivedData(withRootObject: dictionary)
-            
+
             return data.datatypeValue
         }
-        
+
         return nil
     }
-    
+
+    private static func convertToBlob(quote: Quote?) -> Blob? {
+        if let quote = quote {
+            let dictionary = QuoteItem.toDictionary(quote: quote)
+            let data = NSKeyedArchiver.archivedData(withRootObject: dictionary)
+
+            return data.datatypeValue
+        }
+
+        return nil
+    }
+
     private func dropTables() {
         try! self.db?.run(SQLiteHistoryStorage.history.drop(ifExists: true))
     }
-    
+
     private func createTableWith(name: String) {
         SQLiteHistoryStorage.queryQueue.sync { [weak self] in
             guard let `self` = self else {
                 return
             }
-            
+
             let fileManager = FileManager.default
             let documentsPath = try! fileManager.url(for: .documentDirectory,
                                                      in: .userDomainMask,
@@ -448,20 +468,20 @@ final class SQLiteHistoryStorage: HistoryStorage {
                                                      create: false)
             let dbPath = "\(documentsPath)/\(name)"
             self.db = try! Connection(dbPath)
-            self.db?.userVersion = 1
+            self.db?.userVersion = 2
             self.db?.busyTimeout = 1.0
             self.db?.busyHandler() { tries in
                 if tries >= 3 {
                     return false
                 }
-                
+
                 return true
             }
-            
+
             createTables()
         }
     }
-    
+
     private func createTables() {
         /*
          CREATE TABLE history
@@ -486,6 +506,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
             t.column(SQLiteHistoryStorage.type)
             t.column(SQLiteHistoryStorage.text)
             t.column(SQLiteHistoryStorage.data)
+            t.column(SQLiteHistoryStorage.canBeReplied)
+            t.column(SQLiteHistoryStorage.quote)
         })
         self.db?.trace {
             WebimInternalLogger.shared.log(entry: "\($0)",
@@ -493,7 +515,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
         }
         createIndex()
     }
-    
+
     private func createIndex() {
         do {
             /*
@@ -509,17 +531,17 @@ final class SQLiteHistoryStorage: HistoryStorage {
             WebimInternalLogger.shared.log(entry: error.localizedDescription,
                                            verbosityLevel: .VERBOSE)
         }
-        
+
         db?.trace {
             WebimInternalLogger.shared.log(entry: "\($0)",
                 verbosityLevel: .DEBUG)
         }
     }
-    
+
     private func prepare() {
         if !prepared {
             prepared = true
-            
+
             /*
              SELECT timestamp_in_microsecond
              FROM history
@@ -531,14 +553,14 @@ final class SQLiteHistoryStorage: HistoryStorage {
                 .select(SQLiteHistoryStorage.timestamp)
                 .order(SQLiteHistoryStorage.timestamp.asc)
                 .limit(1)
-            
+
             do {
                 if let row = try self.db!.pluck(query) {
                     db?.trace {
                         WebimInternalLogger.shared.log(entry: "\($0)",
                             verbosityLevel: .DEBUG)
                     }
-                    
+
                     firstKnownTimestamp = row[SQLiteHistoryStorage.timestamp]
                 }
             } catch {
@@ -547,11 +569,11 @@ final class SQLiteHistoryStorage: HistoryStorage {
             }
         }
     }
-    
+
     private func createMessageBy(row: Row) -> MessageImpl {
         let id = row[SQLiteHistoryStorage.id]
         let clientSideID = row[SQLiteHistoryStorage.clientSideID]
-        
+
         var rawText: String? = nil
         var text = row[SQLiteHistoryStorage.text]
         let type = MessageMapper.convert(messageKind: MessageItem.MessageKind(rawValue: row[SQLiteHistoryStorage.type])!)
@@ -560,12 +582,20 @@ final class SQLiteHistoryStorage: HistoryStorage {
             rawText = text
             text = ""
         }
-        
+
         var data: [String: Any?]?
         if let dataValue = row[SQLiteHistoryStorage.data] {
             data = NSKeyedUnarchiver.unarchiveObject(with: Data.fromDatatypeValue(dataValue)) as? [String: Any?]
         }
-        
+
+        let canBeReplied = row[SQLiteHistoryStorage.canBeReplied] ?? false
+
+        var quote: Quote?
+        if let quoteValue = row[SQLiteHistoryStorage.quote],
+            let data = NSKeyedUnarchiver.unarchiveObject(with: Data.fromDatatypeValue(quoteValue)) as? [String : Any?] {
+                quote = QuoteImpl.getQuote(quoteItem: QuoteItem(jsonDictionary: data), messageAttachment: nil, serverURL: serverURLString, webimClient: webimClient)
+        }
+
         var keyboard: Keyboard? = nil
         var keyboardRequest: KeyboardRequest? = nil
         if let data = data {
@@ -586,6 +616,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
                            keyboard: keyboard,
                            keyboardRequest: keyboardRequest,
                            operatorID: row[SQLiteHistoryStorage.senderID],
+                           quote: quote,
                            senderAvatarURLString: row[SQLiteHistoryStorage.avatarURLString],
                            senderName: row[SQLiteHistoryStorage.senderName],
                            type: type!,
@@ -597,9 +628,10 @@ final class SQLiteHistoryStorage: HistoryStorage {
                            internalID: id,
                            rawText: rawText,
                            read: row[SQLiteHistoryStorage.timestamp] <= readBeforeTimestamp || readBeforeTimestamp == -1,
-                           messageCanBeEdited: false)
+                           messageCanBeEdited: false,
+                           messageCanBeReplied: canBeReplied)
     }
-    
+
     private func insert(message: MessageImpl) throws {
         /*
          INSERT INTO history (id,
@@ -632,14 +664,16 @@ final class SQLiteHistoryStorage: HistoryStorage {
                     SQLiteHistoryStorage.avatarURLString <- message.getSenderAvatarURLString(),
                     SQLiteHistoryStorage.type <- MessageItem.MessageKind(messageType: message.getType()).rawValue,
                     SQLiteHistoryStorage.text <- (message.getRawText() ?? message.getText()),
-                    SQLiteHistoryStorage.data <- SQLiteHistoryStorage.convertToBlob(dictionary: message.getData())))
-        
+                    SQLiteHistoryStorage.data <- SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()),
+                    SQLiteHistoryStorage.canBeReplied <- message.canBeReplied(),
+                    SQLiteHistoryStorage.quote <- SQLiteHistoryStorage.convertToBlob(quote: message.getQuote())))
+
         db?.trace {
             WebimInternalLogger.shared.log(entry: "\($0)",
                 verbosityLevel: .DEBUG)
         }
     }
-    
+
     private func update(message: MessageImpl) throws {
         /*
          UPDATE history
@@ -664,7 +698,9 @@ final class SQLiteHistoryStorage: HistoryStorage {
                     SQLiteHistoryStorage.avatarURLString <- message.getSenderAvatarURLString(),
                     SQLiteHistoryStorage.type <- MessageItem.MessageKind(messageType: message.getType()).rawValue,
                     SQLiteHistoryStorage.text <- (message.getRawText() ?? message.getText()),
-                    SQLiteHistoryStorage.data <- SQLiteHistoryStorage.convertToBlob(dictionary: message.getData())))
+                    SQLiteHistoryStorage.data <- SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()),
+                    SQLiteHistoryStorage.canBeReplied <- message.canBeReplied(),
+                    SQLiteHistoryStorage.quote <- SQLiteHistoryStorage.convertToBlob(quote: message.getQuote())))
         
         db?.trace {
             WebimInternalLogger.shared.log(entry: "\($0)",

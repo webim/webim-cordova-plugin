@@ -248,6 +248,59 @@ import Photos
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
 
+@objc(replyMessage:)
+    func replyMessage(_ command: CDVInvokedUrlCommand) {
+        let callbackId = command.callbackId
+        let userMessage = command.arguments[0]
+        var repliedMessageDict = command.arguments[1] as! NSDictionary
+        var messageID: String?
+        let chatState = session?.getStream().getChatState()
+        let repliedMessage: Message
+        do {
+            let canBeReplied = repliedMessageDict["canBeReplied"] as? Bool == true
+            let sender = repliedMessageDict["operator"] as? NSDictionary
+            let senderName = sender?["firstname"] as? String
+            let avatar = sender?["avatar"] as? String
+            var attachment: MessageAttachment? = nil
+            if let url = repliedMessageDict["url"] as? String {
+                attachment = MessageAttachmentImpl(urlString: url,
+                                                       size: 0,
+                                                       filename: "file",
+                                                       contentType: "file")
+            }
+            repliedMessage = MessageImpl(serverURLString: accountName ?? "",
+                                         id: repliedMessageDict["id"] as? String ?? "",
+                                         keyboard: nil,
+                                         keyboardRequest: nil,
+                                         operatorID: nil,
+                                         quote: nil,
+                                         senderAvatarURLString: avatar,
+                                         senderName: senderName ?? "",
+                                         type: .VISITOR,
+                                         data: nil,
+                                         text: repliedMessageDict["text"] as? String ?? "",
+                                         timeInMicrosecond: Int64(repliedMessageDict["timestamp"] as? String ?? "0") ?? 0,
+                                         attachment: attachment,
+                                         historyMessage: false,
+                                         internalID: repliedMessageDict["currentChatID"] as? String ?? "",
+                                         rawText: nil,
+                                         read: false,
+                                         messageCanBeEdited: false,
+                                         messageCanBeReplied: canBeReplied)
+            try messageID = session?.getStream().reply(message: userMessage as! String, repliedMessage: repliedMessage)
+        } catch { }
+        let message: String
+        if chatState != .NONE && chatState != .UNKNOWN {
+            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: false, quote: repliedMessage)
+        } else {
+            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: true, quote: repliedMessage)
+            isFirstMessage = true
+        }
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: callbackId)
+    }
+
     @objc(sendFile:)
     func sendFile(_ command: CDVInvokedUrlCommand) {
         onFileMessageErrorCallbackId = command.callbackId
@@ -427,6 +480,38 @@ import Photos
         dict["text"] = message.getText()
         dict["isFirst"] = isFirst
         dict["isReadByOperator"] = message.isReadByOperator()
+        dict["canBeReplied"] = message.canBeReplied()
+        if let quote = message.getQuote() {
+            var quoteDict = [String: String]()
+            switch quote.getState() {
+            case .filled:
+                quoteDict["state"] = "filled"
+                break
+            case .notFound:
+                quoteDict["state"] = "notFound"
+                break
+            case .pending:
+                quoteDict["state"] = "pending"
+                break
+            }
+            quoteDict["senderName"] = quote.getSenderName()
+            quoteDict["message"] = quote.getMessageText()
+            if let timestamp = quote.getMessageTimestamp() {
+                quoteDict["timestamp"] = String(timestamp.timeIntervalSince1970 * 1000)
+            }
+            if let quoteAttachment = quote.getMessageAttachment() {
+                var quoteAttachmentDict = [String: String]()
+                if let size = quoteAttachment.getSize() {
+                    quoteAttachmentDict["size"] = String(size)
+                }
+                quoteAttachmentDict["url"] = quoteAttachment.getURL().absoluteString
+                quoteAttachmentDict["contentType"] = quoteAttachment.getContentType()
+                quoteAttachmentDict["fileName"] = quoteAttachment.getFileName()
+            }
+            quoteDict["authorID"] = quote.getAuthorID()
+            quoteDict["messageID"] = quote.getMessageID()
+            dict["quote"] = quoteDict
+        }
         if let attachment = message.getAttachment() {
             dict["url"] = (attachment.getURL()).absoluteString
             if let imageInfo = attachment.getImageInfo() {
@@ -489,7 +574,8 @@ import Photos
                        url: String?,
                        timestamp: String,
                        sender: String?,
-                       isFirst: Bool) -> String {
+                       isFirst: Bool,
+                       quote: Message? = nil) -> String {
         var dict = [String: Any]()
         dict["id"] = id
         dict["text"] = text
@@ -498,6 +584,18 @@ import Photos
         dict["timestamp"] = timestamp
         dict["isFirst"] = isFirst
         dict["isReadByOperator"] = false
+        if let quote = quote {
+            var quoteDict = [String: String]()
+            quoteDict["state"] = "pending"
+            quoteDict["senderName"] = quote.getSenderName()
+            quoteDict["message"] = quote.getText()
+            quoteDict["timestamp"] = String(quote.getTime().timeIntervalSince1970 * 1000)
+            if let quoteAttachment = quote.getMessageAttachment() {
+                quoteDict["url"] = quoteAttachment.getURL().absoluteString
+            }
+            quoteDict["messageID"] = quote.getID()
+            dict["quote"] = quoteDict
+        }
         if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
                                                       options: .prettyPrinted),
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {

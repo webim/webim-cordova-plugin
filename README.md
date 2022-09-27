@@ -12,6 +12,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#get-messages-history">method  getMessagesHistory</a></p>
 <p style="padding-left: 30px;"><a href="#typing-message">method typingMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-message">method sendMessage</a></p>
+<p style="padding-left: 30px;"><a href="#reply-message">method replyMessage</a></p>
 <p style="padding-left: 30px;"><a href="#send-file">method sendFile</a></p>
 <p style="padding-left: 30px;"><a href="#send-keyboard-request">method sendKeyboardRequest</a></p>
 <p style="padding-left: 30px;"><a href="#send-survey-answer">method sendSurveyAnswer</a></p>
@@ -93,6 +94,13 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="send-message" style="padding-left: 30px;"><b>method webimsdk.sendMessage(message, successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Send message.</p>
 <p style="padding-left: 60px;"><em>message</em> parameter — sending message. Type — <em>String</em>. Max message length — 32000 symbols.
+<p style="padding-left: 60px;">Function <em> successCallback(message)</em> is executed when the method is successfully completed. <em>message</em> parameter contains message, type — <a href="#message"><em>Message</em></a>.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="reply-message" style="padding-left: 30px;"><b>method webimsdk.replyMessage(message, repliedMessage, successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Reply message. Message can be replied if its parameter <em>canBeReplied</em> is true.</p>
+<p style="padding-left: 60px;"><em>message</em> parameter — sending message. Type — <em>String</em>. Max message length — 32000 symbols.
+<p style="padding-left: 60px;"><em>repliedMessage</em> parameter — replied message. Type — <em>Message</em>. JSON with message parameters.
 <p style="padding-left: 60px;">Function <em> successCallback(message)</em> is executed when the method is successfully completed. <em>message</em> parameter contains message, type — <a href="#message"><em>Message</em></a>.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
 
@@ -235,8 +243,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;"><em>timestamp</em> field — sending time in ms. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>sender</em> field — message sender name. No field if message is system message. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>operator</em> field — operator information. No field if message isn't operator message. Type — <em>Employee.</em></p>
+<p style="padding-left: 60px;"><em>keyboard</em> field — keyboard information. Type — <em>Keyboard.</em></p>
 <p style="padding-left: 60px;"><em>isFirst</em> field — true if message is the first message in current chat. Type — <em>Boolean.</em></p>
 <p style="padding-left: 60px;"><em>isReadByOperator</em> field — true if message is read by operator. Type — <em>Boolean.</em></p>
+<p style="padding-left: 60px;"><em>canBeReplied</em> field — true if message is can be replied. Type — <em>Boolean.</em></p>
+<p style="padding-left: 60px;"><em>quote</em> field — quote information. Type — <em>Quote.</em></p>
 
 
 <h4 id="dialog-state" style="padding-left: 30px;"><b>DialogState</b></h4>
@@ -290,3 +301,13 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Keyboard request information.</p>
 <p style="padding-left: 60px;"><em>buttonID</em> field — selected button id. Type — <em>String</em>.</p>
 <p style="padding-left: 60px;"><em>messageID</em> field — id of message with keyboard. Type — <em>String</em>.</p>
+
+<h4 id="quote" style="padding-left: 30px;"><b>Quote</b></h4>
+<p style="padding-left: 60px;">Quote information.</p>
+<p style="padding-left: 60px;"><em>state</em> field — quote state. Type — <em>String</em>. Can be <em>filled</em>, <em>pending</em> and <em>notFound</em>.</p>
+<p style="padding-left: 60px;"><em>senderName</em> field — name of message author. No field if message isn't operator message. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>text</em> field — quote text. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>timestamp</em> field — sending time in ms. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>authorID</em> field — author id. No field if message isn't operator message. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>id</em> field — replied message id. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>url</em> field — file <em>URL</em>. No field if replied message isn't file message. Type — <em>String</em>.</p>

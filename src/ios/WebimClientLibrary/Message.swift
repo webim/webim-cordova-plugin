@@ -102,6 +102,16 @@ public protocol Message {
 
     /**
      - returns:
+     Quote message.
+     - author:
+     Nikita Lazarev-Zubov
+     - copyright:
+     2017 Webim
+     */
+    func getQuote() -> Quote?
+
+    /**
+     - returns:
      URL of a sender's avatar or `nil` if one does not exist.
      - author:
      Nikita Lazarev-Zubov
@@ -194,6 +204,8 @@ public protocol Message {
      2018 Webim
      */
     func canBeEdited() -> Bool
+
+    func canBeReplied() -> Bool
 
     /**
      Messages of type `MessageType.keyboard` contain keyboard from script bot.
@@ -530,6 +542,138 @@ public protocol KeyboardRequest {
      */
     func getMessageID() -> String
 }
+
+/**
+ Qoute.
+ - seealso:
+ `Message.getQuote()`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public protocol Quote {
+    /**
+     - returns:
+     Author ID.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getAuthorID() -> String?
+
+    /**
+     - returns:
+     Author ID.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getMessageAttachment() -> MessageAttachment?
+
+    /**
+     - returns:
+     Author ID.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getMessageTimestamp() -> Date?
+
+    /**
+     - returns:
+     Message ID.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getMessageID() -> String?
+
+    /**
+     - returns:
+     Message text.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getMessageText() -> String?
+
+    /**
+     - returns:
+     Message type.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getMessageType() -> MessageType?
+
+    /**
+     - returns:
+     Sender name.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getSenderName() -> String?
+
+    /**
+     - returns:
+     Quote type.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    func getState() -> QuoteState
+}
+
+// MARK: -
+/**
+ Supported quote states.
+ - seealso:
+ `Quote.getType()`
+ - author:
+ Nikita Kaberov
+ - copyright:
+ 2019 Webim
+ */
+public enum QuoteState {
+
+    /**
+     Quoute is loading.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case pending
+
+    /**
+     Quoute loaded.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case filled
+
+    /**
+     Quote message is not found on server.
+     - author:
+     Nikita Kaberov
+     - copyright:
+     2019 Webim
+     */
+    case notFound
+}
+
 
 
 // MARK: -

@@ -124,11 +124,22 @@ class MessageMapper {
             keyboardRequest = KeyboardRequestImpl.getKeyboardRequest(jsonDictionary: data)
         }
 
+        let quote = messageItem.getQuote()
+        var messageAttachmentFromQuote: MessageAttachment? = nil
+        if let kind = quote?.getMessageKind(), kind == .fileFromVisitor || kind == .fileFromOperator,
+           let webimClient = webimClient {
+            guard let quoteText = quote?.getText() else {
+                WebimInternalLogger.shared.log(entry: "Quote Text is nil in MessageFactories.\(#function)")
+                return nil
+            }
+            messageAttachmentFromQuote = MessageAttachmentImpl.getAttachment(byServerURL: serverURLString, webimClient: webimClient, text: quoteText)
+        }
         return MessageImpl(serverURLString: serverURLString,
                            id: messageItem.getClientSideID()!,
                            keyboard: keyboard,
                            keyboardRequest: keyboardRequest,
                            operatorID: messageItem.getSenderID(),
+                           quote: QuoteImpl.getQuote(quoteItem: quote, messageAttachment: messageAttachmentFromQuote, serverURL: serverURLString, webimClient: webimClient!),
                            senderAvatarURLString: messageItem.getSenderAvatarURLString(),
                            senderName: messageItem.getSenderName()!,
                            type: type!,
@@ -140,21 +151,24 @@ class MessageMapper {
                            internalID: messageItem.getID(),
                            rawText: rawText,
                            read: messageItem.getRead() ?? true,
-                           messageCanBeEdited: messageItem.getCanBeEdited())
+                           messageCanBeEdited: messageItem.getCanBeEdited(),
+                           messageCanBeReplied: messageItem.getCanBeReplied())
     }
-    
+
+
+
     func set(webimClient: WebimClient) {
         self.webimClient = webimClient
     }
-    
+
     func mapAll(messages: [MessageItem]) -> [MessageImpl] {
         return messages.map { map(message: $0) }.compactMap { $0 }
     }
-    
+
     func map(message: MessageItem) -> MessageImpl? {
         preconditionFailure("This method must be overridden!")
     }
-    
+
 }
 
 // MARK: -
@@ -166,13 +180,13 @@ class MessageMapper {
  2017 Webim
  */
 final class CurrentChatMessageMapper: MessageMapper {
-    
+
     // MARK: - Methods
     override func map(message: MessageItem) -> MessageImpl? {
         return convert(messageItem: message,
                        historyMessage: false)
     }
-    
+
 }
 
 // MARK: -
@@ -184,13 +198,13 @@ final class CurrentChatMessageMapper: MessageMapper {
  2017 Webim
  */
 final class HistoryMessageMapper: MessageMapper {
-    
+
     // MARK: - Methods
     override func map(message: MessageItem) -> MessageImpl? {
         return convert(messageItem: message,
                        historyMessage: true)
     }
-    
+
 }
 
 // MARK: -
@@ -202,18 +216,38 @@ final class HistoryMessageMapper: MessageMapper {
  2017 Webim
  */
 final class SendingFactory {
-    
+
     // MARK: - Properties
     var serverURLString: String
-    
-    
+
+
     // MARK: - Initialization
     init(withServerURLString serverURLString: String) {
         self.serverURLString = serverURLString
     }
-    
-    
+
+
     // MARK: - Methods
+
+    func createTextMessageToSendWithQuoteWith(id: String,
+                                              text: String,
+                                              repliedMessage: Message) -> MessageToSend {
+        return MessageToSend(serverURLString: serverURLString,
+                             id: id,
+                             senderName: "",
+                             type: .VISITOR,
+                             text: text,
+                             timeInMicrosecond: InternalUtils.getCurrentTimeInMicrosecond(),
+                             quote: QuoteImpl(state: QuoteState.pending,
+                                              authorID: nil,
+                                              messageAttachment: repliedMessage.getAttachment(),
+                                              messageID: repliedMessage.getCurrentChatID(),
+                                              messageType: repliedMessage.getType(),
+                                              senderName: repliedMessage.getSenderName(),
+                                              text: repliedMessage.getText(),
+                                              rawText: repliedMessage.getText(),
+                                              timestamp: Int64(repliedMessage.getTime().timeIntervalSince1970 * 1000)))
+    }
     
     func createTextMessageToSendWith(id: String,
                                      text: String) -> MessageToSend {
