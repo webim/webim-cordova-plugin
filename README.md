@@ -290,7 +290,7 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="keyboard-button" style="padding-left: 30px;"><b>KeyboardButton</b></h4>
 <p style="padding-left: 60px;">Keyboard button information.</p>
 <p style="padding-left: 60px;"><em>text</em> field — text on button. Type — <em>String</em>.</p>
-<p style="padding-left: 60px;"><em>id</em> field — button id.. Type — <em>String</em>.</p>
+<p style="padding-left: 60px;"><em>id</em> field — button id. Type — <em>String</em>.</p>
 
 <h4 id="keyboard-request" style="padding-left: 30px;"><b>KeyboardRequest</b></h4>
 <p style="padding-left: 60px;">Keyboard request information.</p>

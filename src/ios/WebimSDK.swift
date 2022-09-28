@@ -252,7 +252,7 @@ import Photos
     func replyMessage(_ command: CDVInvokedUrlCommand) {
         let callbackId = command.callbackId
         let userMessage = command.arguments[0]
-        var repliedMessageDict = command.arguments[1] as! NSDictionary
+        let repliedMessageDict = command.arguments[1] as! NSDictionary
         var messageID: String?
         let chatState = session?.getStream().getChatState()
         let repliedMessage: Message
@@ -500,13 +500,8 @@ import Photos
                 quoteDict["timestamp"] = String(timestamp.timeIntervalSince1970 * 1000)
             }
             if let quoteAttachment = quote.getMessageAttachment() {
-                var quoteAttachmentDict = [String: String]()
-                if let size = quoteAttachment.getSize() {
-                    quoteAttachmentDict["size"] = String(size)
-                }
-                quoteAttachmentDict["url"] = quoteAttachment.getURL().absoluteString
-                quoteAttachmentDict["contentType"] = quoteAttachment.getContentType()
-                quoteAttachmentDict["fileName"] = quoteAttachment.getFileName()
+                quoteDict["url"] = quoteAttachment.getURL().absoluteString
+
             }
             quoteDict["authorID"] = quote.getAuthorID()
             quoteDict["messageID"] = quote.getMessageID()
@@ -590,7 +585,7 @@ import Photos
             quoteDict["senderName"] = quote.getSenderName()
             quoteDict["message"] = quote.getText()
             quoteDict["timestamp"] = String(quote.getTime().timeIntervalSince1970 * 1000)
-            if let quoteAttachment = quote.getMessageAttachment() {
+            if let quoteAttachment = quote.getAttachment() {
                 quoteDict["url"] = quoteAttachment.getURL().absoluteString
             }
             quoteDict["messageID"] = quote.getID()
