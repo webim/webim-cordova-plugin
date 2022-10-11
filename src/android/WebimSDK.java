@@ -337,7 +337,7 @@ public class WebimSDK extends CordovaPlugin {
         });
         session.getStream().setChatStateListener(new MessageStream.ChatStateListener() {
             @Override
-            public void onStateChange(@androidx.annotation.NonNull MessageStream.ChatState oldState, @androidx.annotation.NonNull MessageStream.ChatState newState) {
+            public void onStateChange(@NonNull MessageStream.ChatState oldState, @NonNull MessageStream.ChatState newState) {
                 if ((oldState == MessageStream.ChatState.UNKNOWN || oldState == MessageStream.ChatState.CHATTING) && newState == MessageStream.ChatState.CLOSED_BY_OPERATOR) {
                     sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
                 }
@@ -390,7 +390,7 @@ public class WebimSDK extends CordovaPlugin {
         }
 
         ru.webim.android.sdk.Message repliedMessage = new Message() {
-            @androidx.annotation.NonNull
+            @NonNull
             @Override
             public Id getClientSideId() {
                 return new Id() {
@@ -401,13 +401,13 @@ public class WebimSDK extends CordovaPlugin {
                 };
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public String getSessionId() {
                 return null;
             }
 
-            @androidx.annotation.NonNull
+            @NonNull
             @Override
             public String getServerSideId() {
                 try {
@@ -417,13 +417,13 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public Operator.Id getOperatorId() {
                 return null;
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public String getSenderAvatarUrl() {
                 try {
@@ -433,7 +433,7 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
 
-            @androidx.annotation.NonNull
+            @NonNull
             @Override
             public String getSenderName() {
                 try {
@@ -443,7 +443,7 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
 
-            @androidx.annotation.NonNull
+            @NonNull
             @Override
             public Type getType() {
                 return Type.VISITOR;
@@ -458,7 +458,7 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
 
-            @androidx.annotation.NonNull
+            @NonNull
             @Override
             public String getText() {
                 try {
@@ -468,19 +468,19 @@ public class WebimSDK extends CordovaPlugin {
                 }
             }
 
-            @androidx.annotation.NonNull
+            @NonNull
             @Override
             public SendStatus getSendStatus() {
                 return SendStatus.SENT;
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public String getData() {
                 return null;
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public Attachment getAttachment() {
                 return null;
@@ -515,28 +515,44 @@ public class WebimSDK extends CordovaPlugin {
                 return false;
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public Quote getQuote() {
                 return null;
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public Keyboard getKeyboard() {
                 return null;
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public KeyboardRequest getKeyboardRequest() {
                 return null;
             }
 
-            @androidx.annotation.Nullable
+            @Nullable
             @Override
             public Sticker getSticker() {
                 return null;
+            }
+
+            @Nullable
+            @Override
+            public MessageReaction getReaction() {
+                return null;
+            }
+
+            @Override
+            public boolean canVisitorReact() {
+                return false;
+            }
+
+            @Override
+            public boolean canVisitorChangeReaction() {
+                return false;
             }
         };
 
