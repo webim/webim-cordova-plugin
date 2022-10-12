@@ -12,10 +12,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.webkit.MimeTypeMap;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 
@@ -35,6 +35,7 @@ import ru.webim.android.sdk.WebimSession;
 import ru.webim.android.sdk.Webim.SessionBuilder;
 import ru.webim.android.sdk.WebimError;
 import ru.webim.android.sdk.WebimLog;
+import ru.webim.android.sdk.impl.MessageReaction;
 import ru.webim.android.sdk.impl.StringId;
 
 import java.io.File;
