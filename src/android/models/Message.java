@@ -32,7 +32,9 @@ public class Message {
         resultMessage.timestamp = timestamp;
         resultMessage.url = url;
         resultMessage.isFirst = isFirst;
-        resultMessage.quote = ru.webim.plugin.models.Quote.getQuote(quote.getQuote());
+        if (quote != null) {
+            resultMessage.quote = ru.webim.plugin.models.Quote.getQuote(quote.getQuote());
+        }
         resultMessage.canBeReplied = false;
         resultMessage.isReadByOperator = false;
 

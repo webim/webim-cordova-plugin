@@ -300,9 +300,11 @@ public class WebimSDK extends CordovaPlugin {
         session.getStream().setOperatorTypingListener(new MessageStream.OperatorTypingListener() {
             @Override
             public void onOperatorTypingStateChanged(boolean isTyping) {
-                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, isTyping);
-                pluginResult.setKeepCallback(true);
-                typingMessageCallback.sendPluginResult(pluginResult);
+                if (typingMessageCallback != null) {
+                    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, isTyping);
+                    pluginResult.setKeepCallback(true);
+                    typingMessageCallback.sendPluginResult(pluginResult);
+                }
             }
         });
         session.getStream().setCurrentOperatorChangeListener(
