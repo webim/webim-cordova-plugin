@@ -89,7 +89,7 @@ final class MessageComposingHandler {
                                userInfo: nil,
                                repeats: false)
             RunLoop.main.add(resetTimer!,
-                             forMode: RunLoopMode.commonModes)
+                             forMode: RunLoop.Mode.common)
         }
     }
     
