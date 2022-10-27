@@ -158,16 +158,16 @@ import Photos
             } catch { }
             session = nil
             messageTracker = nil
-            onMessageCallbackId = nil
-            onFileCallbackId = nil
-            onBanCallbackId = nil
-            onFileMessageErrorCallbackId = nil
-            onConfirmCallbackId = nil
-            onFatalErrorCallbackId = nil
-            onRateOperatorCallbackId = nil
-            sendDialogToEmailAddressCallbackId = nil
-            onDeletedMessageCallbackId = nil
             if let callbackId = callbackId {
+                onMessageCallbackId = nil
+                onFileCallbackId = nil
+                onBanCallbackId = nil
+                onFileMessageErrorCallbackId = nil
+                onConfirmCallbackId = nil
+                onFatalErrorCallbackId = nil
+                onRateOperatorCallbackId = nil
+                sendDialogToEmailAddressCallbackId = nil
+                onDeletedMessageCallbackId = nil
                 onTypingCallbackId = nil
                 onUnreadByVisitorMessageCountCallbackId = nil
                 onDialogCallbackId = nil
@@ -236,11 +236,11 @@ import Photos
         do {
             try messageID = session?.getStream().send(message: userMessage as! String)
         } catch { }
-        let message: String
+        let message: [String: Any]
         if chatState != .NONE && chatState != .UNKNOWN {
-            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: false)
+            message = messageToDictionary(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: false)
         } else {
-            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: true)
+            message = messageToDictionary(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: true)
             isFirstMessage = true
         }
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
@@ -289,11 +289,11 @@ import Photos
                                          messageCanBeReplied: canBeReplied)
             try messageID = session?.getStream().reply(message: userMessage as! String, repliedMessage: repliedMessage)
         } catch { }
-        let message: String
+        let message: [String: Any]
         if chatState != .NONE && chatState != .UNKNOWN {
-            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: false, quote: repliedMessage)
+            message = messageToDictionary(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: false, quote: repliedMessage)
         } else {
-            message = messageToJSON(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: true, quote: repliedMessage)
+            message = messageToDictionary(id: messageID ?? "error", text: userMessage as! String, url: nil, timestamp: String(Int64(NSDate().timeIntervalSince1970 * 1000)), sender: nil, isFirst: true, quote: repliedMessage)
             isFirstMessage = true
         }
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
@@ -463,16 +463,6 @@ import Photos
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
 
-    func messageToJSON(message: Message, isFirst: Bool = false) -> String {
-        let dict = messageToDictionary(message: message, isFirst: isFirst)
-        if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
-                                                      options: .prettyPrinted),
-            let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
-            return JSONText
-        }
-        return "";
-    }
-
     func messageToDictionary(message: Message, isFirst: Bool = false) -> [String: Any] {
         var dict = [String: Any]()
         dict["id"] = message.getID()
@@ -564,13 +554,13 @@ import Photos
         return dict;
     }
 
-    func messageToJSON(id: String,
-                       text: String,
-                       url: String?,
-                       timestamp: String,
-                       sender: String?,
-                       isFirst: Bool,
-                       quote: Message? = nil) -> String {
+    func messageToDictionary(id: String,
+                             text: String,
+                             url: String?,
+                             timestamp: String,
+                             sender: String?,
+                             isFirst: Bool,
+                             quote: Message? = nil) -> [String: Any] {
         var dict = [String: Any]()
         dict["id"] = id
         dict["text"] = text
@@ -591,12 +581,7 @@ import Photos
             quoteDict["messageID"] = quote.getID()
             dict["quote"] = quoteDict
         }
-        if let JSONData = try? JSONSerialization.data(withJSONObject: dict,
-                                                      options: .prettyPrinted),
-            let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
-            return JSONText
-        }
-        return "";
+        return dict
     }
 
     func dialogStateToJSON(op: Operator?) -> String {
@@ -674,13 +659,13 @@ extension WebimSDK: MessageListener {
         if newMessage.getType() != MessageType.FILE_FROM_OPERATOR
             && newMessage.getType() != MessageType.FILE_FROM_VISITOR {
             if onMessageCallbackId != nil && newMessage.getType() != .VISITOR {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newMessage))
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToDictionary(message: newMessage))
                 pluginResult?.setKeepCallbackAs(true)
                 self.commandDelegate!.send(pluginResult, callbackId: onMessageCallbackId)
             }
         } else {
             if let onFileCallbackId = onFileCallbackId {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newMessage, isFirst: isFirstMessage))
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToDictionary(message: newMessage, isFirst: isFirstMessage))
                 if isFirstMessage {
                     isFirstMessage = false
                 }
@@ -691,7 +676,7 @@ extension WebimSDK: MessageListener {
     }
 
     func removed(message: Message) {
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: message))
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToDictionary(message: message))
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: onDeletedMessageCallbackId)
     }
@@ -701,7 +686,7 @@ extension WebimSDK: MessageListener {
     }
 
     func changed(message oldVersion: Message, to newVersion: Message) {
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToJSON(message: newVersion, isFirst: isFirstMessage))
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: messageToDictionary(message: newVersion, isFirst: isFirstMessage))
         pluginResult?.setKeepCallbackAs(true)
         if isFirstMessage {
             isFirstMessage = false

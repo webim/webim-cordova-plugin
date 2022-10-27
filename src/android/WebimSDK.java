@@ -744,14 +744,14 @@ public class WebimSDK extends CordovaPlugin {
             sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
             return;
         }
-        receiveMessageCallback = null;
-        receiveFileCallback = null;
-        confirmMessageCallback = null;
-        banCallback = null;
-        rateOperatorCallback = null;
-        sendDialogToEmailAddressCallback = null;
-        onDeletedMessageCallback = null;
         if (callbackContext != null) {
+            receiveMessageCallback = null;
+            receiveFileCallback = null;
+            confirmMessageCallback = null;
+            banCallback = null;
+            rateOperatorCallback = null;
+            sendDialogToEmailAddressCallback = null;
+            onDeletedMessageCallback = null;
             typingMessageCallback = null;
             onUnreadByVisitorMessageCountCallback = null;
             dialogCallback = null;
