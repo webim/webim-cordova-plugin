@@ -1,5 +1,6 @@
 package ru.webim.plugin.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Keyboard {
@@ -23,6 +24,7 @@ public class Keyboard {
             resultKeyboard.keyboardResponse = ru.webim.plugin.models.KeyboardResponse.getKeyboardResponse(keyboard.getKeyboardResponse());
             List<List<ru.webim.android.sdk.Message.KeyboardButtons>> buttonsList = keyboard.getButtons();
             if (buttonsList != null) {
+                resultKeyboard.buttons = new ArrayList<KeyboardButton>();
                 for (int i = 0; i < buttonsList.size(); i++) {
                     List<ru.webim.android.sdk.Message.KeyboardButtons> keyboardButtons = buttonsList.get(i);
                     for (int j = 0; i < keyboardButtons.size(); j++) {
