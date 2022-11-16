@@ -434,7 +434,11 @@ final class MessageAttachmentImpl {
                                                                         return nil
         }
 
+        #if swift(>=5.0)
         let fileParameters = FileParametersItem(jsonDictionary: textDictionary)
+        #else
+        let fileParameters = FileParametersItem(jsonDictionary: textDictionary!)
+        #endif
         guard let filename = fileParameters.getFilename(),
             let guid = fileParameters.getGUID(),
             let contentType = fileParameters.getContentType() else {

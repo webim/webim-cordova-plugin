@@ -88,8 +88,13 @@ final class MessageComposingHandler {
                                selector: #selector(resetTypingStatus),
                                userInfo: nil,
                                repeats: false)
+            #if swift(>=5.0)
             RunLoop.main.add(resetTimer!,
                              forMode: RunLoop.Mode.common)
+            #else
+            RunLoop.main.add(resetTimer!,
+                             forMode: RunLoopMode.commonModes)
+            #endif
         }
     }
     

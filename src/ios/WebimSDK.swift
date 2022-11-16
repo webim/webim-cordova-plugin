@@ -158,16 +158,16 @@ import Photos
             } catch { }
             session = nil
             messageTracker = nil
+            onMessageCallbackId = nil
+            onFileCallbackId = nil
+            onBanCallbackId = nil
+            onFileMessageErrorCallbackId = nil
+            onConfirmCallbackId = nil
+            onFatalErrorCallbackId = nil
+            onRateOperatorCallbackId = nil
+            sendDialogToEmailAddressCallbackId = nil
+            onDeletedMessageCallbackId = nil
             if let callbackId = callbackId {
-                onMessageCallbackId = nil
-                onFileCallbackId = nil
-                onBanCallbackId = nil
-                onFileMessageErrorCallbackId = nil
-                onConfirmCallbackId = nil
-                onFatalErrorCallbackId = nil
-                onRateOperatorCallbackId = nil
-                sendDialogToEmailAddressCallbackId = nil
-                onDeletedMessageCallbackId = nil
                 onTypingCallbackId = nil
                 onUnreadByVisitorMessageCountCallbackId = nil
                 onDialogCallbackId = nil
@@ -422,7 +422,11 @@ import Photos
                         dataString?.removeFirst(29)
                         dataString?.removeLast(2)
                         let dataJSON = try? JSONSerialization.jsonObject(with: dataString?.data(using: .utf8, allowLossyConversion: false) ?? Data()) as? [String: Any]
+                        #if swift(>=5.0)
                         let accountConfig = dataJSON?["accountConfig"] as? [String: Any?]
+                        #else
+                        let accountConfig = dataJSON??["accountConfig"] as? [String: Any?]
+                        #endif
                         if let showEmailButton = accountConfig?["show_visitor_send_chat_to_email_button"] as? Bool {
                             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"showEmailButton\":\(showEmailButton)}")
                             pluginResult?.setKeepCallbackAs(true)
@@ -943,7 +947,11 @@ class WebimFile {
 
             let image = UIImage(data: self.data)!
             if imageExtension == "heic" || imageExtension == "heif" {
+                #if swift(>=5.0)
                 resultData = image.jpegData(compressionQuality: 0.5)!
+                #else
+                resultData = UIImageJPEGRepresentation(image, 0.5)!
+                #endif
                 resultMimeType = MimeType()
                 var components = self.fileName.components(separatedBy: ".")
                 if components.count > 1 {
@@ -952,7 +960,11 @@ class WebimFile {
                 }
                 resultFileName += ".jpeg"
             } else {
+                #if swift(>=5.0)
                 resultData = image.pngData()!
+                #else
+                resultData = UIImagePNGRepresentation(image)!
+                #endif
             }
         }
 

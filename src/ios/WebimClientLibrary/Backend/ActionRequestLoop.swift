@@ -132,7 +132,12 @@ class ActionRequestLoop: AbstractRequestLoop {
             do {
                 let data = try self.perform(request: urlRequest!)
                 if let dataJSON = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    if let error = dataJSON[AbstractRequestLoop.ResponseFields.error.rawValue] as? String {
+                    #if swift(>=5.0)
+                    let error = dataJSON[AbstractRequestLoop.ResponseFields.error.rawValue] as? String
+                    #else
+                    let error = dataJSON?[AbstractRequestLoop.ResponseFields.error.rawValue] as? String
+                    #endif
+                    if let error = error {
                         switch error {
                         case WebimInternalError.reinitializationRequired.rawValue:
                             do {
@@ -141,7 +146,7 @@ class ActionRequestLoop: AbstractRequestLoop {
                                 return
                             }
                             self.enqueue(request: request)
-                            
+
                             break
                         case WebimInternalError.fileSizeExceeded.rawValue,
                              WebimInternalError.fileTypeNotAllowed.rawValue,
@@ -150,17 +155,17 @@ class ActionRequestLoop: AbstractRequestLoop {
                              WebimInternalError.notMatchingMagicNumbers.rawValue:
                             self.handleSendFile(error: error,
                                                 ofRequest: request)
-                            
+
                             break
                         case WebimInternalError.wrongArgumentValue.rawValue:
                             self.handleWrongArgumentValueError(ofRequest: request)
-                            
+
                             break
                         case WebimInternalError.noChat.rawValue,
                              WebimInternalError.operatorNotInChat.rawValue:
                             self.handleRateOperator(error: error,
                                                     ofRequest: request)
-                            
+
                             break
                         case WebimInternalError.messageNotFound.rawValue,
                              WebimInternalError.notAllowed.rawValue,
@@ -205,7 +210,12 @@ class ActionRequestLoop: AbstractRequestLoop {
                     }
 
                     // Some internal errors can be received inside "error" field inside "data" field.
-                    if let dataDictionary = dataJSON[AbstractRequestLoop.ResponseFields.data.rawValue] as? [String: Any],
+                    #if swift(>=5.0)
+                    let dataDictionary = dataJSON[AbstractRequestLoop.ResponseFields.data.rawValue] as? [String: Any]
+                    #else
+                    let dataDictionary = dataJSON?[AbstractRequestLoop.ResponseFields.data.rawValue] as? [String: Any]
+                    #endif
+                    if let dataDictionary = dataDictionary,
                         let errorString = dataDictionary[AbstractRequestLoop.DataFields.error.rawValue] as? String {
                         self.handleDataMessage(error: errorString,
                                                ofRequest: request)
