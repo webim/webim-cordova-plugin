@@ -27,7 +27,7 @@ public class Keyboard {
                 resultKeyboard.buttons = new ArrayList<KeyboardButton>();
                 for (int i = 0; i < buttonsList.size(); i++) {
                     List<ru.webim.android.sdk.Message.KeyboardButtons> keyboardButtons = buttonsList.get(i);
-                    for (int j = 0; i < keyboardButtons.size(); j++) {
+                    for (int j = 0; j < keyboardButtons.size(); j++) {
                         resultKeyboard.buttons.add(ru.webim.plugin.models.KeyboardButton.getKeyboardButton(keyboardButtons.get(j)));
                     }
                 }
