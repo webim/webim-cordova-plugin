@@ -27,6 +27,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#on-survey">method onSurvey</a></p>
 <p style="padding-left: 30px;"><a href="#on-next-question">method onNextQuestion</a></p>
 <p style="padding-left: 30px;"><a href="#on-survey-cancel">method onSurveyCancel</a></p>
+<p style="padding-left: 30px;"><a href="#on-chat-state">method onChatState</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperator">method rateOperator</a></p>
 <p style="padding-left: 30px;"><a href="#rateOperatorWithNote">method rateOperatorWithNote</a></p>
 <p style="padding-left: 30px;"><a href="#showRateOperatorWindow">method showRateOperatorWindow</a></p>
@@ -176,6 +177,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <h4 id="on-survey-cancel" style="padding-left: 30px;"><b>method webimsdk.onSurveyCancel(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback called when the survey is canceled.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
+
+<h4 id="on-chat-state" style="padding-left: 30px;"><b>method webimsdk.onChatState(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Success callback called when chat state was changed.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>chatState</em> field with chat state name: unknown, none, queue, chatting, chattingWithRobot, deleted, routing, invitation, closedByVisitor or closedByOperator.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="rateOperator" style="padding-left: 30px;"><b>method webimsdk.rateOperator(id, rating, successCallback, errorCallback)</b></h4>

@@ -73,6 +73,9 @@ module.exports = {
     onSurveyCancel: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onSurveyCancel", [])
     },
+    onChatState: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "onChatState", [])
+    },
     getUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "getUnreadByVisitorMessageCount", [])
     },

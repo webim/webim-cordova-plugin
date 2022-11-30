@@ -23,6 +23,7 @@ import Photos
     var onSurveyCallbackId: String?
     var onNextQuestionCallbackId: String?
     var onSurveyCancelCallbackId: String?
+    var onChatStateCallbackId: String?
     var onLoggingCallbackId: String?
 
 
@@ -134,6 +135,11 @@ import Photos
         onSurveyCancelCallbackId = command.callbackId
     }
 
+    @objc(onChatState:)
+    func onChatState(_ command: CDVInvokedUrlCommand) {
+        onChatStateCallbackId = command.callbackId
+    }
+
     @objc(onLogging:)
     func onLogging(_ command: CDVInvokedUrlCommand) {
         onLoggingCallbackId = command.callbackId
@@ -167,6 +173,7 @@ import Photos
             onRateOperatorCallbackId = nil
             sendDialogToEmailAddressCallbackId = nil
             onDeletedMessageCallbackId = nil
+            onChatStateCallbackId = nil
             if let callbackId = callbackId {
                 onTypingCallbackId = nil
                 onUnreadByVisitorMessageCountCallbackId = nil
@@ -800,6 +807,38 @@ extension WebimSDK: ChatStateListener {
                 callbackId: showRateOperatorWindowCallbackId
             )
         }
+        let pluginResult: CDVPluginResult?
+        switch newState {
+        case .CHATTING:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"chatting\"}")
+            break
+        case .CHATTING_WITH_ROBOT:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"chattingWithRobot\"}")
+            break
+        case .CLOSED_BY_OPERATOR:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"closedByOperator\"}")
+            break
+        case .CLOSED_BY_VISITOR:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"closedByVisitor\"}")
+            break
+        case .INVITATION:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"invitation\"}")
+            break
+        case .NONE:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"none\"}")
+            break
+        case .QUEUE:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"queue\"}")
+            break
+        case .UNKNOWN:
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"chatState\":\"unknown\"}")
+            break
+        }
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(
+            pluginResult,
+            callbackId: onChatStateCallbackId
+        )
     }
 }
 

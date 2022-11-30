@@ -64,6 +64,7 @@ public class WebimSDK extends CordovaPlugin {
     private CallbackContext rateOperatorCallback;
     private CallbackContext sendDialogToEmailAddressCallback;
     private CallbackContext showRateOperatorWindowCallback;
+    private CallbackContext onChatStateCallback;
     private CallbackContext onUnreadByVisitorMessageCountCallback;
     private CallbackContext onDeletedMessageCallback;
     private CallbackContext onSurveyCallback;
@@ -159,6 +160,9 @@ public class WebimSDK extends CordovaPlugin {
 
             case "onBan":
                 banCallback = callbackContext;
+                return true;
+            case "onChatState":
+                onChatStateCallback = callbackContext;
                 return true;
 
             case "close":
@@ -343,6 +347,38 @@ public class WebimSDK extends CordovaPlugin {
             public void onStateChange(@NonNull MessageStream.ChatState oldState, @NonNull MessageStream.ChatState newState) {
                 if ((oldState == MessageStream.ChatState.UNKNOWN || oldState == MessageStream.ChatState.CHATTING) && newState == MessageStream.ChatState.CLOSED_BY_OPERATOR) {
                     sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
+                }
+                switch (newState) {
+                    case MessageStream.ChatState.UNKNOWN:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"unknown\"}");
+                        break;
+                    case MessageStream.ChatState.NONE:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"none\"}");
+                        break;
+                    case MessageStream.ChatState.QUEUE:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"queue\"}");
+                        break;
+                    case MessageStream.ChatState.DELETED:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"deleted\"}");
+                        break;
+                    case MessageStream.ChatState.CHATTING_WITH_ROBOT:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"chattingWithRobot\"}");
+                        break;
+                    case MessageStream.ChatState.ROUTING:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"routing\"}");
+                        break;
+                    case MessageStream.ChatState.CHATTING:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"chatting\"}");
+                        break;
+                    case MessageStream.ChatState.INVITATION:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"invitation\"}");
+                        break;
+                    case MessageStream.ChatState.CLOSED_BY_VISITOR:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"closedByVisitor\"}");
+                        break;
+                    case MessageStream.ChatState.CLOSED_BY_OPERATOR:
+                        sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"closedByOperator\"}");
+                        break;
                 }
             }
         });
@@ -758,6 +794,7 @@ public class WebimSDK extends CordovaPlugin {
             onSurveyCallback = null;
             onSurveyCancelCallback = null;
             onNextQuestionCallback = null;
+            onChatStateCallback = null;
             showRateOperatorWindowCallback = null;
             onLoggingCallback = null;
         }
