@@ -57,6 +57,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
         case data = "data"
         case canBeReplied = "can_be_replied"
         case quote = "quote"
+        case canBeEdited = "can_be_edited"
     }
 
     // MARK: SQLite.swift abstractions
@@ -75,7 +76,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
     private static let data = Expression<Blob?>(ColumnName.data.rawValue)
     private static let canBeReplied = Expression<Bool?>(ColumnName.canBeReplied.rawValue)
     private static let quote = Expression<Blob?>(ColumnName.quote.rawValue)
-
+    private static let canBeEdited = Expression<Bool?>(ColumnName.canBeEdited.rawValue)
 
     // MARK: - Properties
     private static let queryQueue = DispatchQueue.global(qos: .background)
@@ -111,11 +112,11 @@ final class SQLiteHistoryStorage: HistoryStorage {
 
     func getMajorVersion() -> Int {
         // No need in this implementation.
-        return 2
+        return 3
     }
 
     func getVersionDB() -> Int {
-        return 2
+        return 3
     }
 
     func set(reachedHistoryEnd: Bool) {
@@ -281,7 +282,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
                         + "\(SQLiteHistoryStorage.ColumnName.text.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.data.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.canBeReplied.rawValue), "
-                        + "\(SQLiteHistoryStorage.ColumnName.quote.rawValue)) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ?)"
+                        + "\(SQLiteHistoryStorage.ColumnName.quote.rawValue), "
+                        + "\(SQLiteHistoryStorage.ColumnName.canBeEdited.rawValue)) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                     let statement = try db!.prepare(query)
                     try statement.run(message.getID(),
                                       message.getHistoryID()!.getTimeInMicrosecond(),
@@ -292,7 +294,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
                                       message.getRawText() ?? message.getText(),
                                       SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()),
                                       message.canBeReplied(),
-                                      SQLiteHistoryStorage.convertToBlob(quote: message.getQuote()))
+                                      SQLiteHistoryStorage.convertToBlob(quote: message.getQuote()),
+                                      message.canBeEdited())
                     // Raw SQLite statement constructed because there's no way to implement INSERT OR FAIL query with SQLite.swift methods. Appropriate INSERT query can look like this:
                     /*try self.db!.run(SQLiteHistoryStorage
                      .history
@@ -468,7 +471,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
                                                      create: false)
             let dbPath = "\(documentsPath)/\(name)"
             self.db = try! Connection(dbPath)
-            self.db?.userVersion = 2
+            self.db?.userVersion = 3
             self.db?.busyTimeout = 1.0
             self.db?.busyHandler() { tries in
                 if tries >= 3 {
@@ -508,6 +511,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
             t.column(SQLiteHistoryStorage.data)
             t.column(SQLiteHistoryStorage.canBeReplied)
             t.column(SQLiteHistoryStorage.quote)
+            t.column(SQLiteHistoryStorage.canBeEdited)
         })
         self.db?.trace {
             WebimInternalLogger.shared.log(entry: "\($0)",
@@ -595,6 +599,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
             let data = NSKeyedUnarchiver.unarchiveObject(with: Data.fromDatatypeValue(quoteValue)) as? [String : Any?] {
                 quote = QuoteImpl.getQuote(quoteItem: QuoteItem(jsonDictionary: data), messageAttachment: nil, serverURL: serverURLString, webimClient: webimClient)
         }
+        
+        let canBeEdited = row[SQLiteHistoryStorage.canBeEdited] ?? false
 
         var keyboard: Keyboard? = nil
         var keyboardRequest: KeyboardRequest? = nil
@@ -628,7 +634,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
                            internalID: id,
                            rawText: rawText,
                            read: row[SQLiteHistoryStorage.timestamp] <= readBeforeTimestamp || readBeforeTimestamp == -1,
-                           messageCanBeEdited: false,
+                           messageCanBeEdited: canBeEdited,
                            messageCanBeReplied: canBeReplied)
     }
 
@@ -666,7 +672,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
                     SQLiteHistoryStorage.text <- (message.getRawText() ?? message.getText()),
                     SQLiteHistoryStorage.data <- SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()),
                     SQLiteHistoryStorage.canBeReplied <- message.canBeReplied(),
-                    SQLiteHistoryStorage.quote <- SQLiteHistoryStorage.convertToBlob(quote: message.getQuote())))
+                    SQLiteHistoryStorage.quote <- SQLiteHistoryStorage.convertToBlob(quote: message.getQuote()),
+                    SQLiteHistoryStorage.canBeEdited <- message.canBeEdited()))
 
         db?.trace {
             WebimInternalLogger.shared.log(entry: "\($0)",
@@ -700,7 +707,8 @@ final class SQLiteHistoryStorage: HistoryStorage {
                     SQLiteHistoryStorage.text <- (message.getRawText() ?? message.getText()),
                     SQLiteHistoryStorage.data <- SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()),
                     SQLiteHistoryStorage.canBeReplied <- message.canBeReplied(),
-                    SQLiteHistoryStorage.quote <- SQLiteHistoryStorage.convertToBlob(quote: message.getQuote())))
+                    SQLiteHistoryStorage.quote <- SQLiteHistoryStorage.convertToBlob(quote: message.getQuote()),
+                    SQLiteHistoryStorage.canBeEdited <- message.canBeEdited()))
         
         db?.trace {
             WebimInternalLogger.shared.log(entry: "\($0)",

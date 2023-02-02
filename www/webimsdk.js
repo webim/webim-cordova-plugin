@@ -22,6 +22,12 @@ module.exports = {
     sendFile: function (filePath, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendFile", [filePath]);
     },
+    editMessage: function (newText, message, successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "editMessage", [newText, message]);
+    },
+    deleteMessage: function (message, successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "deleteMessage", [message]);
+    },
     sendSurveyAnswer: function (surveyAnswer, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendSurveyAnswer", [surveyAnswer]);
     },

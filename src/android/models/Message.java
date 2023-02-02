@@ -8,6 +8,8 @@ public class Message {
     public int imageWidth;
     public int imageHeight;
     public String thumbUrl;
+    public long fileSize;
+    public String contentType;
     public String timestamp;
     public String sender;
     public ru.webim.plugin.models.Quote quote;
@@ -17,6 +19,7 @@ public class Message {
     public boolean isFirst = false;
     public boolean isReadByOperator;
     public boolean canBeReplied;
+    public boolean canBeEdited;
 
     public static Message fromParams(String id,
                                      String text,
@@ -36,6 +39,7 @@ public class Message {
             resultMessage.quote = ru.webim.plugin.models.Quote.getQuote(quote.getQuote());
         }
         resultMessage.canBeReplied = false;
+        resultMessage.canBeEdited = false;
         resultMessage.isReadByOperator = false;
 
         return resultMessage;
@@ -48,6 +52,7 @@ public class Message {
         resultMessage.text = message.getText();
         resultMessage.isReadByOperator = message.isReadByOperator();
         resultMessage.canBeReplied = message.canBeReplied();
+        resultMessage.canBeEdited = message.canBeEdited();
         if (message.getType() != ru.webim.android.sdk.Message.Type.FILE_FROM_OPERATOR
                 && message.getType() != ru.webim.android.sdk.Message.Type.OPERATOR) {
             resultMessage.sender = message.getSenderName();
@@ -57,10 +62,12 @@ public class Message {
         }
         ru.webim.android.sdk.Message.Attachment attachment = message.getAttachment();
         if (attachment != null) {
-            if(resultMessage.text.trim().isEmpty()) {
+            if (resultMessage.text.trim().isEmpty()) {
                 resultMessage.text = attachment.getFileInfo().getFileName();
             }
             resultMessage.url = attachment.getFileInfo().getUrl();
+            resultMessage.fileSize = attachment.getFileInfo().getSize();
+            resultMessage.contentType = attachment.getFileInfo().getContentType();
             ru.webim.android.sdk.Message.ImageInfo imageInfo = attachment.getFileInfo().getImageInfo();
             if (imageInfo != null) {
                 resultMessage.thumbUrl = imageInfo.getThumbUrl();

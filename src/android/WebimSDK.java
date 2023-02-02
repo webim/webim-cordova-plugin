@@ -99,11 +99,18 @@ public class WebimSDK extends CordovaPlugin {
                 JSONObject repliedMessageJSON = data.getJSONObject(1);
                 replyMessage(additionalMessage, repliedMessageJSON, callbackContext);
                 return true;
-
+            case "deleteMessage":
+                JSONObject deleteMessage = data.getJSONObject(0);
+                deleteMessage(deleteMessage, callbackContext);
+                return true;
+            case "editMessage":
+                String newText = data.getString(0);
+                JSONObject editedMessageJSON = data.getJSONObject(1);
+                editMessage(newText, editedMessageJSON, callbackContext);
+                return true;
             case "requestDialog":
                 requestDialog(callbackContext);
                 return true;
-
             case "getMessagesHistory":
                 int limit = Integer.parseInt(data.getString(0));
                 int offset = Integer.parseInt(data.getString(1));
@@ -349,34 +356,34 @@ public class WebimSDK extends CordovaPlugin {
                     sendNotificationCallbackResult(showRateOperatorWindowCallback, "{\"result\":\"Success\"}");
                 }
                 switch (newState) {
-                    case MessageStream.ChatState.UNKNOWN:
+                    case UNKNOWN:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"unknown\"}");
                         break;
-                    case MessageStream.ChatState.NONE:
+                    case NONE:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"none\"}");
                         break;
-                    case MessageStream.ChatState.QUEUE:
+                    case QUEUE:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"queue\"}");
                         break;
-                    case MessageStream.ChatState.DELETED:
+                    case DELETED:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"deleted\"}");
                         break;
-                    case MessageStream.ChatState.CHATTING_WITH_ROBOT:
+                    case CHATTING_WITH_ROBOT:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"chattingWithRobot\"}");
                         break;
-                    case MessageStream.ChatState.ROUTING:
+                    case ROUTING:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"routing\"}");
                         break;
-                    case MessageStream.ChatState.CHATTING:
+                    case CHATTING:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"chatting\"}");
                         break;
-                    case MessageStream.ChatState.INVITATION:
+                    case INVITATION:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"invitation\"}");
                         break;
-                    case MessageStream.ChatState.CLOSED_BY_VISITOR:
+                    case CLOSED_BY_VISITOR:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"closedByVisitor\"}");
                         break;
-                    case MessageStream.ChatState.CLOSED_BY_OPERATOR:
+                    case CLOSED_BY_OPERATOR:
                         sendNotificationCallbackResult(onChatStateCallback, "{\"chatState\":\"closedByOperator\"}");
                         break;
                 }
@@ -607,6 +614,389 @@ public class WebimSDK extends CordovaPlugin {
                     Long.toString(System.currentTimeMillis()), null, repliedMessage, false);
         }
         sendNotificationCallbackResult(callbackContext, msg);
+    }
+
+   private void deleteMessage(final JSONObject messageJSON, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+
+        ru.webim.android.sdk.Message message = new Message() {
+            @NonNull
+            @Override
+            public Id getClientSideId() {
+                try {
+                    return StringId.forMessage(messageJSON.getString("id"));
+                } catch (JSONException e) {
+                    return new Id() {
+                        @Override
+                        public int hashCode() {
+                            return super.hashCode();
+                        }
+                    };
+                }
+            }
+
+            @Nullable
+            @Override
+            public String getSessionId() {
+                try {
+                    return messageJSON.getString("sessionId");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @NonNull
+            @Override
+            public String getServerSideId() {
+                try {
+                    return messageJSON.getString("currentChatID");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @Nullable
+            @Override
+            public Operator.Id getOperatorId() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public String getSenderAvatarUrl() {
+                return null;
+            }
+
+            @NonNull
+            @Override
+            public String getSenderName() {
+                return "";
+            }
+
+            @NonNull
+            @Override
+            public Type getType() {
+                return Type.VISITOR;
+            }
+
+            @Override
+            public long getTime() {
+                try {
+                    return messageJSON.getLong("timestamp");
+                } catch (JSONException e) {
+                    return 0;
+                }
+            }
+
+            @NonNull
+            @Override
+            public String getText() {
+                try {
+                    return messageJSON.getString("text");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @NonNull
+            @Override
+            public SendStatus getSendStatus() {
+                return SendStatus.SENT;
+            }
+
+            @Nullable
+            @Override
+            public String getData() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public Attachment getAttachment() {
+                return null;
+            }
+
+            @Override
+            public boolean isSavedInHistory() {
+                return false;
+            }
+
+            @Override
+            public boolean isReadByOperator() {
+                return false;
+            }
+
+            @Override
+            public boolean canBeEdited() {
+                try {
+                    return messageJSON.getBoolean("canBeEdited");
+                } catch (JSONException e) {
+                    return false;
+                }
+
+            }
+
+            @Override
+            public boolean canBeReplied() {
+                try {
+                    return messageJSON.getBoolean("canBeReplied");
+                } catch (JSONException e) {
+                    return false;
+                }
+            }
+
+            @Override
+            public boolean isEdited() {
+                return false;
+            }
+
+            @Nullable
+            @Override
+            public Quote getQuote() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public Keyboard getKeyboard() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public KeyboardRequest getKeyboardRequest() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public Sticker getSticker() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public MessageReaction getReaction() {
+                return null;
+            }
+
+            @Override
+            public boolean canVisitorReact() {
+                return false;
+            }
+
+            @Override
+            public boolean canVisitorChangeReaction() {
+                return false;
+            }
+        };
+
+        session.getStream().deleteMessage(message, new MessageStream.DeleteMessageCallback() {
+            @Override
+            public void onSuccess(Message.Id id) {
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
+            }
+
+            @Override
+            public void onFailure(Message.Id id, WebimError<DeleteMessageError> webimError) {
+                sendCallbackError(callbackContext, "{\"result\":\"Failure\"}");
+            }
+        });
+    }
+
+    private void editMessage(String newText, final JSONObject editedMessageJSON, final CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+
+        ru.webim.android.sdk.Message editedMessage = new Message(
+        ) {
+            @NonNull
+            @Override
+            public Id getClientSideId() {
+                try {
+                    return StringId.forMessage(editedMessageJSON.getString("id"));
+                } catch (JSONException e) {
+                    return new Id() {
+                        @Override
+                        public int hashCode() {
+                            return super.hashCode();
+                        }
+                    };
+                }
+            }
+
+            @Nullable
+            @Override
+            public String getSessionId() {
+                try {
+                    return editedMessageJSON.getString("sessionId");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @NonNull
+            @Override
+            public String getServerSideId() {
+                try {
+                    return editedMessageJSON.getString("currentChatID");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @Nullable
+            @Override
+            public Operator.Id getOperatorId() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public String getSenderAvatarUrl() {
+                return null;
+            }
+
+            @NonNull
+            @Override
+            public String getSenderName() {
+                return "";
+            }
+
+            @NonNull
+            @Override
+            public Type getType() {
+                return Type.VISITOR;
+            }
+
+            @Override
+            public long getTime() {
+                try {
+                    return editedMessageJSON.getLong("timestamp");
+                } catch (JSONException e) {
+                    return 0;
+                }
+            }
+
+            @NonNull
+            @Override
+            public String getText() {
+                try {
+                    return editedMessageJSON.getString("text");
+                } catch (JSONException e) {
+                    return "";
+                }
+            }
+
+            @NonNull
+            @Override
+            public SendStatus getSendStatus() {
+                return SendStatus.SENT;
+            }
+
+            @Nullable
+            @Override
+            public String getData() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public Attachment getAttachment() {
+                return null;
+            }
+
+            @Override
+            public boolean isSavedInHistory() {
+                return false;
+            }
+
+            @Override
+            public boolean isReadByOperator() {
+                return false;
+            }
+
+            @Override
+            public boolean canBeEdited() {
+                try {
+                    return editedMessageJSON.getBoolean("canBeEdited");
+                } catch (JSONException e) {
+                    return false;
+                }
+
+            }
+
+            @Override
+            public boolean canBeReplied() {
+                try {
+                    return editedMessageJSON.getBoolean("canBeReplied");
+                } catch (JSONException e) {
+                    return false;
+                }
+            }
+
+            @Override
+            public boolean isEdited() {
+                return false;
+            }
+
+            @Nullable
+            @Override
+            public Quote getQuote() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public Keyboard getKeyboard() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public KeyboardRequest getKeyboardRequest() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public Sticker getSticker() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public MessageReaction getReaction() {
+                return null;
+            }
+
+            @Override
+            public boolean canVisitorReact() {
+                return false;
+            }
+
+            @Override
+            public boolean canVisitorChangeReaction() {
+                return false;
+            }
+        };
+
+        session.getStream().editMessage(editedMessage, newText, new MessageStream.EditMessageCallback() {
+            @Override
+            public void onSuccess(Message.Id id, String response) {
+                sendCallbackResult(callbackContext, "{\"result\":\"Success\"}");
+            }
+
+            @Override
+            public void onFailure(Message.Id id, WebimError<EditMessageError> webimError) {
+                sendCallbackError(callbackContext, "{\"result\":\"Failure\"}");
+            }
+        });
     }
 
     @SuppressLint("Recycle")

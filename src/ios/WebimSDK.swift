@@ -183,6 +183,7 @@ import Photos
                 onSurveyCancelCallbackId = nil
                 showRateOperatorWindowCallbackId = nil
                 onLoggingCallbackId = nil
+                
                 sendCallbackResult(callbackId: callbackId)
             }
         } else {
@@ -254,8 +255,89 @@ import Photos
         pluginResult?.setKeepCallbackAs(true)
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
     }
+    
+    @objc(editMessage:)
+    func editMessage(_ command: CDVInvokedUrlCommand) {
+        let callbackId = command.callbackId
+        let newText = command.arguments[0] as! String
+        let editMessageDict = command.arguments[1] as! NSDictionary
+        let editMessage: Message
+        do {
+            let canBeReplied = editMessageDict["canBeReplied"] as? Bool == true
+            let canBeEdited = editMessageDict["canBeEdited"] as? Bool == true
+            var attachment: MessageAttachment? = nil
+            if let url = editMessageDict["url"] as? String {
+                attachment = MessageAttachmentImpl(urlString: url,
+                                                       size: 0,
+                                                       filename: "file",
+                                                       contentType: "file")
+            }
+            editMessage = MessageImpl(serverURLString: accountName ?? "",
+                                         id: editMessageDict["id"] as? String ?? "",
+                                         keyboard: nil,
+                                         keyboardRequest: nil,
+                                         operatorID: nil,
+                                         quote: nil,
+                                         senderAvatarURLString: nil,
+                                         senderName: "",
+                                         type: .VISITOR,
+                                         data: nil,
+                                         text: editMessageDict["text"] as? String ?? "",
+                                         timeInMicrosecond: Int64(editMessageDict["timestamp"] as? String ?? "0") ?? 0,
+                                         attachment: attachment,
+                                         historyMessage: false,
+                                         internalID: editMessageDict["currentChatID"] as? String ?? "",
+                                         rawText: nil,
+                                         read: false,
+                                         messageCanBeEdited:  canBeEdited,
+                                         messageCanBeReplied: canBeReplied)
+            _ = try session?.getStream().edit(message: editMessage, text: newText, completionHandler: self)
+        } catch {
+        }
+        sendCallbackResult(callbackId: callbackId!)
+    }
+    
+    @objc(deleteMessage:)
+    func deleteMessage(_ command: CDVInvokedUrlCommand) {
+        let callbackId = command.callbackId
+        let deleteMessageDict = command.arguments[0] as! NSDictionary
+        let deleteMessage: Message
+        do {
+            let canBeReplied = deleteMessageDict["canBeReplied"] as? Bool == true
+            let canBeEdited = deleteMessageDict["canBeEdited"] as? Bool == true
+            var attachment: MessageAttachment? = nil
+            if let url = deleteMessageDict["url"] as? String {
+                attachment = MessageAttachmentImpl(urlString: url,
+                                                       size: 0,
+                                                       filename: "file",
+                                                       contentType: "file")
+            }
+            deleteMessage = MessageImpl(serverURLString: accountName ?? "",
+                                         id: deleteMessageDict["id"] as? String ?? "",
+                                         keyboard: nil,
+                                         keyboardRequest: nil,
+                                         operatorID: nil,
+                                         quote: nil,
+                                         senderAvatarURLString: nil,
+                                         senderName: "",
+                                         type: .VISITOR,
+                                         data: nil,
+                                         text: deleteMessageDict["text"] as? String ?? "",
+                                         timeInMicrosecond: Int64(deleteMessageDict["timestamp"] as? String ?? "0") ?? 0,
+                                         attachment: attachment,
+                                         historyMessage: false,
+                                         internalID: deleteMessageDict["currentChatID"] as? String ?? "",
+                                         rawText: nil,
+                                         read: false,
+                                         messageCanBeEdited: canBeEdited,
+                                         messageCanBeReplied: canBeReplied)
+            _ = try session?.getStream().delete(message: deleteMessage, completionHandler: self)
+        } catch {
+        }
+        sendCallbackResult(callbackId: callbackId!)
+    }
 
-@objc(replyMessage:)
+    @objc(replyMessage:)
     func replyMessage(_ command: CDVInvokedUrlCommand) {
         let callbackId = command.callbackId
         let userMessage = command.arguments[0]
@@ -265,6 +347,7 @@ import Photos
         let repliedMessage: Message
         do {
             let canBeReplied = repliedMessageDict["canBeReplied"] as? Bool == true
+            let canBeEdited = repliedMessageDict["canBeEdited"] as? Bool == true
             let sender = repliedMessageDict["operator"] as? NSDictionary
             let senderName = sender?["firstname"] as? String
             let avatar = sender?["avatar"] as? String
@@ -292,7 +375,7 @@ import Photos
                                          internalID: repliedMessageDict["currentChatID"] as? String ?? "",
                                          rawText: nil,
                                          read: false,
-                                         messageCanBeEdited: false,
+                                         messageCanBeEdited: canBeEdited,
                                          messageCanBeReplied: canBeReplied)
             try messageID = session?.getStream().reply(message: userMessage as! String, repliedMessage: repliedMessage)
         } catch { }
@@ -482,6 +565,7 @@ import Photos
         dict["isFirst"] = isFirst
         dict["isReadByOperator"] = message.isReadByOperator()
         dict["canBeReplied"] = message.canBeReplied()
+        dict["canBeEdited"] = message.canBeEdited()
         if let quote = message.getQuote() {
             var quoteDict = [String: String]()
             switch quote.getState() {
@@ -510,6 +594,8 @@ import Photos
         }
         if let attachment = message.getAttachment() {
             dict["url"] = (attachment.getURL()).absoluteString
+            dict["fileSize"] = attachment.getSize()
+            dict["contentType"] = attachment.getContentType()
             if let imageInfo = attachment.getImageInfo() {
                 dict["thumbUrl"] = (imageInfo.getThumbURL()).absoluteString
                 dict["imageWidth"] = imageInfo.getWidth()
@@ -882,6 +968,22 @@ class SendSurveyAnswerCompletionHandlerImpl: SendSurveyAnswerCompletionHandler {
         let errorPluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
         errorPluginResult?.setKeepCallbackAs(true)
         webimSDK.commandDelegate!.send(errorPluginResult, callbackId: callbackContextId)
+    }
+}
+
+extension WebimSDK: DeleteMessageCompletionHandler {
+    func onFailure(messageID: String, error: DeleteMessageError) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onConfirmCallbackId)
+    }
+}
+
+extension WebimSDK: EditMessageCompletionHandler {
+    func onFailure(messageID: String, error: EditMessageError) {
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        pluginResult?.setKeepCallbackAs(true)
+        self.commandDelegate!.send(pluginResult, callbackId: onConfirmCallbackId)
     }
 }
 
