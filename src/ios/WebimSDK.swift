@@ -646,9 +646,9 @@ import Photos
            let keyboardRequest = message.getKeyboardRequest() {
             var keyboardRequestDict: [String: Any] = ["messageID": keyboardRequest.getMessageID()]
             keyboardRequestDict["button"] = ["id": keyboardRequest.getButton().getID(), "text": keyboardRequest.getButton().getText()]
-            dict["keyboardRequest"] = keyboardRequest
+            dict["keyboardRequest"] = keyboardRequestDict
         }
-        return dict;
+        return dict
     }
 
     func messageToDictionary(id: String,
@@ -694,7 +694,7 @@ import Photos
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
             return JSONText
         }
-        return "";
+        return ""
     }
 
     func surveyToJSON(survey: Survey) -> String {
@@ -714,7 +714,7 @@ import Photos
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
             return JSONText
         }
-        return "";
+        return ""
     }
 
     func nextQuestionToJSON(nextQuestion: SurveyQuestion) -> String {
@@ -737,7 +737,7 @@ import Photos
             let JSONText = String(data: JSONData, encoding: String.Encoding.utf8) {
             return JSONText
         }
-        return "";
+        return ""
     }
 }
 
