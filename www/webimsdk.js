@@ -85,7 +85,7 @@ module.exports = {
     getUnreadByVisitorMessageCount: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "getUnreadByVisitorMessageCount", [])
     },
-    sendKeyboardRequest: function (successCallback, errorCallback) {
+    sendKeyboardRequest: function (requestMessageCurrentChatId, buttonId, successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "sendKeyboardRequest", [requestMessageCurrentChatId, buttonId])
     },
     setChatRead: function (successCallback, errorCallback) {
