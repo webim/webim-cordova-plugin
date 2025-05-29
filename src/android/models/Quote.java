@@ -29,7 +29,7 @@ public class Quote {
         resultQuote.senderName = quote.getSenderName();
         resultQuote.text = quote.getMessageText();
         resultQuote.timestamp = String.valueOf(quote.getMessageTimestamp());
-        resultQuote.authorID = quote.getAuthorId();
+        resultQuote.authorID = quote.getQuotedMessageId();
         if (quote.getMessageAttachment() != null) {
             resultQuote.url = quote.getMessageAttachment().getUrl();
         }

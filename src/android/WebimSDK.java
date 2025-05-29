@@ -31,12 +31,14 @@ import ru.webim.android.sdk.MessageTracker;
 import ru.webim.android.sdk.Operator;
 import ru.webim.android.sdk.Survey;
 import ru.webim.android.sdk.Webim;
+import ru.webim.android.sdk.WebimLogEntity;
 import ru.webim.android.sdk.WebimSession;
 import ru.webim.android.sdk.Webim.SessionBuilder;
 import ru.webim.android.sdk.WebimError;
 import ru.webim.android.sdk.WebimLog;
 import ru.webim.android.sdk.impl.MessageReaction;
 import ru.webim.android.sdk.impl.StringId;
+import ru.webim.android.sdk.impl.items.MessageGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -274,7 +276,9 @@ public class WebimSDK extends CordovaPlugin {
                     }
                 })
                 .setAccountName(args.getString("accountName"))
-                .setPushSystem(Webim.PushSystem.FCM)
+                .setPushSystem(args.has("pushSystem")
+                        ? (args.getString("pushSystem").equalsIgnoreCase("hpk") ? Webim.PushSystem.HPK : Webim.PushSystem.FCM)
+                        : Webim.PushSystem.FCM)
                 .setPushToken(args.has("pushToken")
                         ? args.getString("pushToken")
                         : "none")
@@ -295,6 +299,7 @@ public class WebimSDK extends CordovaPlugin {
                                          }
                                      },
                     Webim.SessionBuilder.WebimLogVerbosityLevel.VERBOSE);
+            sessionBuilder.setLoggerEntities(WebimLogEntity.SERVER);
         }
         session = sessionBuilder.build(new WebimSession.SessionCallback() {
             @Override
@@ -528,6 +533,12 @@ public class WebimSDK extends CordovaPlugin {
 
             @Nullable
             @Override
+            public MessageGroup.GroupData getGroupData() {
+                return null;
+            }
+
+            @Nullable
+            @Override
             public Attachment getAttachment() {
                 return null;
             }
@@ -710,6 +721,12 @@ public class WebimSDK extends CordovaPlugin {
             @Nullable
             @Override
             public String getData() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public MessageGroup.GroupData getGroupData() {
                 return null;
             }
 
@@ -902,6 +919,12 @@ public class WebimSDK extends CordovaPlugin {
             @Nullable
             @Override
             public String getData() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public MessageGroup.GroupData getGroupData() {
                 return null;
             }
 

@@ -4,7 +4,7 @@ public class KeyboardButton {
     public String text;
     public String id;
 
-    public static KeyboardButton getKeyboardButton(ru.webim.android.sdk.Message.KeyboardButtons keyboardButton) {
+    public static KeyboardButton getKeyboardButton(ru.webim.android.sdk.Message.KeyboardButton keyboardButton) {
         KeyboardButton resultKeyboardButton = new KeyboardButton();
         if (keyboardButton != null) {
             resultKeyboardButton.text = keyboardButton.getText();

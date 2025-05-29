@@ -22,12 +22,12 @@ public class Keyboard {
                 }
             }
             resultKeyboard.keyboardResponse = ru.webim.plugin.models.KeyboardResponse.getKeyboardResponse(keyboard.getKeyboardResponse());
-            List<List<ru.webim.android.sdk.Message.KeyboardButtons>> buttonsList = keyboard.getButtons();
+            List<List<ru.webim.android.sdk.Message.KeyboardButton>> buttonsList = keyboard.getButtons();
             if (buttonsList != null) {
                 resultKeyboard.buttons = new ArrayList<KeyboardButton>();
                 try {
                     for (int i = 0; i < buttonsList.size(); i++) {
-                        List<ru.webim.android.sdk.Message.KeyboardButtons> keyboardButtons = buttonsList.get(i);
+                        List<ru.webim.android.sdk.Message.KeyboardButton> keyboardButtons = buttonsList.get(i);
                         for (int j = 0; j < keyboardButtons.size(); j++) {
                             resultKeyboard.buttons.add(ru.webim.plugin.models.KeyboardButton.getKeyboardButton(keyboardButtons.get(j)));
                         }
