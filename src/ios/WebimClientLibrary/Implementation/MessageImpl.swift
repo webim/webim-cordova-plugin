@@ -406,6 +406,7 @@ final class MessageAttachmentImpl {
     let filename: String
     let contentType: String
     let imageInfo: ImageInfo?
+    let extraText: String?
 
 
     // MARK: - Initialization
@@ -413,18 +414,21 @@ final class MessageAttachmentImpl {
          size: Int64?,
          filename: String,
          contentType: String,
-         imageInfo: ImageInfo? = nil) {
+         imageInfo: ImageInfo? = nil,
+         extraText: String? = nil) {
         self.urlString = urlString
         self.size = size
         self.filename = filename
         self.contentType = contentType
         self.imageInfo = imageInfo
+        self.extraText = extraText
     }
 
     // MARK: - Methods
     static func getAttachment(byServerURL serverURLString: String,
                               webimClient: WebimClient,
-                              text: String) -> MessageAttachment? {
+                              text: String,
+                              extraText: String? = nil) -> MessageAttachment? {
         let textData = text.data(using: .utf8)!
         guard let textDictionary = try? JSONSerialization.jsonObject(with: textData,
                                                                      options: []) as? [String: Any?] else {
@@ -467,7 +471,8 @@ final class MessageAttachmentImpl {
                                          filename: filename,
                                          contentType: contentType,
                                          imageInfo: extractImageInfoOf(fileParameters: fileParameters,
-                                                                       with: fileURLString))
+                                                                       with: fileURLString),
+                                         extraText: extraText)
         } else {
             WebimInternalLogger.shared.log(entry: "Error creating message attachment link due to HMAC SHA256 encoding error.")
 
@@ -521,6 +526,10 @@ extension MessageAttachmentImpl: MessageAttachment {
 
     func getURL() -> URL {
         return URL(string: urlString)!
+    }
+    
+    func getExtraText() -> String? {
+        return extraText
     }
 
 }

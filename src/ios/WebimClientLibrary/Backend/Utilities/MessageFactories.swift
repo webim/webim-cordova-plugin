@@ -106,7 +106,8 @@ class MessageMapper {
             || (kind == .fileFromOperator) {
             attachment = MessageAttachmentImpl.getAttachment(byServerURL: serverURLString,
                                                              webimClient: webimClient!,
-                                                             text: messageItemText!)
+                                                             text: messageItemText!,
+                                                             extraText: messageItem.getExtraText())
             if attachment == nil {
                 return nil
             }

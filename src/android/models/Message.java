@@ -20,6 +20,7 @@ public class Message {
     public boolean isReadByOperator;
     public boolean canBeReplied;
     public boolean canBeEdited;
+    public String extraText;
 
     public static Message fromParams(String id,
                                      String text,
@@ -41,6 +42,7 @@ public class Message {
         resultMessage.canBeReplied = false;
         resultMessage.canBeEdited = false;
         resultMessage.isReadByOperator = false;
+        resultMessage.extraText = "";
 
         return resultMessage;
     }
@@ -68,6 +70,7 @@ public class Message {
             resultMessage.url = attachment.getFileInfo().getUrl();
             resultMessage.fileSize = attachment.getFileInfo().getSize();
             resultMessage.contentType = attachment.getFileInfo().getContentType();
+            resultMessage.extraText = attachment.getExtraText();
             ru.webim.android.sdk.Message.ImageInfo imageInfo = attachment.getFileInfo().getImageInfo();
             if (imageInfo != null) {
                 resultMessage.thumbUrl = imageInfo.getThumbUrl();

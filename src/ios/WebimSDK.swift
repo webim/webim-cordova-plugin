@@ -596,6 +596,7 @@ import Photos
             dict["url"] = (attachment.getURL()).absoluteString
             dict["fileSize"] = attachment.getSize()
             dict["contentType"] = attachment.getContentType()
+            dict["extraText"] = attachment.getExtraText()
             if let imageInfo = attachment.getImageInfo() {
                 dict["thumbUrl"] = (imageInfo.getThumbURL()).absoluteString
                 dict["imageWidth"] = imageInfo.getWidth()

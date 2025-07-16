@@ -295,6 +295,16 @@ public protocol MessageAttachment {
      2017 Webim
      */
     func getURL() -> URL
+    
+    /**
+     - returns:
+     Attachment file extra text.
+     - author:
+     Anna Frolova
+     - copyright:
+     2025 Webim
+     */
+    func getExtraText() -> String?
 
 }
 

@@ -273,7 +273,7 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;"><em>canEdited</em> field — true if message is can be edited and deleted. Type — <em>Boolean.</em></p>
 <p style="padding-left: 60px;"><em>canBeReplied</em> field — true if message is can be replied. Type — <em>Boolean.</em></p>
 <p style="padding-left: 60px;"><em>quote</em> field — quote information. Type — <em>Quote.</em></p>
-
+<p style="padding-left: 60px;"><em>extraText</em> field — extra text in broadcast. Type — <em>String.</em></p>
 
 <h4 id="dialog-state" style="padding-left: 30px;"><b>DialogState</b></h4>
 <p style="padding-left: 60px;">Dialog state info. See method <em><a href="#on-dialog">onDialog</a>.</em></p>

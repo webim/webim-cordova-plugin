@@ -54,6 +54,7 @@ final class MessageItem {
         case text = "text"
         case timestampInMicrosecond = "ts_m"
         case timestampInSecond = "ts"
+        case extraText = "extra_text"
     }
 
     // MARK: - Properties
@@ -73,6 +74,7 @@ final class MessageItem {
     var timestampInMicrosecond: Int64 = -1
     var timestampInSecond: Double?
     var read: Bool?
+    var extraText: String?
 
     // MARK: - Initialization
     init(jsonDictionary: [String: Any?]) {
@@ -106,6 +108,7 @@ final class MessageItem {
 
         if let data = jsonDictionary[JSONField.data.rawValue] as? [String: Any?] {
             self.data = data
+            self.extraText = data[JSONField.extraText.rawValue] as? String
         }
 
         if let deleted = jsonDictionary[JSONField.deleted.rawValue] as? Bool {
@@ -205,6 +208,10 @@ final class MessageItem {
 
     func getCanBeReplied() -> Bool {
         return canBeReplied ?? false
+    }
+    
+    func getExtraText() -> String? {
+        return extraText
     }
 
     // MARK: -
