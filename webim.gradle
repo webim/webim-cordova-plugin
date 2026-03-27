@@ -6,7 +6,7 @@ android {
 }
 
 dependencies {
-    implementation "ru.webim.sdk:webimclientsdkandroid:3.45.4"
+    implementation "ru.webim.sdk:webimclientsdkandroid:3.46.6"
     repositories {
         mavenCentral()
     }

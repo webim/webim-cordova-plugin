@@ -543,6 +543,12 @@ public class WebimSDK extends CordovaPlugin {
                 return null;
             }
 
+            @Nullable
+            @Override
+            public TranslationInfo getTranslationInfo() {
+                return null;
+            }
+
             @Override
             public boolean isSavedInHistory() {
                 return false;
@@ -733,6 +739,12 @@ public class WebimSDK extends CordovaPlugin {
             @Nullable
             @Override
             public Attachment getAttachment() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public TranslationInfo getTranslationInfo() {
                 return null;
             }
 
@@ -931,6 +943,12 @@ public class WebimSDK extends CordovaPlugin {
             @Nullable
             @Override
             public Attachment getAttachment() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public TranslationInfo getTranslationInfo() {
                 return null;
             }
 
