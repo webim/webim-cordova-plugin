@@ -59,6 +59,9 @@ import Photos
                     sessionBuilder = sessionBuilder.set(visitorFieldsJSONString: jsonString)
                 }
             }
+            if let appVersion = args["appVersion"] as? String {
+                sessionBuilder = sessionBuilder.set(appVersion: appVersion)
+            }
             do {
                 session = try sessionBuilder.build()
                 session?.getStream().set(operatorTypingListener:self)

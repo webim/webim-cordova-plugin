@@ -242,12 +242,12 @@ public class WebimSDK extends CordovaPlugin {
         if (session != null) {
             close(null);
         }
-        if (!args.has("accountName")) {
+        if (args.isNull("accountName")) {
             sendCallbackError(callbackContext, "{\"result\":\"Missing required parameters\"}");
             return;
         }
         accountName = args.getString("accountName");
-        if (args.has("closeWithClearVisitorData")) {
+        if (!args.isNull("closeWithClearVisitorData")) {
             closeWithClearVisitorData = args.getBoolean("closeWithClearVisitorData");
         }
         SessionBuilder sessionBuilder = Webim.newSessionBuilder()
@@ -276,20 +276,23 @@ public class WebimSDK extends CordovaPlugin {
                     }
                 })
                 .setAccountName(args.getString("accountName"))
-                .setPushSystem(args.has("pushSystem")
+                .setPushSystem(!args.isNull("pushSystem")
                         ? (args.getString("pushSystem").equalsIgnoreCase("hpk") ? Webim.PushSystem.HPK : Webim.PushSystem.FCM)
                         : Webim.PushSystem.FCM)
-                .setPushToken(args.has("pushToken")
+                .setPushToken(!args.isNull("pushToken")
                         ? args.getString("pushToken")
                         : "none")
-                .setLocation(args.has("location")
+                .setLocation(!args.isNull("location")
                         ? args.getString("location")
                         : DEFAULT_LOCATION)
-                .setStoreHistoryLocally(args.has("storeHistoryLocally")
+                .setStoreHistoryLocally(!args.isNull("storeHistoryLocally")
                         && args.getBoolean("storeHistoryLocally"));
 
-        if (args.has("visitorFields")) {
+        if (!args.isNull("visitorFields")) {
             sessionBuilder.setVisitorFieldsJson(args.getJSONObject("visitorFields").toString());
+        }
+        if (!args.isNull("appVersion")) {
+            sessionBuilder.setAppVersion(args.getString("appVersion"));
         }
         if (onLoggingCallback != null) {
             sessionBuilder.setLogger(new WebimLog() {
