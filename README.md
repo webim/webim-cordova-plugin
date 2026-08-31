@@ -38,6 +38,7 @@ Webim Cordova Plugin is the free software for integrating Webim chat functionali
 <p style="padding-left: 30px;"><a href="#get-unread-by-visitor-message-count">method getUnreadByVisitorMessageCount</a></p>
 <p style="padding-left: 30px;"><a href="#set-chat-read">method setChatRead</a></p>
 <p style="padding-left: 30px;"><a href="#get-show-email-button">method getShowEmailButton</a></p>
+<p style="padding-left: 30px;"><a href="#get-account-config">method getAccountConfig</a></p>
 <p style="padding-left: 30px;"><a href="#on-logging">method onLogging</a></p>
 <p style="padding-left: 30px;"><a href="#close">method close</a></p>
 
@@ -246,6 +247,11 @@ Example: `cordova plugin add https://github.com/webim/webim-cordova-plugin.git`
 <p style="padding-left: 60px;">Method returns true if app should show send chat to email button.</p>
 <p style="padding-left: 60px;">Function <em> successCallback(jsonString)</em> is executed when the method is successfully completed. <em>jsonString</em> parameter contains <em>showEmailButton</em> field with execution method completion information.</p>
 <p style="padding-left: 60px;">Function <em> errorCallback(jsonString)</em> is executed when the method is unsuccessfully completed. <em>jsonString</em> parameter contains <em>result</em> field with execution method completion information.</p>
+
+<h4 id="get-account-config" style="padding-left: 30px;"><b>method webimsdk.getAccountConfig(successCallback, errorCallback)</b></h4>
+<p style="padding-left: 60px;">Requests account config.</p>
+<p style="padding-left: 60px;">Function <em> successCallback(log)</em> returns account config.</p>
+<p style="padding-left: 60px;">Function <em> errorCallback()</em> will never be executed.</p>
 
 <h4 id="on-logging" style="padding-left: 30px;"><b>method webimsdk.onLogging(successCallback, errorCallback)</b></h4>
 <p style="padding-left: 60px;">Success callback called when new log entry appears.</p>

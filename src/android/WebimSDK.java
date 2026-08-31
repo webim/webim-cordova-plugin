@@ -38,6 +38,7 @@ import ru.webim.android.sdk.WebimError;
 import ru.webim.android.sdk.WebimLog;
 import ru.webim.android.sdk.impl.MessageReaction;
 import ru.webim.android.sdk.impl.StringId;
+import ru.webim.android.sdk.impl.items.AccountConfigItem;
 import ru.webim.android.sdk.impl.items.MessageGroup;
 
 import java.io.File;
@@ -1348,6 +1349,16 @@ public class WebimSDK extends CordovaPlugin {
         } catch (Exception e) {
             sendCallbackError(callbackContext, e.toString());
         }
+    }
+
+    private void getAccountConfig(CallbackContext callbackContext) {
+        if (session == null) {
+            sendCallbackError(callbackContext, "{\"result\":\"Session initialisation expected\"}");
+            return;
+        }
+        AccountConfigItem accountConfigItem = session.getStream().getAccountConfig();
+        ru.webim.plugin.models.AccountConfig accountConfig = ru.webim.plugin.models.AccountConfig.accountConfigFromAccountConfigItem(accountConfigItem);
+        sendCallbackResult(callbackContext, accountConfig);
     }
 
     private void sendNoResult(CallbackContext callbackContext) {

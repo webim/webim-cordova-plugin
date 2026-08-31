@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<plugin id="ru.webim.sdk" version="1.13.1" xmlns="http://www.phonegap.com/ns/plugins/1.0">
+<plugin id="ru.webim.sdk" version="1.14.0" xmlns="http://www.phonegap.com/ns/plugins/1.0">
 
     <name>WebimSDK</name>
 
@@ -23,6 +23,8 @@
 
         <framework custom="true" src="webim.gradle" type="gradleReference" />
         <source-file src="src/android/WebimSDK.java" target-dir="src/ru/webim/plugin/" />
+        <source-file src="src/android/models/AccountConfig.java"
+            target-dir="src/ru/webim/plugin/models" />
         <source-file src="src/android/models/Message.java"
             target-dir="src/ru/webim/plugin/models" />
         <source-file src="src/android/models/DialogState.java"

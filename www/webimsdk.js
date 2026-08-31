@@ -97,6 +97,9 @@ module.exports = {
     showRateOperatorWindow: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "showRateOperatorWindow", [])
     },
+    getAccountConfig: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "WebimSDK", "getAccountConfig", [])
+    },
     onLogging: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "WebimSDK", "onLogging", [])
     }
